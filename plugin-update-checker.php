@@ -3,13 +3,13 @@
 //TODO: Remove debug code
 function upc_debug(){
 	$updates = get_transient('update_plugins');
-	var_dump($updates);
+	//var_dump($updates);
 }
 add_action('admin_notices', 'upc_debug');
 
 function upc_display_api_result($res, $action = null, $args = null){
-	var_dump($res);
-	print_r($_GET);
+	//var_dump($res);
+	//print_r($_GET);
 	return $res;
 }
 add_action('plugins_api_result', 'upc_display_api_result');
