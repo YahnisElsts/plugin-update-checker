@@ -48,7 +48,9 @@ class PluginUpdateChecker {
 		
 		if ( empty($this->optionName) ){
 			$this->optionName = 'external_updates-' . $this->slug;
-		}		
+		}
+		
+		$this->installHooks();		
 	}
 	
 	/**
@@ -62,8 +64,8 @@ class PluginUpdateChecker {
 		add_filter('plugins_api', array(&$this, 'injectInfo'), 10, 3);
 		
 		//Insert our update info into the update array maintained by WP
-		add_filter('site_transient_update_plugins', array(&$this,'inject_update')); //WP 3.0+
-		add_filter('transient_update_plugins', array(&$this,'inject_update')); //WP 2.8+
+		add_filter('site_transient_update_plugins', array(&$this,'injectUpdate')); //WP 3.0+
+		add_filter('transient_update_plugins', array(&$this,'injectUpdate')); //WP 2.8+
 		
 		//Set up the periodic update checks
 		$cronHook = 'check_plugin_updates-' . $this->slug;
@@ -133,7 +135,7 @@ class PluginUpdateChecker {
 		
 		//Try to parse the response
 		$pluginInfo = null;
-		if ( !is_wp_error($result) && isset($result['code']) && ($result['code'] == 200) && !empty($result['body']) ){
+		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
 			$pluginInfo = PluginInfo::fromJson($result['body']);
 		}
 		$pluginInfo = apply_filters('puc_request_info_result', $pluginInfo);
@@ -212,7 +214,7 @@ class PluginUpdateChecker {
 			!isset($state->lastCheck) || 
 			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 ) ||
 			( $state->checkedVersion != $this->getInstalledVersion() );
-			 
+			
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
 		}
