@@ -1,5 +1,6 @@
 <?php
 
+//TODO: Remove debug code
 function upc_debug(){
 	$updates = get_transient('update_plugins');
 	var_dump($updates);
