@@ -111,22 +111,28 @@ class PluginUpdateChecker {
 	 * 
 	 * @uses wp_remote_get()
 	 * 
+	 * @param array $queryArgs Additional query arguments to append to the request. Optional.
 	 * @return PluginInfo
 	 */
-	function requestInfo(){
-		$url = trailingslashit($this->apiUrl) . $this->slug . '/info.json';
+	function requestInfo($queryArgs = array()){
+		//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
+		$queryArgs['installed_version'] = $this->getInstalledVersion(); 
+		$queryArgs = apply_filters('puc_request_info_query_args-'.$this->slug, $queryArgs);
 		
-		//Let plugins add custom query arguments to the URL
-		$queryArgs = apply_filters(
-			'puc_request_info_query_args-'.$this->slug, 
-			array('installed_version' => $this->getInstalledVersion()) //By default, the only query arg. is the installed version
+		//Various options for the wp_remote_get() call. Plugins can filter these, too.
+		$options = array(
+			'timeout' => 10, //seconds
+			'headers' => array(
+				'Accept' => 'application/json'
+			),
 		);
+		$options = apply_filters('puc_request_info_options-'.$this->slug, array());
+		
+		//The plugin info should be at 'http://your-api.com/url/here/$slug/info.json'
+		$url = trailingslashit($this->apiUrl) . $this->slug . '/info.json'; 
 		if ( !empty($queryArgs) ){
 			$url .= '?' . build_query($queryArgs);
 		}
-
-		//Let plugins add/modify request headers, cookies and so on.
-		$options = apply_filters('puc_request_info_options-'.$this->slug, array());
 		
 		$result = wp_remote_get(
 			$url,
@@ -138,7 +144,7 @@ class PluginUpdateChecker {
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
 			$pluginInfo = PluginInfo::fromJson($result['body']);
 		}
-		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo);
+		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
 		return $pluginInfo;
 	}
 	
@@ -152,7 +158,7 @@ class PluginUpdateChecker {
 	function requestUpdate(){
 		//For the sake of simplicity, this function just calls requestInfo() 
 		//and transforms the result accordingly.
-		$pluginInfo = $this->requestInfo();
+		$pluginInfo = $this->requestInfo(array('checking_for_updates' => '1'));
 		if ( $pluginInfo == null ){
 			return null;
 		}
@@ -197,8 +203,7 @@ class PluginUpdateChecker {
 	}
 	
 	/**
-	 * Check for updates only if the configured check interval has already elapsed,
-	 * or if a new version has been just installed.
+	 * Check for updates only if the configured check interval has already elapsed.
 	 * 
 	 * @return void
 	 */
@@ -212,8 +217,7 @@ class PluginUpdateChecker {
 		$shouldCheck =
 			empty($state) ||
 			!isset($state->lastCheck) || 
-			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 ) ||
-			( $state->checkedVersion != $this->getInstalledVersion() );
+			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 );
 			
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
@@ -299,8 +303,12 @@ class PluginUpdateChecker {
 	/**
 	 * Register a callback for filtering the plugin info retrieved from the external API.
 	 * 
-	 * The callback function should take one argument - an instance of PluginInfo.
-	 * It should return a new or modified instance of PluginInfo or NULL.
+	 * The callback function should take two arguments. If the plugin info was retrieved 
+	 * successfully, the first argument passed will be an instance of  PluginInfo. Otherwise, 
+	 * it will be NULL. The second argument will be the corresponding return value of 
+	 * wp_remote_get (see WP docs for details).
+	 *  
+	 * The callback function should return a new or modified instance of PluginInfo or NULL.
 	 * 
 	 * @uses add_filter() This method is a convenience wrapper for add_filter().
 	 * 
@@ -308,7 +316,7 @@ class PluginUpdateChecker {
 	 * @return void
 	 */
 	function addResultFilter($callback){
-		add_filter('puc_request_info_result-'.$this->slug, $callback);
+		add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
 	}
 }
 	
