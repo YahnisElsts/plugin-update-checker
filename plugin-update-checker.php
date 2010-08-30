@@ -122,9 +122,9 @@ class PluginUpdateChecker {
 			array('installed_version' => $this->getInstalledVersion()) //By default, the only query arg. is the installed version
 		);
 		if ( !empty($queryArgs) ){
-			$url .= '?' . http_build_query($queryArgs);
+			$url .= '?' . build_query($queryArgs);
 		}
-		
+
 		//Let plugins add/modify request headers, cookies and so on.
 		$options = apply_filters('puc_request_info_options-'.$this->slug, array());
 		
@@ -138,7 +138,7 @@ class PluginUpdateChecker {
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
 			$pluginInfo = PluginInfo::fromJson($result['body']);
 		}
-		$pluginInfo = apply_filters('puc_request_info_result', $pluginInfo);
+		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo);
 		return $pluginInfo;
 	}
 	
@@ -263,6 +263,52 @@ class PluginUpdateChecker {
 		}
 				
 		return $updates;
+	}
+	
+	/**
+	 * Register a callback for filtering query arguments. 
+	 * 
+	 * The callback function should take one argument - an associative array of query arguments.
+	 * It should return a modified array of query arguments.
+	 * 
+	 * @uses add_filter() This method is a convenience wrapper for add_filter().
+	 * 
+	 * @param callback $callback 
+	 * @return void
+	 */
+	function addQueryArgFilter($callback){
+		add_filter('puc_request_info_query_args-'.$this->slug, $callback);
+	}
+	
+	/**
+	 * Register a callback for filtering arguments passed to wp_remote_get().
+	 * 
+	 * The callback function should take one argument - an associative array of arguments -
+	 * and return a modified array or arguments. See the WP documentation on wp_remote_get()
+	 * for details on what arguments are available and how they work. 
+	 * 
+	 * @uses add_filter() This method is a convenience wrapper for add_filter().
+	 * 
+	 * @param callback $callback
+	 * @return void
+	 */
+	function addHttpRequestArgFilter($callback){
+		add_filter('puc_request_info_options-'.$this->slug, $callback);
+	}
+	
+	/**
+	 * Register a callback for filtering the plugin info retrieved from the external API.
+	 * 
+	 * The callback function should take one argument - an instance of PluginInfo.
+	 * It should return a new or modified instance of PluginInfo or NULL.
+	 * 
+	 * @uses add_filter() This method is a convenience wrapper for add_filter().
+	 * 
+	 * @param callback $callback
+	 * @return void
+	 */
+	function addResultFilter($callback){
+		add_filter('puc_request_info_result-'.$this->slug, $callback);
 	}
 }
 	
