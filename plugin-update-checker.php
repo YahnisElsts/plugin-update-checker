@@ -1,6 +1,14 @@
 <?php
 if ( !class_exists('PluginUpdateChecker') ):
 	
+/**
+ * A custom plugin update checker. 
+ * 
+ * @author Janis Elsts
+ * @copyright 2010
+ * @version 1.0
+ * @access public
+ */
 class PluginUpdateChecker {
 	public $apiUrl = '';      //External update API endpoint URL.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory.
@@ -309,7 +317,17 @@ endif;
 
 if ( !class_exists('PluginInfo') ):
 
+/**
+ * A container class for holding and transforming various plugin metadata.
+ * 
+ * @author Janis Elsts
+ * @copyright 2010
+ * @version 1.0
+ * @access public
+ */
 class PluginInfo {
+	//Most fields map directly to the contents of the plugin's info.json file.
+	//See the relevant docs for a description of their meaning.  
 	public $name;
 	public $slug;
 	public $version;
@@ -324,11 +342,12 @@ class PluginInfo {
 	public $tested;
 	public $upgrade_notice;
 	
-	public $id = 0;
 	public $rating;
 	public $num_ratings;
 	public $downloaded;
 	public $last_updated;
+	
+	public $id = 0; //The native WP.org API returns numeric plugin IDs, but they're not used for anything.
 		
 	/**
 	 * Create a new instance of PluginInfo from JSON-encoded plugin info 
@@ -402,6 +421,14 @@ endif;
 
 if ( !class_exists('PluginUpdate') ):
 
+/**
+ * A simple container class for holding information about an available update.
+ * 
+ * @author Janis Elsts
+ * @copyright 2010
+ * @version 1.0
+ * @access public
+ */
 class PluginUpdate {
 	public $id = 0;
 	public $slug;
