@@ -10,7 +10,7 @@ if ( !class_exists('PluginUpdateChecker') ):
  * @access public
  */
 class PluginUpdateChecker {
-	public $apiUrl = '';      //External update API endpoint URL.
+	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory.
 	public $slug = '';        //Plugin slug.
 	public $checkPeriod = 12; //How often to check for updates (in hours).
@@ -19,15 +19,15 @@ class PluginUpdateChecker {
 	/**
 	 * Class constructor.
 	 * 
-	 * @param string $apiUrl External update API endpoint URL.
+	 * @param string $metadataUrl The URL of the plugin's metadata file.
 	 * @param string $pluginFile Fully qualified path to the main plugin file.
 	 * @param string $slug The plugin's 'slug'. If not specified, the filename part of $pluginFile sans '.php' will be used as the slug.
 	 * @param integer $checkPeriod How often to check for updates (in hours). Defaults to checking every 12 hours. Set to 0 to disable automatic update checks.
 	 * @param string $optionName Where to store book-keeping info about update checks. Defaults to 'external_updates-$slug'. 
 	 * @return void
 	 */
-	function __construct($apiUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
-		$this->apiUrl = $apiUrl;
+	function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
+		$this->metadataUrl = $metadataUrl;
 		$this->pluginFile = plugin_basename($pluginFile);
 		$this->checkPeriod = $checkPeriod;
 		$this->slug = $slug;
@@ -122,9 +122,9 @@ class PluginUpdateChecker {
 		$options = apply_filters('puc_request_info_options-'.$this->slug, array());
 		
 		//The plugin info should be at 'http://your-api.com/url/here/$slug/info.json'
-		$url = trailingslashit($this->apiUrl) . $this->slug . '/info.json'; 
+		$url = $this->metadataUrl; 
 		if ( !empty($queryArgs) ){
-			$url .= '?' . build_query($queryArgs);
+			$url = add_query_arg($queryArgs, $url);
 		}
 		
 		$result = wp_remote_get(
@@ -192,7 +192,7 @@ class PluginUpdateChecker {
 		update_option($this->optionName, $state); //Save before checking in case something goes wrong 
 		
 		$state->update = $this->requestUpdate();
-		update_option($this->optionName, $state);	
+		update_option($this->optionName, $state);
 	}
 	
 	/**
@@ -211,7 +211,7 @@ class PluginUpdateChecker {
 			empty($state) ||
 			!isset($state->lastCheck) || 
 			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 );
-			
+		
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
 		}
