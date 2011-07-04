@@ -1,4 +1,13 @@
 <?php
+/**
+ * Plugin Update Checker Library 1.0
+ * http://w-shadow.com/
+ * 
+ * Copyright 2011 Janis Elsts
+ * Licensed under the GNU GPL license.
+ * http://www.gnu.org/licenses/gpl.html
+ */
+
 if ( !class_exists('PluginUpdateChecker') ):
 	
 /**
