@@ -419,9 +419,11 @@ class PluginInfo {
 		foreach($sameFormat as $field){
 			if ( isset($this->$field) ) {
 				$info->$field = $this->$field;
+			} else {
+				$info->$field = null;
 			}
 		}
-		
+
 		//Other fields need to be renamed and/or transformed.
 		$info->download_link = $this->download_url;
 		
