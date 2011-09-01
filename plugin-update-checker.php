@@ -33,7 +33,6 @@ class PluginUpdateChecker {
 	 * @param string $slug The plugin's 'slug'. If not specified, the filename part of $pluginFile sans '.php' will be used as the slug.
 	 * @param integer $checkPeriod How often to check for updates (in hours). Defaults to checking every 12 hours. Set to 0 to disable automatic update checks.
 	 * @param string $optionName Where to store book-keeping info about update checks. Defaults to 'external_updates-$slug'. 
-	 * @return void
 	 */
 	function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
 		$this->metadataUrl = $metadataUrl;
@@ -128,7 +127,7 @@ class PluginUpdateChecker {
 				'Accept' => 'application/json'
 			),
 		);
-		$options = apply_filters('puc_request_info_options-'.$this->slug, array());
+		$options = apply_filters('puc_request_info_options-'.$this->slug, $options);
 		
 		//The plugin info should be at 'http://your-api.com/url/here/$slug/info.json'
 		$url = $this->metadataUrl; 
@@ -181,7 +180,7 @@ class PluginUpdateChecker {
 			return $allPlugins[$this->pluginFile]['Version']; 
 		} else {
 			return ''; //This should never happen.
-		};
+		}
 	}
 	
 	/**
@@ -216,7 +215,7 @@ class PluginUpdateChecker {
 		if ( empty($this->checkPeriod) ){
 			return;
 		}
-		
+		/** @var $state StdClass */
 		$state = get_option($this->optionName);
 		
 		$shouldCheck =
@@ -257,10 +256,11 @@ class PluginUpdateChecker {
 	/**
 	 * Insert the latest update (if any) into the update list maintained by WP.
 	 * 
-	 * @param array $updates Update list.
-	 * @return array Modified update list.
+	 * @param StdClass $updates Update list.
+	 * @return StdClass Modified update list.
 	 */
 	function injectUpdate($updates){
+		/** @var StdClass $state */
 		$state = get_option($this->optionName);
 		
 		//Is there an update to insert?
@@ -369,6 +369,7 @@ class PluginInfo {
 	 * @return PluginInfo New instance of PluginInfo, or NULL on error.
 	 */
 	public static function fromJson($json){
+		/** @var StdClass $apiResponse */
 		$apiResponse = json_decode($json);
 		if ( empty($apiResponse) || !is_object($apiResponse) ){
 			return null;
