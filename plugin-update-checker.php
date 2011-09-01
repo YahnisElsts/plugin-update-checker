@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 1.0
+ * Plugin Update Checker Library 1.1
  * http://w-shadow.com/
  * 
  * Copyright 2011 Janis Elsts
@@ -14,8 +14,8 @@ if ( !class_exists('PluginUpdateChecker') ):
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2010
- * @version 1.0
+ * @copyright 2011
+ * @version 1.1
  * @access public
  */
 class PluginUpdateChecker {
@@ -24,7 +24,9 @@ class PluginUpdateChecker {
 	public $slug = '';        //Plugin slug.
 	public $checkPeriod = 12; //How often to check for updates (in hours).
 	public $optionName = '';  //Where to store the update info.
-	
+
+	private $cronHook = null;
+
 	/**
 	 * Class constructor.
 	 * 
@@ -69,16 +71,18 @@ class PluginUpdateChecker {
 		add_filter('transient_update_plugins', array(&$this,'injectUpdate')); //WP 2.8+
 		
 		//Set up the periodic update checks
-		$cronHook = 'check_plugin_updates-' . $this->slug;
+		$this->cronHook = 'check_plugin_updates-' . $this->slug;
 		if ( $this->checkPeriod > 0 ){
 			
 			//Trigger the check via Cron
 			add_filter('cron_schedules', array(&$this, '_addCustomSchedule'));
-			if ( !wp_next_scheduled($cronHook) && !defined('WP_INSTALLING') ) {
+			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 				$scheduleName = 'every' . $this->checkPeriod . 'hours';
-				wp_schedule_event(time(), $scheduleName, $cronHook);
+				wp_schedule_event(time(), $scheduleName, $this->cronHook);
 			}
-			add_action($cronHook, array(&$this, 'checkForUpdates'));
+			add_action($this->cronHook, array(&$this, 'checkForUpdates'));
+			
+			register_deactivation_hook($this->pluginFile, array($this, '_removeUpdaterCron'));
 			
 			//In case Cron is disabled or unreliable, we also manually trigger 
 			//the periodic checks while the user is browsing the Dashboard. 
@@ -86,7 +90,7 @@ class PluginUpdateChecker {
 			
 		} else {
 			//Periodic checks are disabled.
-			wp_clear_scheduled_hook($cronHook);
+			wp_clear_scheduled_hook($this->cronHook);
 		}		
 	}
 	
@@ -105,6 +109,15 @@ class PluginUpdateChecker {
 			);
 		}		
 		return $schedules;
+	}
+
+	/**
+	 * Remove the scheduled cron event that the library uses to check for updates.
+	 *
+	 * @return void
+	 */
+	function _removeUpdaterCron(){
+		wp_clear_scheduled_hook($this->cronHook);
 	}
 	
 	/**
