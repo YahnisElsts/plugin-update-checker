@@ -64,29 +64,29 @@ class PluginUpdateChecker {
 	 */
 	function installHooks(){
 		//Override requests for plugin information
-		add_filter('plugins_api', array(&$this, 'injectInfo'), 10, 3);
+		add_filter('plugins_api', array($this, 'injectInfo'), 10, 3);
 		
 		//Insert our update info into the update array maintained by WP
-		add_filter('site_transient_update_plugins', array(&$this,'injectUpdate')); //WP 3.0+
-		add_filter('transient_update_plugins', array(&$this,'injectUpdate')); //WP 2.8+
+		add_filter('site_transient_update_plugins', array($this,'injectUpdate')); //WP 3.0+
+		add_filter('transient_update_plugins', array($this,'injectUpdate')); //WP 2.8+
 		
 		//Set up the periodic update checks
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
 		if ( $this->checkPeriod > 0 ){
 			
 			//Trigger the check via Cron
-			add_filter('cron_schedules', array(&$this, '_addCustomSchedule'));
+			add_filter('cron_schedules', array($this, '_addCustomSchedule'));
 			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 				$scheduleName = 'every' . $this->checkPeriod . 'hours';
 				wp_schedule_event(time(), $scheduleName, $this->cronHook);
 			}
-			add_action($this->cronHook, array(&$this, 'checkForUpdates'));
+			add_action($this->cronHook, array($this, 'checkForUpdates'));
 			
 			register_deactivation_hook($this->pluginFile, array($this, '_removeUpdaterCron'));
 			
 			//In case Cron is disabled or unreliable, we also manually trigger 
 			//the periodic checks while the user is browsing the Dashboard. 
-			add_action( 'admin_init', array(&$this, 'maybeCheckForUpdates') );
+			add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
 			
 		} else {
 			//Periodic checks are disabled.
