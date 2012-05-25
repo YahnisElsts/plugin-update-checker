@@ -203,7 +203,7 @@ class PluginUpdateChecker {
 	 * @return void
 	 */
 	function checkForUpdates(){
-		$state = get_option($this->optionName);
+		$state = $this->getUpdateState();
 		if ( empty($state) ){
 			$state = new StdClass;
 			$state->lastCheck = 0;
@@ -213,10 +213,10 @@ class PluginUpdateChecker {
 		
 		$state->lastCheck = time();
 		$state->checkedVersion = $this->getInstalledVersion();
-		update_option($this->optionName, $state); //Save before checking in case something goes wrong 
+		$this->setUpdateState($state); //Save before checking in case something goes wrong 
 		
 		$state->update = $this->requestUpdate();
-		update_option($this->optionName, $state);
+		$this->setUpdateState($state);
 	}
 	
 	/**
@@ -228,8 +228,7 @@ class PluginUpdateChecker {
 		if ( empty($this->checkPeriod) ){
 			return;
 		}
-		/** @var $state StdClass */
-		$state = get_option($this->optionName);
+		$state = $this->getUpdateState();
 		
 		$shouldCheck =
 			empty($state) ||
@@ -239,6 +238,33 @@ class PluginUpdateChecker {
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
 		}
+	}
+	
+	/**
+	 * Load the update checker state from the DB.
+	 *  
+	 * @return StdClass|null
+	 */
+	private function getUpdateState() {
+		$state = get_option($this->optionName);
+		if ( !empty($state) && isset($state->update) && !($state->update instanceof PluginUpdate) ){
+			$state->update = PluginUpdate::fromObject($state->update);
+		}
+		return $state;
+	}
+	
+	
+	/**
+	 * Persist the update checker state to the DB.
+	 * 
+	 * @param StdClass $state
+	 * @return void
+	 */
+	private function setUpdateState($state) {
+		if ( $state->update instanceof PluginUpdate ) {
+			$state->update = $state->update->toStdClass();
+		}
+		update_option($this->optionName, $state);
 	}
 	
 	/**
@@ -274,7 +300,7 @@ class PluginUpdateChecker {
 	 */
 	function injectUpdate($updates){
 		/** @var StdClass $state */
-		$state = get_option($this->optionName);
+		$state = $this->getUpdateState();
 		
 		//Is there an update to insert?
 		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
@@ -464,6 +490,7 @@ class PluginUpdate {
 	public $homepage;
 	public $download_url;
 	public $upgrade_notice;
+	private $fields = array('id', 'slug', 'version', 'homepage', 'download_url', 'upgrade_notice');
 	
 	/**
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
@@ -491,13 +518,40 @@ class PluginUpdate {
 	 * @return PluginUpdate
 	 */
 	public static function fromPluginInfo($info){
+		return self::fromObject($info);
+	}
+	
+	/**
+	 * Create a new instance of PluginUpdate by copying the necessary fields from 
+	 * another object.
+	 *  
+	 * @param StdClass|PluginInfo|PluginUpdate $object The source object.
+	 * @return PluginUpdate The new copy.
+	 */
+	public static function fromObject($object) {
 		$update = new PluginUpdate();
-		$copyFields = array('id', 'slug', 'version', 'homepage', 'download_url', 'upgrade_notice');
-		foreach($copyFields as $field){
+		foreach($this->fields as $field){
 			$update->$field = $info->$field;
 		}
 		return $update;
 	}
+	
+	/**
+	 * Create an instance of StdClass that can later be converted back to 
+	 * a PluginUpdate. Useful for serialization and caching, as it avoids
+	 * the "incomplete object" problem if the cached value is loaded before
+	 * this class.
+	 * 
+	 * @return StdClass
+	 */
+	public function toStdClass() {
+		$object = new StdClass();
+		foreach($this->fields as $field){
+			$object->$field = $this->$field;
+		}
+		return $object;
+	}
+	
 	
 	/**
 	 * Transform the update into the format used by WordPress native plugin API.
