@@ -490,7 +490,7 @@ class PluginUpdate {
 	public $homepage;
 	public $download_url;
 	public $upgrade_notice;
-	private $fields = array('id', 'slug', 'version', 'homepage', 'download_url', 'upgrade_notice');
+	private static $fields = array('id', 'slug', 'version', 'homepage', 'download_url', 'upgrade_notice');
 	
 	/**
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
@@ -530,7 +530,7 @@ class PluginUpdate {
 	 */
 	public static function fromObject($object) {
 		$update = new PluginUpdate();
-		foreach($this->fields as $field){
+		foreach(self::$fields as $field){
 			$update->$field = $info->$field;
 		}
 		return $update;
@@ -546,7 +546,7 @@ class PluginUpdate {
 	 */
 	public function toStdClass() {
 		$object = new StdClass();
-		foreach($this->fields as $field){
+		foreach(self::$fields as $field){
 			$object->$field = $this->$field;
 		}
 		return $object;
