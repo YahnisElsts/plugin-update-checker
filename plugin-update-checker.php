@@ -531,7 +531,7 @@ class PluginUpdate {
 	public static function fromObject($object) {
 		$update = new PluginUpdate();
 		foreach(self::$fields as $field){
-			$update->$field = $info->$field;
+			$update->$field = $object->$field;
 		}
 		return $update;
 	}
@@ -575,5 +575,3 @@ class PluginUpdate {
 }
 	
 endif;
-
-?>
