@@ -130,7 +130,8 @@ class PluginUpdateChecker {
 	 */
 	function requestInfo($queryArgs = array()){
 		//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
-		$queryArgs['installed_version'] = $this->getInstalledVersion(); 
+		$installedVersion = $this->getInstalledVersion();
+		$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
 		$queryArgs = apply_filters('puc_request_info_query_args-'.$this->slug, $queryArgs);
 		
 		//Various options for the wp_remote_get() call. Plugins can filter these, too.
@@ -192,7 +193,8 @@ class PluginUpdateChecker {
 		if ( array_key_exists($this->pluginFile, $allPlugins) && array_key_exists('Version', $allPlugins[$this->pluginFile]) ){
 			return $allPlugins[$this->pluginFile]['Version']; 
 		} else {
-			return ''; //This should never happen.
+			//This can happen if the filename is wrong or the plugin is installed in mu-plugins.
+			return null;
 		}
 	}
 	
@@ -203,6 +205,13 @@ class PluginUpdateChecker {
 	 * @return void
 	 */
 	function checkForUpdates(){
+		$installedVersion = $this->getInstalledVersion();
+		//Fail silently if we can't find the plugin or read its header.
+		//TODO: Throw an error or otherwise provide feedback to the developer.
+		if ( $installedVersion === null ) {
+			return;
+		}
+
 		$state = $this->getUpdateState();
 		if ( empty($state) ){
 			$state = new StdClass;
@@ -212,7 +221,7 @@ class PluginUpdateChecker {
 		}
 		
 		$state->lastCheck = time();
-		$state->checkedVersion = $this->getInstalledVersion();
+		$state->checkedVersion = $installedVersion;
 		$this->setUpdateState($state); //Save before checking in case something goes wrong 
 		
 		$state->update = $this->requestUpdate();
@@ -305,7 +314,8 @@ class PluginUpdateChecker {
 		//Is there an update to insert?
 		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
 			//Only insert updates that are actually newer than the currently installed version.
-			if ( version_compare($state->update->version, $this->getInstalledVersion(), '>') ){
+			$installedVersion = $this->getInstalledVersion();
+			if ( ($installedVersion !== null) && version_compare($state->update->version, $installedVersion, '>') ){
 				$updates->response[$this->pluginFile] = $state->update->toWpFormat();
 			}
 		}
