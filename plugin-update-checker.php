@@ -25,6 +25,9 @@ class PluginUpdateChecker {
 	public $checkPeriod = 12; //How often to check for updates (in hours).
 	public $optionName = '';  //Where to store the update info.
 
+	public $debugMode = false; //Set to TRUE to enable error reporting. Errors are raised using trigger_error()
+                               //and should be logged to the standard PHP error log.
+
 	private $cronHook = null;
 
 	/**
@@ -157,8 +160,19 @@ class PluginUpdateChecker {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo::fromJson($result['body']);
+			$pluginInfo = PluginInfo::fromJson($result['body'], $this->debugMode);
+		} else if ( $this->debugMode ) {
+			$message = sprintf("The URL %s does not point to a valid plugin metadata file. ", $url);
+			if ( is_wp_error($result) ) {
+				$message .= "WP HTTP error: " . $result->get_error_message();
+			} else if ( isset($result['response']['code']) ) {
+				$message .= "HTTP response code is " . $result['response']['code'] . " (expected: 200)";
+			} else {
+				$message .= "wp_remote_get() returned an unexpected result.";
+			}
+			trigger_error($message, E_USER_WARNING);
 		}
+
 		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
 		return $pluginInfo;
 	}
@@ -194,6 +208,15 @@ class PluginUpdateChecker {
 			return $allPlugins[$this->pluginFile]['Version']; 
 		} else {
 			//This can happen if the filename is wrong or the plugin is installed in mu-plugins.
+			if ( $this->debugMode ) {
+				trigger_error(
+					sprintf(
+						"Can't to read the Version header for %s. The filename may be incorrect, or the file is not present in /wp-content/plugins.",
+						$this->pluginFile
+					),
+					E_USER_WARNING
+				);
+			}
 			return null;
 		}
 	}
@@ -207,8 +230,13 @@ class PluginUpdateChecker {
 	function checkForUpdates(){
 		$installedVersion = $this->getInstalledVersion();
 		//Fail silently if we can't find the plugin or read its header.
-		//TODO: Throw an error or otherwise provide feedback to the developer.
 		if ( $installedVersion === null ) {
+			if ( $this->debugMode ) {
+				trigger_error(
+					sprintf('Skipping update check for %s - installed version unknown.', $this->pluginFile),
+					E_USER_WARNING
+				);
+			}
 			return;
 		}
 
@@ -414,19 +442,32 @@ class PluginInfo {
 	 * Create a new instance of PluginInfo from JSON-encoded plugin info 
 	 * returned by an external update API.
 	 * 
-	 * @param string $json Valid JSON string representing plugin info. 
-	 * @return PluginInfo New instance of PluginInfo, or NULL on error.
+	 * @param string $json Valid JSON string representing plugin info.
+	 * @param bool $triggerErrors
+	 * @return PluginInfo|null New instance of PluginInfo, or NULL on error.
 	 */
-	public static function fromJson($json){
+	public static function fromJson($json, $triggerErrors = false){
 		/** @var StdClass $apiResponse */
 		$apiResponse = json_decode($json);
 		if ( empty($apiResponse) || !is_object($apiResponse) ){
+			if ( $triggerErrors ) {
+				trigger_error(
+					"Failed to parse plugin metadata. Try validating your .json file with http://jsonlint.com/",
+					E_USER_NOTICE
+				);
+			}
 			return null;
 		}
 		
 		//Very, very basic validation.
 		$valid = isset($apiResponse->name) && !empty($apiResponse->name) && isset($apiResponse->version) && !empty($apiResponse->version);
 		if ( !$valid ){
+			if ( $triggerErrors ) {
+				trigger_error(
+					"The plugin metadata file does not contain the required 'name' and/or 'version' keys.",
+					E_USER_NOTICE
+				);
+			}
 			return null;
 		}
 		
@@ -506,13 +547,14 @@ class PluginUpdate {
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
 	 * 
 	 * @param string $json
-	 * @return PluginUpdate
+	 * @param bool $triggerErrors
+	 * @return PluginUpdate|null
 	 */
-	public static function fromJson($json){
+	public static function fromJson($json, $triggerErrors = false){
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo::fromJson($json);
+		$pluginInfo = PluginInfo::fromJson($json, $triggerErrors);
 		if ( $pluginInfo != null ) {
 			return PluginUpdate::fromPluginInfo($pluginInfo);
 		} else {
