@@ -322,6 +322,7 @@ class PluginUpdateChecker {
 		}
 		
 		$pluginInfo = $this->requestInfo();
+		$pluginInfo = apply_filters('puc_pre_inject_info-' . $this->slug, $pluginInfo);
 		if ($pluginInfo){
 			return $pluginInfo->toWpFormat();
 		}
@@ -341,10 +342,16 @@ class PluginUpdateChecker {
 		
 		//Is there an update to insert?
 		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
+			//Let plugins filter the update info before it's passed on to WordPress.
+			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $state->update); /** @var PluginUpdate $update */
+			if ( !isset($update) ) {
+				return $updates;
+			}
+
 			//Only insert updates that are actually newer than the currently installed version.
 			$installedVersion = $this->getInstalledVersion();
-			if ( ($installedVersion !== null) && version_compare($state->update->version, $installedVersion, '>') ){
-				$updates->response[$this->pluginFile] = $state->update->toWpFormat();
+			if ( ($installedVersion !== null) && version_compare($update->version, $installedVersion, '>') ){
+				$updates->response[$this->pluginFile] = $update->toWpFormat();
 			}
 		}
 				
@@ -399,6 +406,22 @@ class PluginUpdateChecker {
 	 */
 	function addResultFilter($callback){
 		add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
+	}
+
+	/**
+	 * Register a callback for one of the update checker filters.
+	 *
+	 * Identical to add_filter(), except it automatically adds the "puc_" prefix
+	 * and the "-$plugin_slug" suffix to the filter name. For example, "request_info_result"
+	 * becomes "puc_request_info_result-your_plugin_slug".
+	 *
+	 * @param string $tag
+	 * @param callable $callback
+	 * @param int $priority
+	 * @param int $acceptedArgs
+	 */
+	public function addFilter($tag, $callback, $priority = 10, $acceptedArgs = 1) {
+		add_filter('puc_' . $tag . '-' . $this->slug, $callback, $priority, $acceptedArgs);
 	}
 }
 	
