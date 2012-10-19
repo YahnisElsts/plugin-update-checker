@@ -298,7 +298,7 @@ class PluginUpdateChecker {
 	 * @return void
 	 */
 	private function setUpdateState($state) {
-		if ( $state->update instanceof PluginUpdate ) {
+		if ( isset($state->update) && ($state->update instanceof PluginUpdate) ) {
 			$state->update = $state->update->toStdClass();
 		}
 		update_option($this->optionName, $state);
