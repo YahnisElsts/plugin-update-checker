@@ -159,7 +159,7 @@ class PluginUpdateChecker {
 			$url,
 			$options
 		);
-		
+
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
@@ -309,6 +309,16 @@ class PluginUpdateChecker {
 		}
 		update_option($this->optionName, $state);
 	}
+
+	/**
+	 * Reset update checker state - i.e. last check time, cached update data and so on.
+	 *
+	 * Call this when your plugin is being uninstalled, or if you want to
+	 * clear the update cache.
+	 */
+	public function resetUpdateState() {
+		delete_option($this->optionName);
+	}
 	
 	/**
 	 * Intercept plugins_api() calls that request information about our plugin and 
@@ -432,6 +442,7 @@ class PluginUpdateChecker {
 				'<div class="updated"><p>%s</p></div>',
 				apply_filters('puc_manual_check_message-' . $this->slug, $message, $update)
 			);
+			//todo: the update doesn't show up right away, why?
 		}
 	}
 
