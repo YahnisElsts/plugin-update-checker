@@ -442,7 +442,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @uses add_filter() This method is a convenience wrapper for add_filter().
 	 * 
-	 * @param callback $callback 
+	 * @param callable $callback
 	 * @return void
 	 */
 	function addQueryArgFilter($callback){
@@ -458,7 +458,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @uses add_filter() This method is a convenience wrapper for add_filter().
 	 * 
-	 * @param callback $callback
+	 * @param callable $callback
 	 * @return void
 	 */
 	function addHttpRequestArgFilter($callback){
@@ -477,7 +477,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @uses add_filter() This method is a convenience wrapper for add_filter().
 	 * 
-	 * @param callback $callback
+	 * @param callable $callback
 	 * @return void
 	 */
 	function addResultFilter($callback){
