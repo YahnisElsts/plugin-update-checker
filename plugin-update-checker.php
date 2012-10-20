@@ -74,7 +74,8 @@ class PluginUpdateChecker {
 		add_filter('transient_update_plugins', array($this,'injectUpdate')); //WP 2.8+
 
 		add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 4);
-		add_action('admin_notices', array($this, 'handleManualUpdateCheck'));
+		add_action('admin_init', array($this, 'handleManualCheck'));
+		add_action('admin_notices', array($this, 'displayManualCheckResult'));
 		
 		//Set up the periodic update checks
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
@@ -419,12 +420,11 @@ class PluginUpdateChecker {
 
 	/**
 	 * Check for updates when the user clicks the "Check for updates" link.
-	 *
-	 * You can change the result message by using the "puc_manual_check_message-$slug" filter.
+	 * @see self::addCheckForUpdatesLink()
 	 *
 	 * @return void
 	 */
-	public function handleManualUpdateCheck() {
+	public function handleManualCheck() {
 		$shouldCheck =
 			   isset($_GET['puc_check_for_updates'])
 			&& $_GET['puc_check_for_updates'] == $this->slug
@@ -433,16 +433,31 @@ class PluginUpdateChecker {
 
 		if ( $shouldCheck ) {
 			$update = $this->checkForUpdates();
-			if ( $update === null ) {
+			$status = ($update === null) ? 'no_update' : 'update_available';
+			wp_redirect(add_query_arg('puc_update_check_result', $status, admin_url('plugins.php')));
+		}
+	}
+
+	/**
+	 * Display the results of a manual update check.
+	 * @see self::handleManualCheck()
+	 *
+	 * You can change the result message by using the "puc_manual_check_message-$slug" filter.
+	 */
+	public function displayManualCheckResult() {
+		if ( isset($_GET['puc_update_check_result']) ) {
+			$status = strval($_GET['puc_update_check_result']);
+			if ( $status == 'no_update' ) {
 				$message = 'This plugin is up to date.';
-			} else {
+			} else if ( $status == 'update_available' ) {
 				$message = 'A new version of this plugin is available.';
+			} else {
+				$message = sprintf('Unknown update checker status "%s"', htmlentities($status));
 			}
 			printf(
 				'<div class="updated"><p>%s</p></div>',
-				apply_filters('puc_manual_check_message-' . $this->slug, $message, $update)
+				apply_filters('puc_manual_check_message-' . $this->slug, $message, $status)
 			);
-			//todo: the update doesn't show up right away, why?
 		}
 	}
 
