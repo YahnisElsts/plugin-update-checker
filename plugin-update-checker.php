@@ -67,11 +67,14 @@ class PluginUpdateChecker {
 	 */
 	function installHooks(){
 		//Override requests for plugin information
-		add_filter('plugins_api', array($this, 'injectInfo'), 10, 3);
+		add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 		
 		//Insert our update info into the update array maintained by WP
 		add_filter('site_transient_update_plugins', array($this,'injectUpdate')); //WP 3.0+
 		add_filter('transient_update_plugins', array($this,'injectUpdate')); //WP 2.8+
+
+		add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 4);
+		add_action('admin_notices', array($this, 'handleManualUpdateCheck'));
 		
 		//Set up the periodic update checks
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
@@ -225,7 +228,7 @@ class PluginUpdateChecker {
 	 * Check for plugin updates. 
 	 * The results are stored in the DB option specified in $optionName.
 	 * 
-	 * @return void
+	 * @return PluginUpdate|null
 	 */
 	function checkForUpdates(){
 		$installedVersion = $this->getInstalledVersion();
@@ -237,7 +240,7 @@ class PluginUpdateChecker {
 					E_USER_WARNING
 				);
 			}
-			return;
+			return null;
 		}
 
 		$state = $this->getUpdateState();
@@ -254,6 +257,8 @@ class PluginUpdateChecker {
 		
 		$state->update = $this->requestUpdate();
 		$this->setUpdateState($state);
+
+		return $this->getUpdate();
 	}
 	
 	/**
@@ -337,27 +342,98 @@ class PluginUpdateChecker {
 	 * @return StdClass Modified update list.
 	 */
 	function injectUpdate($updates){
-		/** @var StdClass $state */
-		$state = $this->getUpdateState();
-		
 		//Is there an update to insert?
-		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
+		$update = $this->getUpdate();
+		if ( !empty($update) ) {
 			//Let plugins filter the update info before it's passed on to WordPress.
-			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $state->update); /** @var PluginUpdate $update */
-			if ( !isset($update) ) {
-				return $updates;
-			}
-
-			//Only insert updates that are actually newer than the currently installed version.
-			$installedVersion = $this->getInstalledVersion();
-			if ( ($installedVersion !== null) && version_compare($update->version, $installedVersion, '>') ){
-				$updates->response[$this->pluginFile] = $update->toWpFormat();
-			}
+			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
+			$updates->response[$this->pluginFile] = $update->toWpFormat();
 		}
-				
+
 		return $updates;
 	}
-	
+
+	/**
+	 * Get the details of the currently available update, if any.
+	 *
+	 * If no updates are available, or if the last known update version is below or equal
+	 * to the currently installed version, this method will return NULL.
+	 *
+	 * Uses cached update data. To retrieve update information straight from
+	 * the metadata URL, call requestUpdate() instead.
+	 *
+	 * @return PluginUpdate|null
+	 */
+	public function getUpdate() {
+		$state = $this->getUpdateState(); /** @var StdClass $state */
+
+		//Is there an update available insert?
+		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
+			$update = $state->update;
+			//Check if the update is actually newer than the currently installed version.
+			$installedVersion = $this->getInstalledVersion();
+			if ( ($installedVersion !== null) && version_compare($update->version, $installedVersion, '>') ){
+				return $update;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
+	 * the new link will appear after the "Visit plugin site" link.
+	 *
+	 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
+	 * Returning an empty string from the filter will disable the link.
+	 *
+	 * @param array $pluginMeta Array of meta links.
+	 * @param string $pluginFile
+	 * @param array|null $pluginData Currently ignored.
+	 * @param string|null $status Currently ignored/
+	 * @return array
+	 */
+	public function addCheckForUpdatesLink($pluginMeta, $pluginFile, $pluginData = null, $status = null) {
+		if ( $pluginFile == $this->pluginFile && current_user_can('update_plugins') ) {
+			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, 'Check for updates');
+			$linkUrl = wp_nonce_url(
+				add_query_arg('puc_check_for_updates', $this->slug, admin_url('plugins.php')),
+				'puc_check_for_updates'
+			);
+			if ( !empty($linkText) ) {
+				$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
+			}
+		}
+		return $pluginMeta;
+	}
+
+	/**
+	 * Check for updates when the user clicks the "Check for updates" link.
+	 *
+	 * You can change the result message by using the "puc_manual_check_message-$slug" filter.
+	 *
+	 * @return void
+	 */
+	public function handleManualUpdateCheck() {
+		$shouldCheck =
+			   isset($_GET['puc_check_for_updates'])
+			&& $_GET['puc_check_for_updates'] == $this->slug
+			&& current_user_can('update_plugins')
+			&& check_admin_referer('puc_check_for_updates');
+
+		if ( $shouldCheck ) {
+			$update = $this->checkForUpdates();
+			if ( $update === null ) {
+				$message = 'This plugin is up to date.';
+			} else {
+				$message = 'A new version of this plugin is available.';
+			}
+			printf(
+				'<div class="updated"><p>%s</p></div>',
+				apply_filters('puc_manual_check_message-' . $this->slug, $message, $update)
+			);
+		}
+	}
+
 	/**
 	 * Register a callback for filtering query arguments. 
 	 * 
