@@ -288,7 +288,7 @@ class PluginUpdateChecker {
 	 * @return StdClass|null
 	 */
 	private function getUpdateState() {
-		$state = get_option($this->optionName);
+		$state = get_site_option($this->optionName);
 		if ( !empty($state) && isset($state->update) && !($state->update instanceof PluginUpdate) ){
 			$state->update = PluginUpdate::fromObject($state->update);
 		}
@@ -307,7 +307,7 @@ class PluginUpdateChecker {
 			$update = $state->update; /** @var PluginUpdate $update */
 			$state->update = $update->toStdClass();
 		}
-		update_option($this->optionName, $state);
+		update_site_option($this->optionName, $state);
 	}
 
 	/**
@@ -317,7 +317,7 @@ class PluginUpdateChecker {
 	 * clear the update cache.
 	 */
 	public function resetUpdateState() {
-		delete_option($this->optionName);
+		delete_site_option($this->optionName);
 	}
 	
 	/**
