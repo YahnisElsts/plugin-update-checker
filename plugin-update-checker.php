@@ -360,6 +360,8 @@ class PluginUpdateChecker {
 			//Let plugins filter the update info before it's passed on to WordPress.
 			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
 			$updates->response[$this->pluginFile] = $update->toWpFormat();
+		} else {
+			unset($updates->response[$this->pluginFile]);
 		}
 
 		return $updates;
