@@ -1,0 +1,19 @@
+.puc-debug-bar-panel pre {
+	margin-top: 0;
+}
+
+table.puc-debug-data th {
+	width: 11em;
+}
+
+.puc-ajax-response {
+	border: 1px solid #dfdfdf;
+	border-radius: 3px;
+	padding: 0.5em;
+	margin: 5px 0;
+	background-color: white;
+}
+
+.puc-ajax-nonce {
+	display: none;
+}

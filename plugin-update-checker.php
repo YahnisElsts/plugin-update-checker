@@ -29,6 +29,7 @@ class PluginUpdateChecker {
                                //and should be logged to the standard PHP error log.
 
 	private $cronHook = null;
+	private $debugBarPlugin = null;
 
 	/**
 	 * Class constructor.
@@ -57,7 +58,7 @@ class PluginUpdateChecker {
 			$this->optionName = 'external_updates-' . $this->slug;
 		}
 		
-		$this->installHooks();		
+		$this->installHooks();
 	}
 	
 	/**
@@ -99,7 +100,9 @@ class PluginUpdateChecker {
 		} else {
 			//Periodic checks are disabled.
 			wp_clear_scheduled_hook($this->cronHook);
-		}		
+		}
+
+		add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
 	}
 	
 	/**
@@ -126,6 +129,15 @@ class PluginUpdateChecker {
 	 */
 	function _removeUpdaterCron(){
 		wp_clear_scheduled_hook($this->cronHook);
+	}
+
+	/**
+	 * Get the name of the update checker's WP-cron hook. Mostly useful for debugging.
+	 *
+	 * @return string
+	 */
+	public function getCronHookName() {
+		return $this->cronHook;
 	}
 	
 	/**
@@ -289,7 +301,7 @@ class PluginUpdateChecker {
 	 *  
 	 * @return StdClass|null
 	 */
-	private function getUpdateState() {
+	public function getUpdateState() {
 		$state = get_site_option($this->optionName);
 		if ( !empty($state) && isset($state->update) && !($state->update instanceof PluginUpdate) ){
 			$state->update = PluginUpdate::fromObject($state->update);
@@ -528,6 +540,16 @@ class PluginUpdateChecker {
 	 */
 	public function addFilter($tag, $callback, $priority = 10, $acceptedArgs = 1) {
 		add_filter('puc_' . $tag . '-' . $this->slug, $callback, $priority, $acceptedArgs);
+	}
+
+	/**
+	 * Initialize our Debug Bar plugin/add-on thingy.
+	 */
+	public function initDebugBarPanel() {
+		if ( class_exists('Debug_Bar') ) {
+			require_once dirname(__FILE__) . '/debug-bar-support.php';
+			$this->debugBarPlugin = new PucDebugBarPlugin($this);
+		}
 	}
 }
 	
