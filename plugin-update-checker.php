@@ -3,7 +3,7 @@
  * Plugin Update Checker Library 1.1
  * http://w-shadow.com/
  * 
- * Copyright 2011 Janis Elsts
+ * Copyright 2012 Janis Elsts
  * Licensed under the GNU GPL license.
  * http://www.gnu.org/licenses/gpl.html
  */
@@ -14,7 +14,7 @@ if ( !class_exists('PluginUpdateChecker') ):
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2011
+ * @copyright 2012
  * @version 1.1
  * @access public
  */
@@ -332,7 +332,7 @@ class PluginUpdateChecker {
 	 * @param array|object $args
 	 * @return mixed
 	 */
-	function injectInfo($result, $action = null, $args = null){
+	public function injectInfo($result, $action = null, $args = null){
     	$relevant = ($action == 'plugin_information') && isset($args->slug) && ($args->slug == $this->slug);
 		if ( !$relevant ){
 			return $result;
@@ -353,7 +353,7 @@ class PluginUpdateChecker {
 	 * @param StdClass $updates Update list.
 	 * @return StdClass Modified update list.
 	 */
-	function injectUpdate($updates){
+	public function injectUpdate($updates){
 		//Is there an update to insert?
 		$update = $this->getUpdate();
 		if ( !empty($update) ) {
@@ -538,7 +538,7 @@ if ( !class_exists('PluginInfo') ):
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
- * @copyright 2010
+ * @copyright 2012
  * @version 1.0
  * @access public
  */
@@ -658,8 +658,8 @@ if ( !class_exists('PluginUpdate') ):
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
- * @copyright 2010
- * @version 1.0
+ * @copyright 2012
+ * @version 1.1
  * @access public
  */
 class PluginUpdate {
