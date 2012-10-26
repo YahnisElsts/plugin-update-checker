@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 1.1
+ * Plugin Update Checker Library 1.2
  * http://w-shadow.com/
  * 
  * Copyright 2012 Janis Elsts
@@ -15,7 +15,7 @@ if ( !class_exists('PluginUpdateChecker') ):
  * 
  * @author Janis Elsts
  * @copyright 2012
- * @version 1.1
+ * @version 1.2
  * @access public
  */
 class PluginUpdateChecker {
@@ -660,7 +660,7 @@ if ( !class_exists('PluginUpdate') ):
  * 
  * @author Janis Elsts
  * @copyright 2012
- * @version 1.1
+ * @version 1.2
  * @access public
  */
 class PluginUpdate {
