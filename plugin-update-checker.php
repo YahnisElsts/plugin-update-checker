@@ -690,7 +690,7 @@ class PluginUpdate {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Create a new instance of PluginUpdate based on an instance of PluginInfo.
 	 * Basically, this just copies a subset of fields from one object to another.
