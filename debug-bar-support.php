@@ -60,9 +60,7 @@ class PucDebugBarPlugin {
 		$update = $this->updateChecker->checkForUpdates();
 		if ( $update !== null ) {
 			echo "An update is available:";
-			echo '<pre>';
-			print_r($update);
-			echo '</pre>';
+			echo '<pre>', htmlentities(print_r($update, true)), '</pre>';
 		} else {
 			echo 'No updates found.';
 		}
@@ -80,9 +78,7 @@ class PucDebugBarPlugin {
 		$info = $this->updateChecker->requestInfo();
 		if ( $info !== null ) {
 			echo 'Successfully retrieved plugin info from the metadata URL:';
-			echo '<pre>';
-			print_r($info);
-			echo '</pre>';
+			echo '<pre>', htmlentities(print_r($info, true)), '</pre>';
 		} else {
 			echo 'Failed to retrieve plugin info from the metadata URL.';
 		}
