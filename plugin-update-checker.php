@@ -40,7 +40,7 @@ class PluginUpdateChecker {
 	 * @param integer $checkPeriod How often to check for updates (in hours). Defaults to checking every 12 hours. Set to 0 to disable automatic update checks.
 	 * @param string $optionName Where to store book-keeping info about update checks. Defaults to 'external_updates-$slug'. 
 	 */
-	function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
+	public function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
 		$this->metadataUrl = $metadataUrl;
 		$this->pluginFile = plugin_basename($pluginFile);
 		$this->checkPeriod = $checkPeriod;
@@ -67,7 +67,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @return void
 	 */
-	function installHooks(){
+	protected function installHooks(){
 		//Override requests for plugin information
 		add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 		
@@ -111,7 +111,7 @@ class PluginUpdateChecker {
 	 * @param array $schedules
 	 * @return array
 	 */
-	function _addCustomSchedule($schedules){
+	public function _addCustomSchedule($schedules){
 		if ( $this->checkPeriod && ($this->checkPeriod > 0) ){
 			$scheduleName = 'every' . $this->checkPeriod . 'hours';
 			$schedules[$scheduleName] = array(
@@ -127,7 +127,7 @@ class PluginUpdateChecker {
 	 *
 	 * @return void
 	 */
-	function _removeUpdaterCron(){
+	public function _removeUpdaterCron(){
 		wp_clear_scheduled_hook($this->cronHook);
 	}
 
@@ -148,7 +148,7 @@ class PluginUpdateChecker {
 	 * @param array $queryArgs Additional query arguments to append to the request. Optional.
 	 * @return PluginInfo
 	 */
-	function requestInfo($queryArgs = array()){
+	public function requestInfo($queryArgs = array()){
 		//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
 		$installedVersion = $this->getInstalledVersion();
 		$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
@@ -201,7 +201,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @return PluginUpdate An instance of PluginUpdate, or NULL when no updates are available.
 	 */
-	function requestUpdate(){
+	public function requestUpdate(){
 		//For the sake of simplicity, this function just calls requestInfo() 
 		//and transforms the result accordingly.
 		$pluginInfo = $this->requestInfo(array('checking_for_updates' => '1'));
@@ -216,7 +216,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @return string Version number.
 	 */
-	function getInstalledVersion(){
+	public function getInstalledVersion(){
 		if ( !function_exists('get_plugins') ){
 			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 		}
@@ -244,7 +244,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @return PluginUpdate|null
 	 */
-	function checkForUpdates(){
+	public function checkForUpdates(){
 		$installedVersion = $this->getInstalledVersion();
 		//Fail silently if we can't find the plugin or read its header.
 		if ( $installedVersion === null ) {
@@ -280,7 +280,7 @@ class PluginUpdateChecker {
 	 * 
 	 * @return void
 	 */
-	function maybeCheckForUpdates(){
+	public function maybeCheckForUpdates(){
 		if ( empty($this->checkPeriod) ){
 			return;
 		}
@@ -487,7 +487,7 @@ class PluginUpdateChecker {
 	 * @param callable $callback
 	 * @return void
 	 */
-	function addQueryArgFilter($callback){
+	public function addQueryArgFilter($callback){
 		add_filter('puc_request_info_query_args-'.$this->slug, $callback);
 	}
 	
@@ -503,7 +503,7 @@ class PluginUpdateChecker {
 	 * @param callable $callback
 	 * @return void
 	 */
-	function addHttpRequestArgFilter($callback){
+	public function addHttpRequestArgFilter($callback){
 		add_filter('puc_request_info_options-'.$this->slug, $callback);
 	}
 	
@@ -522,7 +522,7 @@ class PluginUpdateChecker {
 	 * @param callable $callback
 	 * @return void
 	 */
-	function addResultFilter($callback){
+	public function addResultFilter($callback){
 		add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
 	}
 
