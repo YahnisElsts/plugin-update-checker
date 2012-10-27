@@ -11,7 +11,11 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 
 	public function __construct($updateChecker) {
 		$this->updateChecker = $updateChecker;
-		$title = sprintf('PUC (%s)', $this->updateChecker->slug);
+		$title = sprintf(
+			'<span id="puc-debug-menu-link-%s">PUC (%s)</span>',
+			esc_attr($this->updateChecker->slug),
+			$this->updateChecker->slug
+		);
 		parent::Debug_Bar_Panel($title);
 	}
 
