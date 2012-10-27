@@ -41,12 +41,12 @@ jQuery(function($) {
 		var target = panel.closest('.debug-menu-target');
 
 		//Change the panel wrapper ID.
-		target.attr('id', 'debug-menu-target-' + slug);
+		target.attr('id', 'debug-menu-target-puc-' + slug);
 
 		//Change the menu link ID as well and point it at the new target ID.
 		$('#puc-debug-menu-link-' + panel.data('slug'))
 			.closest('.debug-menu-link')
-			.attr('id', 'debug-menu-link-' + slug)
+			.attr('id', 'debug-menu-link-puc-' + slug)
 			.attr('href', '#' + target.attr('id'));
 	});
 });
