@@ -372,8 +372,12 @@ class PluginUpdateChecker {
 		if ( !empty($update) ) {
 			//Let plugins filter the update info before it's passed on to WordPress.
 			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
+			if ( !is_object($updates) ) {
+				$updates = new StdClass();
+				$updates->response = array();
+			}
 			$updates->response[$this->pluginFile] = $update->toWpFormat();
-		} else {
+		} else if ( isset($updates, $updates->response) ) {
 			unset($updates->response[$this->pluginFile]);
 		}
 
