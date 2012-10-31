@@ -34,7 +34,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		$this->row('Slug', htmlentities($this->updateChecker->slug));
 		$this->row('DB option', htmlentities($this->updateChecker->optionName));
 
-		$requestInfoButton = get_submit_button('Request Info', 'secondary', 'puc-request-info-button', false);
+		$requestInfoButton = function_exists('get_submit_button') ? get_submit_button('Request Info', 'secondary', 'puc-request-info-button', false) : '';
 		$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $responseBox);
 
 		if ( $this->updateChecker->checkPeriod > 0 ) {
@@ -47,7 +47,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		echo '<h3>Status</h3>';
 		echo '<table class="widefat puc-debug-data">';
 		$state = $this->updateChecker->getUpdateState();
-		$checkNowButton = get_submit_button('Check Now', 'secondary', 'puc-check-now-button', false);
+		$checkNowButton = function_exists('get_submit_button') ? get_submit_button('Check Now', 'secondary', 'puc-check-now-button', false) : '';
 
 		if ( isset($state, $state->lastCheck) ) {
 			$this->row('Last check', $this->formatTimeWithDelta($state->lastCheck) . ' ' . $checkNowButton . $responseBox);
@@ -97,7 +97,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 	}
 
 	private function formatTimestamp($unixTime) {
-		return gmdate('Y-m-d H:i:s', $unixTime + (get_option('gmt_offset') * HOUR_IN_SECONDS));
+		return gmdate('Y-m-d H:i:s', $unixTime + (get_option('gmt_offset') * 3600));
 	}
 
 	private function row($name, $value) {
