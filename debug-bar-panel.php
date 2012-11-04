@@ -62,6 +62,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 			$this->row('Checked version', htmlentities($state->checkedVersion));
 			$this->row('Cached update', $state->update);
 		}
+		$this->row('Update checker class', htmlentities(get_class($this->updateChecker)));
 		echo '</table>';
 
 		$update = $this->updateChecker->getUpdate();
