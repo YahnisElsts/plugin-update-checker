@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 1.2
+ * Plugin Update Checker Library 1.3
  * http://w-shadow.com/
  * 
  * Copyright 2012 Janis Elsts
@@ -8,8 +8,8 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-if ( !class_exists('PluginUpdateChecker') ):
-	
+if ( !class_exists('PluginUpdateChecker_1_3') ):
+
 /**
  * A custom plugin update checker. 
  * 
@@ -18,7 +18,7 @@ if ( !class_exists('PluginUpdateChecker') ):
  * @version 1.2
  * @access public
  */
-class PluginUpdateChecker {
+class PluginUpdateChecker_1_3 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory.
 	public $slug = '';        //Plugin slug.
@@ -177,7 +177,7 @@ class PluginUpdateChecker {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo::fromJson($result['body'], $this->debugMode);
+			$pluginInfo = PluginInfo_1_3::fromJson($result['body'], $this->debugMode);
 		} else if ( $this->debugMode ) {
 			$message = sprintf("The URL %s does not point to a valid plugin metadata file. ", $url);
 			if ( is_wp_error($result) ) {
@@ -208,7 +208,7 @@ class PluginUpdateChecker {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate::fromPluginInfo($pluginInfo);
+		return PluginUpdate_1_3::fromPluginInfo($pluginInfo);
 	}
 	
 	/**
@@ -303,8 +303,8 @@ class PluginUpdateChecker {
 	 */
 	public function getUpdateState() {
 		$state = get_site_option($this->optionName);
-		if ( !empty($state) && isset($state->update) && !($state->update instanceof PluginUpdate) ){
-			$state->update = PluginUpdate::fromObject($state->update);
+		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
+			$state->update = PluginUpdate_1_3::fromObject($state->update);
 		}
 		return $state;
 	}
@@ -317,7 +317,7 @@ class PluginUpdateChecker {
 	 * @return void
 	 */
 	private function setUpdateState($state) {
-		if ( isset($state->update) && ($state->update instanceof PluginUpdate) ) {
+		if ( isset($state->update) && is_object($state->update) && method_exists($state->update, 'toStdClass') ) {
 			$update = $state->update; /** @var PluginUpdate $update */
 			$state->update = $update->toStdClass();
 		}
@@ -556,20 +556,20 @@ class PluginUpdateChecker {
 		}
 	}
 }
-	
+
 endif;
 
-if ( !class_exists('PluginInfo') ):
+if ( !class_exists('PluginInfo_1_3') ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
  * @copyright 2012
- * @version 1.0
+ * @version 1.3
  * @access public
  */
-class PluginInfo {
+class PluginInfo_1_3 {
 	//Most fields map directly to the contents of the plugin's info.json file.
 	//See the relevant docs for a description of their meaning.  
 	public $name;
@@ -626,7 +626,7 @@ class PluginInfo {
 			return null;
 		}
 		
-		$info = new PluginInfo();
+		$info = new self();
 		foreach(get_object_vars($apiResponse) as $key => $value){
 			$info->$key = $value;
 		}
@@ -679,7 +679,7 @@ class PluginInfo {
 	
 endif;
 
-if ( !class_exists('PluginUpdate') ):
+if ( !class_exists('PluginUpdate_1_3') ):
 
 /**
  * A simple container class for holding information about an available update.
@@ -689,7 +689,7 @@ if ( !class_exists('PluginUpdate') ):
  * @version 1.2
  * @access public
  */
-class PluginUpdate {
+class PluginUpdate_1_3 {
 	public $id = 0;
 	public $slug;
 	public $version;
@@ -709,9 +709,9 @@ class PluginUpdate {
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo::fromJson($json, $triggerErrors);
+		$pluginInfo = PluginInfo_1_3::fromJson($json, $triggerErrors);
 		if ( $pluginInfo != null ) {
-			return PluginUpdate::fromPluginInfo($pluginInfo);
+			return self::fromPluginInfo($pluginInfo);
 		} else {
 			return null;
 		}
@@ -736,7 +736,7 @@ class PluginUpdate {
 	 * @return PluginUpdate The new copy.
 	 */
 	public static function fromObject($object) {
-		$update = new PluginUpdate();
+		$update = new self();
 		foreach(self::$fields as $field){
 			$update->$field = $object->$field;
 		}
@@ -782,3 +782,112 @@ class PluginUpdate {
 }
 	
 endif;
+
+if ( !class_exists('PucFactory') ):
+
+/**
+ * A factory that builds instances of other classes from this library.
+ *
+ * When multiple versions of the same class have been loaded (e.g. PluginUpdateChecker 1.2
+ * and 1.3), this factory will always use the latest available version. Register class
+ * versions by calling {@link PucFactory::addVersion()}.
+ *
+ * At the moment it can only build instances of the PluginUpdateChecker class. Other classes
+ * are intended mainly for internal use and refer directly to specific implementations. If you
+ * want to instantiate one of them anyway, you can use {@link PucFactory::getLatestClassVersion()}
+ * to get the class name and then create it with <code>new $class(...)</code>.
+ */
+class PucFactory {
+	protected static $classVersions = array();
+	protected static $sorted = false;
+
+	/**
+	 * Create a new instance of PluginUpdateChecker.
+	 *
+	 * @see PluginUpdateChecker::__construct()
+	 *
+	 * @param $metadataUrl
+	 * @param $pluginFile
+	 * @param string $slug
+	 * @param int $checkPeriod
+	 * @param string $optionName
+	 * @return PluginUpdateChecker
+	 */
+	public static function buildUpdateChecker($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '') {
+		$class = self::getLatestClassVersion('PluginUpdateChecker');
+		return new $class($metadataUrl, $pluginFile, $slug, $checkPeriod, $optionName);
+	}
+
+	/**
+	 * Get the specific class name for the latest available version of a class.
+	 *
+	 * @param string $class
+	 * @return string|null
+	 */
+	public static function getLatestClassVersion($class) {
+		if ( !self::$sorted ) {
+			self::sortVersions();
+		}
+
+		if ( isset(self::$classVersions[$class]) ) {
+			return reset(self::$classVersions[$class]);
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Sort available class versions in descending order (i.e. newest first).
+	 */
+	protected static function sortVersions() {
+		foreach ( self::$classVersions as $class => $versions ) {
+			uksort($versions, array(__CLASS__, 'compareVersions'));
+			self::$classVersions[$class] = $versions;
+		}
+		self::$sorted = true;
+	}
+
+	protected static function compareVersions($a, $b) {
+		return -version_compare($a, $b);
+	}
+
+	/**
+	 * Register a version of a class.
+	 *
+	 * @access private This method is only for internal use by the library.
+	 *
+	 * @param string $generalClass Class name without version numbers, e.g. 'PluginUpdateChecker'.
+	 * @param string $versionedClass Actual class name, e.g. 'PluginUpdateChecker_1_2'.
+	 * @param string $version Version number, e.g. '1.2'.
+	 */
+	public static function addVersion($generalClass, $versionedClass, $version) {
+		if ( !isset(self::$classVersions[$generalClass]) ) {
+			self::$classVersions[$generalClass] = array();
+		}
+		self::$classVersions[$generalClass][$version] = $versionedClass;
+		self::$sorted = false;
+	}
+}
+
+endif;
+
+//Register classes defined in this file with the factory.
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_3', '1.3');
+PucFactory::addVersion('PluginUpdate', 'PluginUpdate_1_3', '1.3');
+PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
+
+/**
+ * Create non-versioned variants of the update checker classes. This allows for backwards
+ * compatibility with versions that did not use a factory, and it simplifies doc-comments.
+ */
+if ( !class_exists('PluginUpdateChecker') ) {
+	class PluginUpdateChecker extends PluginUpdateChecker_1_3 { }
+}
+
+if ( !class_exists('PluginUpdate') ) {
+	class PluginUpdate extends PluginUpdate_1_3 {}
+}
+
+if ( !class_exists('PluginInfo') ) {
+	class PluginInfo extends PluginInfo_1_3 {}
+}
