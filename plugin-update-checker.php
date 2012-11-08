@@ -427,7 +427,13 @@ class PluginUpdateChecker_1_3 {
 		if ( $pluginFile == $this->pluginFile && current_user_can('update_plugins') ) {
 			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, 'Check for updates');
 			$linkUrl = wp_nonce_url(
-				add_query_arg('puc_check_for_updates', $this->slug, admin_url('plugins.php')),
+				add_query_arg(
+					array(
+						'puc_check_for_updates' => 1,
+						'puc_slug' => $this->slug,
+					),
+					admin_url('plugins.php')
+				),
 				'puc_check_for_updates'
 			);
 			if ( !empty($linkText) ) {
@@ -445,15 +451,21 @@ class PluginUpdateChecker_1_3 {
 	 */
 	public function handleManualCheck() {
 		$shouldCheck =
-			   isset($_GET['puc_check_for_updates'])
-			&& $_GET['puc_check_for_updates'] == $this->slug
+			   isset($_GET['puc_check_for_updates'], $_GET['puc_slug'])
+			&& $_GET['puc_slug'] == $this->slug
 			&& current_user_can('update_plugins')
 			&& check_admin_referer('puc_check_for_updates');
 
 		if ( $shouldCheck ) {
 			$update = $this->checkForUpdates();
 			$status = ($update === null) ? 'no_update' : 'update_available';
-			wp_redirect(add_query_arg('puc_update_check_result', $status, admin_url('plugins.php')));
+			wp_redirect(add_query_arg(
+					array(
+					     'puc_update_check_result' => $status,
+					     'puc_slug' => $this->slug,
+					),
+					admin_url('plugins.php')
+			));
 		}
 	}
 
@@ -464,7 +476,7 @@ class PluginUpdateChecker_1_3 {
 	 * You can change the result message by using the "puc_manual_check_message-$slug" filter.
 	 */
 	public function displayManualCheckResult() {
-		if ( isset($_GET['puc_update_check_result']) ) {
+		if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->slug) ) {
 			$status = strval($_GET['puc_update_check_result']);
 			if ( $status == 'no_update' ) {
 				$message = 'This plugin is up to date.';
