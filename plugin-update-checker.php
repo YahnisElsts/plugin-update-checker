@@ -302,7 +302,11 @@ class PluginUpdateChecker_1_3 {
 	 * @return StdClass|null
 	 */
 	public function getUpdateState() {
-		$state = get_site_option($this->optionName);
+		$state = get_site_option($this->optionName, null);
+		if ( empty($state) || !is_object($state)) {
+			$state = null;
+		}
+
 		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
 			$state->update = PluginUpdate_1_3::fromObject($state->update);
 		}
