@@ -77,7 +77,7 @@ class PluginUpdateChecker_1_3 {
 
 		add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 4);
 		add_action('admin_init', array($this, 'handleManualCheck'));
-		add_action('admin_notices', array($this, 'displayManualCheckResult'));
+		add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
 		
 		//Set up the periodic update checks
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
@@ -424,22 +424,23 @@ class PluginUpdateChecker_1_3 {
 	 * @param array $pluginMeta Array of meta links.
 	 * @param string $pluginFile
 	 * @param array|null $pluginData Currently ignored.
-	 * @param string|null $status Currently ignored/
+	 * @param string|null $status Currently ignored.
 	 * @return array
 	 */
 	public function addCheckForUpdatesLink($pluginMeta, $pluginFile, $pluginData = null, $status = null) {
 		if ( $pluginFile == $this->pluginFile && current_user_can('update_plugins') ) {
-			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, 'Check for updates');
 			$linkUrl = wp_nonce_url(
 				add_query_arg(
 					array(
 						'puc_check_for_updates' => 1,
 						'puc_slug' => $this->slug,
 					),
-					admin_url('plugins.php')
+					is_network_admin() ? network_admin_url('plugins.php') : admin_url('plugins.php')
 				),
 				'puc_check_for_updates'
 			);
+
+			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, 'Check for updates');
 			if ( !empty($linkText) ) {
 				$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
 			}
@@ -468,7 +469,7 @@ class PluginUpdateChecker_1_3 {
 					     'puc_update_check_result' => $status,
 					     'puc_slug' => $this->slug,
 					),
-					admin_url('plugins.php')
+					is_network_admin() ? network_admin_url('plugins.php') : admin_url('plugins.php')
 			));
 		}
 	}
