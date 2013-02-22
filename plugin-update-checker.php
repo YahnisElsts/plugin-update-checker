@@ -84,7 +84,7 @@ class PluginUpdateChecker_1_3 {
 		if ( $this->checkPeriod > 0 ){
 			
 			//Trigger the check via Cron
-			add_filter('cron_schedules', array($this, '_addCustomSchedule'));
+			add_filter('cron_schedules', array($this, '_addCustomSchedule'), 20);
 			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 				$scheduleName = 'every' . $this->checkPeriod . 'hours';
 				wp_schedule_event(time(), $scheduleName, $this->cronHook);
@@ -118,7 +118,7 @@ class PluginUpdateChecker_1_3 {
 				'interval' => $this->checkPeriod * 3600, 
 				'display' => sprintf('Every %d hours', $this->checkPeriod),
 			);
-		}		
+		}
 		return $schedules;
 	}
 
@@ -193,12 +193,12 @@ class PluginUpdateChecker_1_3 {
 		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
 		return $pluginInfo;
 	}
-	
+
 	/**
 	 * Retrieve the latest update (if any) from the configured API endpoint.
-	 * 
+	 *
 	 * @uses PluginUpdateChecker::requestInfo()
-	 * 
+	 *
 	 * @return PluginUpdate An instance of PluginUpdate, or NULL when no updates are available.
 	 */
 	public function requestUpdate(){
@@ -237,11 +237,11 @@ class PluginUpdateChecker_1_3 {
 			return null;
 		}
 	}
-	
+
 	/**
-	 * Check for plugin updates. 
+	 * Check for plugin updates.
 	 * The results are stored in the DB option specified in $optionName.
-	 * 
+	 *
 	 * @return PluginUpdate|null
 	 */
 	public function checkForUpdates(){
@@ -285,12 +285,12 @@ class PluginUpdateChecker_1_3 {
 			return;
 		}
 		$state = $this->getUpdateState();
-		
+
 		$shouldCheck =
 			empty($state) ||
-			!isset($state->lastCheck) || 
+			!isset($state->lastCheck) ||
 			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 );
-		
+
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
 		}
