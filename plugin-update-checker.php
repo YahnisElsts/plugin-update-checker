@@ -83,10 +83,23 @@ class PluginUpdateChecker_1_3 {
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
 		if ( $this->checkPeriod > 0 ){
 			
-			//Trigger the check via Cron
-			add_filter('cron_schedules', array($this, '_addCustomSchedule'), 20);
-			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
+			//Trigger the check via Cron.
+			//Try to use one of the default schedules if possible as it's less likely to conflict
+			//with other plugins and their custom schedules.
+			$defaultSchedules = array(
+				1  => 'hourly',
+				12 => 'twicedaily',
+				24 => 'daily',
+			);
+			if ( array_key_exists($this->checkPeriod, $defaultSchedules) ) {
+				$scheduleName = $defaultSchedules[$this->checkPeriod];
+			} else {
+				//Use a custom cron schedule.
 				$scheduleName = 'every' . $this->checkPeriod . 'hours';
+				add_filter('cron_schedules', array($this, '_addCustomSchedule'));
+			}
+
+			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 				wp_schedule_event(time(), $scheduleName, $this->cronHook);
 			}
 			add_action($this->cronHook, array($this, 'checkForUpdates'));
