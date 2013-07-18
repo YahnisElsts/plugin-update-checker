@@ -1,24 +1,24 @@
 <?php
 /**
- * Plugin Update Checker Library 1.3
+ * Plugin Update Checker Library 1.3.1
  * http://w-shadow.com/
  * 
- * Copyright 2012 Janis Elsts
+ * Copyright 2013 Janis Elsts
  * Licensed under the GNU GPL license.
  * http://www.gnu.org/licenses/gpl.html
  */
 
-if ( !class_exists('PluginUpdateChecker_1_3') ):
+if ( !class_exists('PluginUpdateChecker_1_3_1') ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2012
- * @version 1.2
+ * @copyright 2013
+ * @version 1.3.1
  * @access public
  */
-class PluginUpdateChecker_1_3 {
+class PluginUpdateChecker_1_3_1 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory.
 	public $slug = '';        //Plugin slug.
@@ -115,7 +115,11 @@ class PluginUpdateChecker_1_3 {
 			wp_clear_scheduled_hook($this->cronHook);
 		}
 
-		add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
+		if ( did_action('plugins_loaded') ) {
+			$this->initDebugBarPanel();
+		} else {
+			add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
+		}
 	}
 	
 	/**
@@ -902,7 +906,7 @@ class PucFactory {
 endif;
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_3', '1.3');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_3_1', '1.3.1');
 PucFactory::addVersion('PluginUpdate', 'PluginUpdate_1_3', '1.3');
 PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
 
@@ -911,7 +915,7 @@ PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker') ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_1_3 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_1_3_1 { }
 }
 
 if ( !class_exists('PluginUpdate') ) {
