@@ -109,6 +109,9 @@ class PluginUpdateChecker_1_3_1 {
 			//In case Cron is disabled or unreliable, we also manually trigger 
 			//the periodic checks while the user is browsing the Dashboard. 
 			add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
+
+			//Like WordPress itself, we check more often on certain pages.
+			add_action( 'load-update-core.php', array($this, 'maybeCheckForUpdates') );
 			
 		} else {
 			//Periodic checks are disabled.
@@ -293,7 +296,8 @@ class PluginUpdateChecker_1_3_1 {
 	}
 	
 	/**
-	 * Check for updates only if the configured check interval has already elapsed.
+	 * Check for updates if the configured check interval has already elapsed.
+	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates".
 	 * 
 	 * @return void
 	 */
@@ -303,10 +307,17 @@ class PluginUpdateChecker_1_3_1 {
 		}
 		$state = $this->getUpdateState();
 
+		//Check more often when the user visits Dashboard -> Updates.
+		if ( current_filter() == 'load-update-core.php' ) {
+			$timeout = 60;
+		} else {
+			$timeout = $this->checkPeriod * 3600;
+		}
+
 		$shouldCheck =
 			empty($state) ||
 			!isset($state->lastCheck) ||
-			( (time() - $state->lastCheck) >= $this->checkPeriod*3600 );
+			( (time() - $state->lastCheck) >= $timeout );
 
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
