@@ -37,7 +37,7 @@ class PucDebugBarPlugin {
 			'puc-debug-bar-style',
 			plugins_url( "/css/puc-debug-bar.css", __FILE__ ),
 			array('debug-bar'),
-			'20121026-3'
+			'20130927'
 		);
 
 		wp_enqueue_script(

@@ -29,7 +29,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		$responseBox = '<div class="puc-ajax-response" style="display: none;"></div>';
 
 		echo '<h3>Configuration</h3>';
-		echo '<table class="widefat puc-debug-data">';
+		echo '<table class="puc-debug-data">';
 		$this->row('Plugin file', htmlentities($this->updateChecker->pluginFile));
 		$this->row('Slug', htmlentities($this->updateChecker->slug));
 		$this->row('DB option', htmlentities($this->updateChecker->optionName));
@@ -45,7 +45,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		echo '</table>';
 
 		echo '<h3>Status</h3>';
-		echo '<table class="widefat puc-debug-data">';
+		echo '<table class="puc-debug-data">';
 		$state = $this->updateChecker->getUpdateState();
 		$checkNowButton = function_exists('get_submit_button') ? get_submit_button('Check Now', 'secondary', 'puc-check-now-button', false) : '';
 
@@ -68,7 +68,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		$update = $this->updateChecker->getUpdate();
 		if ( $update !== null ) {
 			echo '<h3>An Update Is Available</h3>';
-			echo '<table class="widefat puc-debug-data">';
+			echo '<table class="puc-debug-data">';
 			$fields = array('version', 'download_url', 'slug', 'homepage', 'upgrade_notice');
 			foreach($fields as $field) {
 				$this->row(ucwords(str_replace('_', ' ', $field)), htmlentities($update->$field));
