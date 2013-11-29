@@ -8,17 +8,17 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-if ( !class_exists('PluginUpdateChecker_1_3_2') ):
+if ( !class_exists('PluginUpdateChecker_1_4') ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
  * @copyright 2013
- * @version 1.3.1
+ * @version 1.4
  * @access public
  */
-class PluginUpdateChecker_1_3_2 {
+class PluginUpdateChecker_1_4 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
@@ -28,6 +28,9 @@ class PluginUpdateChecker_1_3_2 {
 
 	public $debugMode = false; //Set to TRUE to enable error reporting. Errors are raised using trigger_error()
                                //and should be logged to the standard PHP error log.
+
+	public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
+	public $throttledCheckPeriod = 72;
 
 	private $cronHook = null;
 	private $debugBarPlugin = null;
@@ -109,7 +112,7 @@ class PluginUpdateChecker_1_3_2 {
 			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 				wp_schedule_event(time(), $scheduleName, $this->cronHook);
 			}
-			add_action($this->cronHook, array($this, 'checkForUpdates'));
+			add_action($this->cronHook, array($this, 'maybeCheckForUpdates'));
 			
 			register_deactivation_hook($this->pluginFile, array($this, '_removeUpdaterCron'));
 			
@@ -324,23 +327,33 @@ class PluginUpdateChecker_1_3_2 {
 	
 	/**
 	 * Check for updates if the configured check interval has already elapsed.
-	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates".
-	 * 
+	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
+	 *
+	 * This method must be declared public to be usable as a hook callback, but calling it directly is not recommended.
+	 *
 	 * @return void
 	 */
 	public function maybeCheckForUpdates(){
 		if ( empty($this->checkPeriod) ){
 			return;
 		}
-		$state = $this->getUpdateState();
 
-		//Check more often when the user visits Dashboard -> Updates.
 		if ( current_filter() == 'load-update-core.php' ) {
+			//Check more often when the user visits Dashboard -> Updates.
 			$timeout = 60;
+		} else if ( $this->throttleRedundantChecks && ($this->getUpdate() !== null) ) {
+			//Check less frequently if it's already known that an update is available.
+			$timeout = $this->throttledCheckPeriod * 3600;
+		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
+			//Check every time if triggered by cron and throttling is disabled. Our cron event is
+			//scheduled to run every $checkPeriod hours, so we don't need to check how much time
+			//has passed since the last check.
+			$timeout = 0;
 		} else {
 			$timeout = $this->checkPeriod * 3600;
 		}
 
+		$state = $this->getUpdateState();
 		$shouldCheck =
 			empty($state) ||
 			!isset($state->lastCheck) ||
@@ -954,7 +967,7 @@ class PucFactory {
 endif;
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_3_2', '1.3.2');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_4', '1.4');
 PucFactory::addVersion('PluginUpdate', 'PluginUpdate_1_3', '1.3');
 PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
 
@@ -963,7 +976,7 @@ PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker') ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_1_3_2 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_1_4 { }
 }
 
 if ( !class_exists('PluginUpdate') ) {
