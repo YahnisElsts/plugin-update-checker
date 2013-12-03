@@ -329,9 +329,14 @@ class PluginUpdateChecker_1_4 {
 	 * Check for updates if the configured check interval has already elapsed.
 	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
 	 *
-	 * This method must be declared public to be usable as a hook callback, but calling it directly is not recommended.
+	 * You can override the default behaviour by using the "puc_check_now-$slug" filter.
+	 * The filter callback will be passed three parameters:
+	 *     - Current decision. TRUE = check updates now, FALSE = don't check now.
+	 *     - Last check time as a Unix timestamp.
+	 *     - Configured check period in hours.
+	 * Return TRUE to check for updates immediately, or FALSE to cancel.
 	 *
-	 * @return void
+	 * This method is declared public because it's a hook callback. Calling it directly is not recommended.
 	 */
 	public function maybeCheckForUpdates(){
 		if ( empty($this->checkPeriod) ){
@@ -358,6 +363,14 @@ class PluginUpdateChecker_1_4 {
 			empty($state) ||
 			!isset($state->lastCheck) ||
 			( (time() - $state->lastCheck) >= $timeout );
+
+		//Let plugin authors substitute their own algorithm.
+		$shouldCheck = apply_filters(
+			'puc_check_now-' . $this->slug,
+			$shouldCheck,
+			(!empty($state) && isset($state->lastCheck)) ? $state->lastCheck : 0,
+			$this->checkPeriod
+		);
 
 		if ( $shouldCheck ){
 			$this->checkForUpdates();
