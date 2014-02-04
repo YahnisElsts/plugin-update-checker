@@ -845,7 +845,9 @@ class PluginUpdate_1_3 {
 	 */
 	public static function fromObject($object) {
 		$update = new self();
-		foreach(self::$fields as $field){
+		$fields = self::$fields;
+		if (!empty($object->slug)) $fields = apply_filters('puc_retain_fields-'.$object->slug, $fields);
+		foreach($fields as $field){
 			$update->$field = $object->$field;
 		}
 		return $update;
@@ -861,7 +863,9 @@ class PluginUpdate_1_3 {
 	 */
 	public function toStdClass() {
 		$object = new StdClass();
-		foreach(self::$fields as $field){
+		$fields = self::$fields;
+		if (!empty($this->slug)) $fields = apply_filters('puc_retain_fields-'.$this->slug, $fields);
+		foreach($fields as $field){
 			$object->$field = $this->$field;
 		}
 		return $object;
