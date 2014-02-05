@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Update Checker Library 1.3.2
+ * Plugin Update Checker Library 1.4
  * http://w-shadow.com/
  * 
- * Copyright 2013 Janis Elsts
+ * Copyright 2014 Janis Elsts
  * Licensed under the GNU GPL license.
  * http://www.gnu.org/licenses/gpl.html
  */
