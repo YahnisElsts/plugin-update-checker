@@ -866,7 +866,7 @@ class PluginUpdate_1_3 {
 		$fields = self::$fields;
 		if (!empty($this->slug)) $fields = apply_filters('puc_retain_fields-'.$this->slug, $fields);
 		foreach($fields as $field){
-			$object->$field = $this->$field;
+			if (isset($this->$field)) $object->$field = $this->$field;
 		}
 		return $object;
 	}
