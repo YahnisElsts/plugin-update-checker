@@ -848,7 +848,9 @@ class PluginUpdate_1_3 {
 		$fields = self::$fields;
 		if (!empty($object->slug)) $fields = apply_filters('puc_retain_fields-'.$object->slug, $fields);
 		foreach($fields as $field){
-			$update->$field = $object->$field;
+			if (property_exists($object, $field)) {
+				$update->$field = $object->$field;
+			}
 		}
 		return $update;
 	}
@@ -866,7 +868,9 @@ class PluginUpdate_1_3 {
 		$fields = self::$fields;
 		if (!empty($this->slug)) $fields = apply_filters('puc_retain_fields-'.$this->slug, $fields);
 		foreach($fields as $field){
-			$object->$field = $this->$field;
+			if (property_exists($this, $field)) {
+				$object->$field = $this->$field;
+			}
 		}
 		return $object;
 	}
