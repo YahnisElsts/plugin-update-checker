@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 1.4
+ * Plugin Update Checker Library 1.5
  * http://w-shadow.com/
  * 
  * Copyright 2014 Janis Elsts
@@ -8,23 +8,24 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-if ( !class_exists('PluginUpdateChecker_1_4') ):
+if ( !class_exists('PluginUpdateChecker_1_5') ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2013
- * @version 1.4
+ * @copyright 2014
+ * @version 1.5
  * @access public
  */
-class PluginUpdateChecker_1_4 {
+class PluginUpdateChecker_1_5 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 	public $slug = '';        //Plugin slug.
 	public $checkPeriod = 12; //How often to check for updates (in hours).
 	public $optionName = '';  //Where to store the update info.
+	public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
 	public $debugMode = false; //Set to TRUE to enable error reporting. Errors are raised using trigger_error()
                                //and should be logged to the standard PHP error log.
@@ -38,22 +39,24 @@ class PluginUpdateChecker_1_4 {
 
 	/**
 	 * Class constructor.
-	 * 
+	 *
 	 * @param string $metadataUrl The URL of the plugin's metadata file.
 	 * @param string $pluginFile Fully qualified path to the main plugin file.
 	 * @param string $slug The plugin's 'slug'. If not specified, the filename part of $pluginFile sans '.php' will be used as the slug.
 	 * @param integer $checkPeriod How often to check for updates (in hours). Defaults to checking every 12 hours. Set to 0 to disable automatic update checks.
-	 * @param string $optionName Where to store book-keeping info about update checks. Defaults to 'external_updates-$slug'. 
+	 * @param string $optionName Where to store book-keeping info about update checks. Defaults to 'external_updates-$slug'.
+	 * @param string $muPluginFile Optional. The plugin filename relative to the mu-plugins directory.
 	 */
-	public function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = ''){
+	public function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = ''){
 		$this->metadataUrl = $metadataUrl;
 		$this->pluginAbsolutePath = $pluginFile;
 		$this->pluginFile = plugin_basename($this->pluginAbsolutePath);
+		$this->muPluginFile = $muPluginFile;
 		$this->checkPeriod = $checkPeriod;
 		$this->slug = $slug;
 		$this->optionName = $optionName;
 		$this->debugMode = defined('WP_DEBUG') && WP_DEBUG;
-		
+
 		//If no slug is specified, use the name of the main plugin file as the slug.
 		//For example, 'my-cool-plugin/cool-plugin.php' becomes 'cool-plugin'.
 		if ( empty($this->slug) ){
@@ -62,6 +65,12 @@ class PluginUpdateChecker_1_4 {
 		
 		if ( empty($this->optionName) ){
 			$this->optionName = 'external_updates-' . $this->slug;
+		}
+
+		//Backwards compatibility: If the plugin is a mu-plugin but no $muPluginFile is specified, assume
+		//it's the same as $pluginFile given that it's not in a subdirectory (WP only looks in the base dir).
+		if ( empty($this->muPluginFile) && (strpbrk($this->pluginFile, '/\\') === false) && $this->isMuPlugin() ) {
+			$this->muPluginFile = $this->pluginFile;
 		}
 		
 		$this->installHooks();
@@ -88,7 +97,7 @@ class PluginUpdateChecker_1_4 {
 		//Clear the version number cache when something - anything - is upgraded or WP clears the update cache.
 		add_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
 		add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
-		
+
 		//Set up the periodic update checks
 		$this->cronHook = 'check_plugin_updates-' . $this->slug;
 		if ( $this->checkPeriod > 0 ){
@@ -454,6 +463,13 @@ class PluginUpdateChecker_1_4 {
 	public function injectUpdate($updates){
 		//Is there an update to insert?
 		$update = $this->getUpdate();
+
+		//No update notifications for mu-plugins unless explicitly enabled. The MU plugin file
+		//is usually different from the main plugin file so the update wouldn't show up properly anyway.
+		if ( !empty($update) && empty($this->muPluginFile) && $this->isMuPlugin() ) {
+			$update = null;
+		}
+
 		if ( !empty($update) ) {
 			//Let plugins filter the update info before it's passed on to WordPress.
 			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
@@ -461,9 +477,22 @@ class PluginUpdateChecker_1_4 {
 				$updates = new StdClass();
 				$updates->response = array();
 			}
-			$updates->response[$this->pluginFile] = $update->toWpFormat();
+
+			$wpUpdate = $update->toWpFormat();
+			$pluginFile = $this->pluginFile;
+
+			if ( $this->isMuPlugin() ) {
+				//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
+				$wpUpdate->package = null;
+				$pluginFile = $this->muPluginFile;
+			}
+			$updates->response[$pluginFile] = $wpUpdate;
+
 		} else if ( isset($updates, $updates->response) ) {
 			unset($updates->response[$this->pluginFile]);
+			if ( !empty($this->muPluginFile) ) {
+				unset($updates->response[$this->muPluginFile]);
+			}
 		}
 
 		return $updates;
@@ -507,7 +536,10 @@ class PluginUpdateChecker_1_4 {
 	 * @return array
 	 */
 	public function addCheckForUpdatesLink($pluginMeta, $pluginFile) {
-		if ( $pluginFile == $this->pluginFile && current_user_can('update_plugins') ) {
+		$isRelevant = ($pluginFile == $this->pluginFile)
+		              || (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
+
+		if ( $isRelevant && current_user_can('update_plugins') ) {
 			$linkUrl = wp_nonce_url(
 				add_query_arg(
 					array(
@@ -574,6 +606,25 @@ class PluginUpdateChecker_1_4 {
 				apply_filters('puc_manual_check_message-' . $this->slug, $message, $status)
 			);
 		}
+	}
+
+	/**
+	 * Check if the plugin file is inside the mu-plugins directory.
+	 *
+	 * @return bool
+	 */
+	protected function isMuPlugin() {
+		static $cachedResult = null;
+
+		if ( $cachedResult === null ) {
+			//Convert both paths to the canonical form before comparison.
+			$muPluginDir = realpath(WPMU_PLUGIN_DIR);
+			$pluginPath  = realpath($this->pluginAbsolutePath);
+
+			$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);
+		}
+
+		return $cachedResult;
 	}
 
 	/**
@@ -927,11 +978,12 @@ class PucFactory {
 	 * @param string $slug
 	 * @param int $checkPeriod
 	 * @param string $optionName
+	 * @param string $muPluginFile
 	 * @return PluginUpdateChecker
 	 */
-	public static function buildUpdateChecker($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '') {
+	public static function buildUpdateChecker($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 		$class = self::getLatestClassVersion('PluginUpdateChecker');
-		return new $class($metadataUrl, $pluginFile, $slug, $checkPeriod, $optionName);
+		return new $class($metadataUrl, $pluginFile, $slug, $checkPeriod, $optionName, $muPluginFile);
 	}
 
 	/**
@@ -988,7 +1040,7 @@ class PucFactory {
 endif;
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_4', '1.4');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_5', '1.5');
 PucFactory::addVersion('PluginUpdate', 'PluginUpdate_1_3', '1.3');
 PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
 
@@ -997,7 +1049,7 @@ PucFactory::addVersion('PluginInfo', 'PluginInfo_1_3', '1.3');
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker') ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_1_4 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_1_5 { }
 }
 
 if ( !class_exists('PluginUpdate') ) {
