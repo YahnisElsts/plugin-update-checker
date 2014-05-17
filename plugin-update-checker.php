@@ -359,7 +359,7 @@ class PluginUpdateChecker_1_5 {
 			//Check less frequently if it's already known that an update is available.
 			$timeout = $this->throttledCheckPeriod * 3600;
 		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
-			//WordPress cron schedules are not exact, so lets do a n update check even
+			//WordPress cron schedules are not exact, so lets do an update check even
 			//if slightly less than $checkPeriod hours have elapsed since the last check.
 			$cronFuzziness = 20 * 60;
 			$timeout = $this->checkPeriod * 3600 - $cronFuzziness;
