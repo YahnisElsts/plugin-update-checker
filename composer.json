@@ -4,7 +4,7 @@
 	"description": "A custom update checker for WordPress plugins. Useful if you can't or don't want to host your plugin in the official WP plugin repository, but would still like it to support automatic plugin updates.",
 	"keywords": ["wordpress","auto-update", "automatic updates"],
 	"homepage": "https://github.com/aelia-co/plugin-update-checker",
-	"license": "MIT",
+	"license": "GPL",
 	"authors": [
 		{
 			"name": "Yahnis Elsts",
