@@ -1,0 +1,25 @@
+{
+	"name": "aelia/plugin-update-checker",
+	"type": "library",
+	"description": "A custom update checker for WordPress plugins. Useful if you can't or don't want to host your plugin in the official WP plugin repository, but would still like it to support automatic plugin updates.",
+	"keywords": ["wordpress","auto-update", "automatic updates"],
+	"homepage": "https://github.com/aelia-co/plugin-update-checker",
+	"license": "GPL",
+	"authors": [
+		{
+			"name": "Yahnis Elsts",
+			"email": "whiteshadow@w-shadow.com",
+			"homepage": "http://w-shadow.com/",
+			"role": "Developer"
+		},
+		{
+			"name": "Diego Zanella (Aelia)",
+			"email": "admin@aelia.co",
+			"homepage": "http://aelia.co/",
+			"role": "Developer"
+		}
+	],
+	"require": {
+		"php": ">=5.2.0"
+	}
+}
