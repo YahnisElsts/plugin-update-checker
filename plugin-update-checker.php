@@ -130,8 +130,13 @@ class PluginUpdateChecker_1_6 {
 			add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
 
 			//Like WordPress itself, we check more often on certain pages.
-			add_action( 'load-update-core.php', array($this, 'maybeCheckForUpdates') );
-			
+			/** @see wp_update_plugins */
+			add_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
+			add_action('load-plugins.php', array($this, 'maybeCheckForUpdates'));
+			add_action('load-update.php', array($this, 'maybeCheckForUpdates'));
+			//This hook fires after a bulk update is complete.
+			add_action('upgrader_process_complete', array($this, 'maybeCheckForUpdates'), 11, 0);
+
 		} else {
 			//Periodic checks are disabled.
 			wp_clear_scheduled_hook($this->cronHook);
@@ -353,9 +358,13 @@ class PluginUpdateChecker_1_6 {
 			return;
 		}
 
-		if ( current_filter() == 'load-update-core.php' ) {
-			//Check more often when the user visits Dashboard -> Updates.
+		$currentFilter = current_filter();
+		if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
+			//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
 			$timeout = 60;
+		} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
+			//Also check more often on the "Plugins" page and /wp-admin/update.php.
+			$timeout = 3600;
 		} else if ( $this->throttleRedundantChecks && ($this->getUpdate() !== null) ) {
 			//Check less frequently if it's already known that an update is available.
 			$timeout = $this->throttledCheckPeriod * 3600;
