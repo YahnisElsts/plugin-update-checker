@@ -1,11 +1,10 @@
 <?php
 /**
- * Plugin Update Checker Library 1.6
+ * Plugin Update Checker Library 1.6.1
  * http://w-shadow.com/
  * 
  * Copyright 2014 Janis Elsts
- * Licensed under the GNU GPL license.
- * http://www.gnu.org/licenses/gpl.html
+ * Released under the  MIT license. See license.txt for details.
  */
 
 if ( !class_exists('PluginUpdateChecker_1_6') ):
