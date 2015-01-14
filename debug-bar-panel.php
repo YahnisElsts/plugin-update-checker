@@ -36,7 +36,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 
 		$requestInfoButton = '';
 		if ( function_exists('get_submit_button') ) {
-			$requestInfoButton = get_submit_button('Request Info', 'secondary', 'puc-request-info-button', false, array('id' => 'puc-request-info-button-'.$this->updateChecker->slug));
+			$requestInfoButton = get_submit_button('Request Info', 'secondary', 'puc-request-info-button', false, array('id' => 'puc-request-info-button-' . $this->updateChecker->slug));
 		}
 		$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $responseBox);
 
@@ -67,7 +67,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		$state = $this->updateChecker->getUpdateState();
 		$checkNowButton = '';
 		if ( function_exists('get_submit_button')  ) {
-			$checkNowButton = get_submit_button('Check Now', 'secondary', 'puc-check-now-button', false, array('id' => 'puc-check-now-button'.$this->updateChecker->slug));
+			$checkNowButton = get_submit_button('Check Now', 'secondary', 'puc-check-now-button', false, array('id' => 'puc-check-now-button-' . $this->updateChecker->slug));
 		}
 
 		if ( isset($state, $state->lastCheck) ) {
