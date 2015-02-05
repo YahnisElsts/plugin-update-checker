@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Update Checker Library 1.6.1
+ * Plugin Update Checker Library 1.6.2
  * http://w-shadow.com/
  * 
- * Copyright 2014 Janis Elsts
+ * Copyright 2015 Janis Elsts
  * Released under the  MIT license. See license.txt for details.
  */
 
@@ -13,7 +13,7 @@ if ( !class_exists('PluginUpdateChecker_1_6') ):
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2014
+ * @copyright 2015
  * @version 1.6
  * @access public
  */
@@ -734,8 +734,8 @@ if ( !class_exists('PluginInfo_1_6') ):
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
- * @copyright 2014
- * @version 1.6
+ * @copyright 2015
+ * @version 1.6.2
  * @access public
  */
 class PluginInfo_1_6 {
@@ -746,6 +746,7 @@ class PluginInfo_1_6 {
 	public $version;
 	public $homepage;
 	public $sections;
+	public $banners;
 	public $download_url;
 
 	public $author;
@@ -843,7 +844,14 @@ class PluginInfo_1_6 {
 		} else {
 			$info->sections = array('description' => '');
 		}
-				
+
+		if ( !empty($this->banners) ) {
+			//WP expects an array with two keys: "high" and "low". Both are optional.
+			//Docs: https://wordpress.org/plugins/about/faq/#banners
+			$info->banners = is_object($this->banners) ? get_object_vars($this->banners) : $this->banners;
+			$info->banners = array_intersect_key($info->banners, array('high' => true, 'low' => true));
+		}
+
 		return $info;
 	}
 }
@@ -856,7 +864,7 @@ if ( !class_exists('PluginUpdate_1_6') ):
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
- * @copyright 2014
+ * @copyright 2015
  * @version 1.6
  * @access public
  */
