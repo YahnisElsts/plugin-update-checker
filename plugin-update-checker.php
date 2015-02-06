@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 1.6.2
+ * Plugin Update Checker Library 1.6.3
  * http://w-shadow.com/
  * 
  * Copyright 2015 Janis Elsts
@@ -146,6 +146,9 @@ class PluginUpdateChecker_1_6 {
 		} else {
 			add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
 		}
+
+		//Rename the update directory to be the same as the existing directory.
+		add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 	}
 	
 	/**
@@ -506,6 +509,98 @@ class PluginUpdateChecker_1_6 {
 
 		return $updates;
 	}
+
+	/**
+	 * Rename the update directory to match the existing plugin directory.
+	 *
+	 * When WordPress installs a plugin or theme update, it assumes that the ZIP file will contain
+	 * exactly one directory, and that the directory name will be the same as the directory where
+	 * the plugin/theme is currently installed.
+	 *
+	 * GitHub and other repositories provide ZIP downloads, but they often use directory names like
+	 * "project-branch" or "project-tag-hash". We need to change the name to the actual plugin folder.
+	 *
+	 * @param string $source
+	 * @param string $remoteSource
+	 * @param WP_Upgrader $upgrader
+	 * @return string|WP_Error
+	 */
+	function fixDirectoryName($source, $remoteSource, $upgrader) {
+		global $wp_filesystem; /** @var WP_Filesystem_Base $wp_filesystem */
+
+		//Basic sanity checks.
+		if ( !isset($source, $remoteSource, $upgrader, $upgrader->skin, $wp_filesystem) ) {
+			return $source;
+		}
+
+		//Figure out which plugin is being upgraded.
+		$pluginFile = null;
+		$skin = $upgrader->skin;
+		if ( $skin instanceof Plugin_Upgrader_Skin ) {
+			if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
+				$pluginFile = $skin->plugin;
+			}
+		} elseif ( $upgrader->skin instanceof Bulk_Plugin_Upgrader_Skin ) {
+			//This case is tricky because Bulk_Plugin_Upgrader_Skin doesn't actually store the plugin
+			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
+			//do is compare those headers to the headers of installed plugins.
+			if ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
+				if ( !function_exists('get_plugins') ){
+					require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+				}
+
+				$installedPlugins = get_plugins();
+				$matches = array();
+				foreach($installedPlugins as $pluginBasename => $headers) {
+					$diff1 = array_diff_assoc($headers, $skin->plugin_info);
+					$diff2 = array_diff_assoc($skin->plugin_info, $headers);
+					if ( empty($diff1) && empty($diff2) ) {
+						$matches[] = $pluginBasename;
+					}
+				}
+
+				//It's possible (though very unlikely) that there could be two plugins with identical
+				//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
+				if ( count($matches) !== 1 ) {
+					return $source;
+				}
+
+				$pluginFile = reset($matches);
+			}
+		}
+
+		//If WordPress is upgrading anything other than our plugin, leave the directory name unchanged.
+		if ( empty($pluginFile) || ($pluginFile !== $this->pluginFile) ) {
+			return $source;
+		}
+
+		//Rename the source to match the existing plugin directory.
+		$pluginDirectoryName = dirname($this->pluginFile);
+		if ( ($pluginDirectoryName === '.') || ($pluginDirectoryName === '/') ) {
+			return $source;
+		}
+		$correctedSource = trailingslashit($remoteSource) . $pluginDirectoryName . '/';
+		if ( $source !== $correctedSource ) {
+			$upgrader->skin->feedback(sprintf(
+				'Renaming %s to %s&#8230;',
+				'<span class="code">' . basename($source) . '</span>',
+				'<span class="code">' . $pluginDirectoryName . '</span>'
+			));
+
+			if ( $wp_filesystem->move($source, $correctedSource, true) ) {
+				$upgrader->skin->feedback('Plugin directory successfully renamed.');
+				return $correctedSource;
+			} else {
+				return new WP_Error(
+					'puc-rename-failed',
+					'Unable to rename the update to match the existing plugin directory.'
+				);
+			}
+		}
+
+		return $source;
+	}
+
 
 	/**
 	 * Get the details of the currently available update, if any.
