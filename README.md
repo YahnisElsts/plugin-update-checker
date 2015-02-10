@@ -13,17 +13,17 @@ Getting Started
 ### Self-hosted Plugins
 
 1. Make a JSON file that describes your plugin. Here's a minimal example:
-	```json
-	{
-		"name" : "My Cool Plugin",
-		"version" : "2.0",
-		"author" : "John Smith",
-		"download_url" : "http://example.com/plugins/my-cool-plugin.zip",
-		"sections" : {
-			"description" : "Plugin description here. You can use HTML."
-		}
-	}
-	```
+    ```json
+    {
+    	"name" : "My Cool Plugin",
+    	"version" : "2.0",
+    	"author" : "John Smith",
+    	"download_url" : "http://example.com/plugins/my-cool-plugin.zip",
+    	"sections" : {
+    		"description" : "Plugin description here. You can use HTML."
+    	}
+    }
+    ```
 	See [this table](https://spreadsheets.google.com/pub?key=0AqP80E74YcUWdEdETXZLcXhjd2w0cHMwX2U1eDlWTHc&authkey=CK7h9toK&hl=en&single=true&gid=0&output=html) for a full list of supported fields.
 2. Upload this file to a publicly accessible location.
 3. Download [the update checker](https://github.com/YahnisElsts/plugin-update-checker/releases/latest), unzip the archive and copy the `plugin-update-checker` directory to your plugin.
