@@ -1,23 +1,23 @@
 <?php
 /**
- * Plugin Update Checker Library 1.6.3
+ * Plugin Update Checker Library 2.0.0
  * http://w-shadow.com/
  * 
  * Copyright 2015 Janis Elsts
  * Released under the  MIT license. See license.txt for details.
  */
 
-if ( !class_exists('PluginUpdateChecker_1_6') ):
+if ( !class_exists('PluginUpdateChecker_2_0') ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 1.6
+ * @version 2.0
  * @access public
  */
-class PluginUpdateChecker_1_6 {
+class PluginUpdateChecker_2_0 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
@@ -223,8 +223,9 @@ class PluginUpdateChecker_1_6 {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo_1_6::fromJson($result['body'], $this->debugMode);
+			$pluginInfo = PluginInfo_2_0::fromJson($result['body'], $this->debugMode);
 			$pluginInfo->filename = $this->pluginFile;
+			$pluginInfo->slug = $this->slug;
 		} else if ( $this->debugMode ) {
 			$message = sprintf("The URL %s does not point to a valid plugin metadata file. ", $url);
 			if ( is_wp_error($result) ) {
@@ -255,7 +256,7 @@ class PluginUpdateChecker_1_6 {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate_1_6::fromPluginInfo($pluginInfo);
+		return PluginUpdate_2_0::fromPluginInfo($pluginInfo);
 	}
 	
 	/**
@@ -268,25 +269,7 @@ class PluginUpdateChecker_1_6 {
 			return $this->cachedInstalledVersion;
 		}
 
-		if ( !function_exists('get_plugin_data') ){
-			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-		}
-
-		if ( !is_file($this->pluginAbsolutePath) ) {
-			//This can happen if the plugin filename is wrong.
-			if ( $this->debugMode ) {
-				trigger_error(
-					sprintf(
-						"Can't to read the Version header for %s. The file does not exist.",
-						$this->pluginFile
-					),
-					E_USER_WARNING
-				);
-			}
-			return null;
-		}
-
-		$pluginHeader = get_plugin_data($this->pluginAbsolutePath, false, false);
+		$pluginHeader = $this->getPluginHeader();
 		if ( isset($pluginHeader['Version']) ) {
 			$this->cachedInstalledVersion = $pluginHeader['Version'];
 			return $pluginHeader['Version'];
@@ -295,7 +278,7 @@ class PluginUpdateChecker_1_6 {
 			if ( $this->debugMode ) {
 				trigger_error(
 					sprintf(
-						"Can't to read the Version header for %s. The filename is incorrect or is not a plugin.",
+						"Can't to read the Version header for '%s'. The filename is incorrect or is not a plugin.",
 						$this->pluginFile
 					),
 					E_USER_WARNING
@@ -303,6 +286,32 @@ class PluginUpdateChecker_1_6 {
 			}
 			return null;
 		}
+	}
+
+	/**
+	 * Get plugin's metadata from its file header.
+	 *
+	 * @return array
+	 */
+	protected function getPluginHeader() {
+		if ( !is_file($this->pluginAbsolutePath) ) {
+			//This can happen if the plugin filename is wrong.
+			if ( $this->debugMode ) {
+				trigger_error(
+					sprintf(
+						"Can't to read the plugin header for '%s'. The file does not exist.",
+						$this->pluginFile
+					),
+					E_USER_WARNING
+				);
+			}
+			return array();
+		}
+
+		if ( !function_exists('get_plugin_data') ){
+			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+		}
+		return get_plugin_data($this->pluginAbsolutePath, false, false);
 	}
 
 	/**
@@ -410,7 +419,7 @@ class PluginUpdateChecker_1_6 {
 		}
 
 		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
-			$state->update = PluginUpdate_1_6::fromObject($state->update);
+			$state->update = PluginUpdate_2_0::fromObject($state->update);
 		}
 		return $state;
 	}
@@ -452,7 +461,9 @@ class PluginUpdateChecker_1_6 {
 	 * @return mixed
 	 */
 	public function injectInfo($result, $action = null, $args = null){
-    	$relevant = ($action == 'plugin_information') && isset($args->slug) && ($args->slug == $this->slug);
+    	$relevant = ($action == 'plugin_information') && isset($args->slug) && (
+			($args->slug == $this->slug) || ($args->slug == dirname($this->pluginFile))
+		);
 		if ( !$relevant ){
 			return $result;
 		}
@@ -823,17 +834,17 @@ class PluginUpdateChecker_1_6 {
 
 endif;
 
-if ( !class_exists('PluginInfo_1_6') ):
+if ( !class_exists('PluginInfo_2_0') ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 1.6.2
+ * @version 2.0
  * @access public
  */
-class PluginInfo_1_6 {
+class PluginInfo_2_0 {
 	//Most fields map directly to the contents of the plugin's info.json file.
 	//See the relevant docs for a description of their meaning.  
 	public $name;
@@ -953,17 +964,17 @@ class PluginInfo_1_6 {
 	
 endif;
 
-if ( !class_exists('PluginUpdate_1_6') ):
+if ( !class_exists('PluginUpdate_2_0') ):
 
 /**
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 1.6
+ * @version 2.0
  * @access public
  */
-class PluginUpdate_1_6 {
+class PluginUpdate_2_0 {
 	public $id = 0;
 	public $slug;
 	public $version;
@@ -985,7 +996,7 @@ class PluginUpdate_1_6 {
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo_1_6::fromJson($json, $triggerErrors);
+		$pluginInfo = PluginInfo_2_0::fromJson($json, $triggerErrors);
 		if ( $pluginInfo != null ) {
 			return self::fromPluginInfo($pluginInfo);
 		} else {
@@ -1158,23 +1169,26 @@ class PucFactory {
 
 endif;
 
+require_once(dirname(__FILE__) . '/github-checker.php');
+
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_1_6', '1.6');
-PucFactory::addVersion('PluginUpdate', 'PluginUpdate_1_6', '1.6');
-PucFactory::addVersion('PluginInfo', 'PluginInfo_1_6', '1.6');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_0', '2.0');
+PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_0', '2.0');
+PucFactory::addVersion('PluginInfo', 'PluginInfo_2_0', '2.0');
+PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_0', '2.0');
 
 /**
  * Create non-versioned variants of the update checker classes. This allows for backwards
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker') ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_1_6 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_2_0 { }
 }
 
 if ( !class_exists('PluginUpdate') ) {
-	class PluginUpdate extends PluginUpdate_1_6 {}
+	class PluginUpdate extends PluginUpdate_2_0 {}
 }
 
 if ( !class_exists('PluginInfo') ) {
-	class PluginInfo extends PluginInfo_1_6 {}
+	class PluginInfo extends PluginInfo_2_0 {}
 }
