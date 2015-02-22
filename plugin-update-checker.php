@@ -531,8 +531,8 @@ class PluginUpdateChecker_2_0 {
 	 * GitHub and other repositories provide ZIP downloads, but they often use directory names like
 	 * "project-branch" or "project-tag-hash". We need to change the name to the actual plugin folder.
 	 *
-	 * @param string $source
-	 * @param string $remoteSource
+	 * @param string $source The directory to copy to /wp-content/plugins. Usually a subdirectory of $remoteSource.
+	 * @param string $remoteSource WordPress has extracted the update to this directory.
 	 * @param WP_Upgrader $upgrader
 	 * @return string|WP_Error
 	 */
@@ -592,6 +592,26 @@ class PluginUpdateChecker_2_0 {
 		}
 		$correctedSource = trailingslashit($remoteSource) . $pluginDirectoryName . '/';
 		if ( $source !== $correctedSource ) {
+			//The update archive should contain a single directory that contains the rest of plugin files. Otherwise,
+			//WordPress will try to copy the entire working directory ($source == $remoteSource). We can't rename
+			//$remoteSource because that would break WordPress code that cleans up temporary files after update.
+			$sourceFiles = $wp_filesystem->dirlist($remoteSource);
+			if ( is_array($sourceFiles) ) {
+				$sourceFiles = array_keys($sourceFiles);
+				$firstFilePath = trailingslashit($remoteSource) . $sourceFiles[0];
+
+				if ( (count($sourceFiles) > 1) || (!$wp_filesystem->is_dir($firstFilePath)) ) {
+					return new WP_Error(
+						'puc-incorrect-directory-structure',
+						sprintf(
+							'The directory structure of the update is incorrect. All plugin files should be inside ' .
+							'a directory named <span class="code">%s</span>, not at the root of the ZIP file.',
+							htmlentities($this->slug)
+						)
+					);
+				}
+			}
+
 			$upgrader->skin->feedback(sprintf(
 				'Renaming %s to %s&#8230;',
 				'<span class="code">' . basename($source) . '</span>',
