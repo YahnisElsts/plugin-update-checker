@@ -1,6 +1,6 @@
 <?php
 
-if ( !class_exists('PucGitHubChecker_2_0') ):
+if ( !class_exists('PucGitHubChecker_2_0', false) ):
 
 class PucGitHubChecker_2_0 extends PluginUpdateChecker_2_0 {
 	/**
@@ -254,7 +254,7 @@ class PucGitHubChecker_2_0 extends PluginUpdateChecker_2_0 {
 	 * @return string
 	 */
 	protected function parseMarkdown($markdown) {
-		if ( !class_exists('Parsedown') ) {
+		if ( !class_exists('Parsedown', false) ) {
 			require_once(dirname(__FILE__) . '/vendor/Parsedown.php');
 		}
 
@@ -406,7 +406,7 @@ class PucGitHubChecker_2_0 extends PluginUpdateChecker_2_0 {
 	}
 
 	protected function parseReadme($content) {
-		if ( !class_exists('PucReadmeParser') ) {
+		if ( !class_exists('PucReadmeParser', false) ) {
 			require_once(dirname(__FILE__) . '/vendor/readme-parser.php');
 		}
 		$parser = new PucReadmeParser();

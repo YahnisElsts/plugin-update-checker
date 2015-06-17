@@ -1,6 +1,6 @@
 <?php
 
-if ( !class_exists('PluginUpdateCheckerPanel') && class_exists('Debug_Bar_Panel') ) {
+if ( !class_exists('PluginUpdateCheckerPanel', false) && class_exists('Debug_Bar_Panel', false) ) {
 
 /**
  * A Debug Bar panel for the plugin update checker.

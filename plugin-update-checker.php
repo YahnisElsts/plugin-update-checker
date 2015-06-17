@@ -7,7 +7,7 @@
  * Released under the  MIT license. See license.txt for details.
  */
 
-if ( !class_exists('PluginUpdateChecker_2_0') ):
+if ( !class_exists('PluginUpdateChecker_2_0', false) ):
 
 /**
  * A custom plugin update checker. 
@@ -845,7 +845,7 @@ class PluginUpdateChecker_2_0 {
 	 * Initialize the update checker Debug Bar plugin/add-on thingy.
 	 */
 	public function initDebugBarPanel() {
-		if ( class_exists('Debug_Bar') ) {
+		if ( class_exists('Debug_Bar', false) ) {
 			require_once dirname(__FILE__) . '/debug-bar-plugin.php';
 			$this->debugBarPlugin = new PucDebugBarPlugin($this);
 		}
@@ -854,7 +854,7 @@ class PluginUpdateChecker_2_0 {
 
 endif;
 
-if ( !class_exists('PluginInfo_2_0') ):
+if ( !class_exists('PluginInfo_2_0', false) ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
@@ -984,7 +984,7 @@ class PluginInfo_2_0 {
 	
 endif;
 
-if ( !class_exists('PluginUpdate_2_0') ):
+if ( !class_exists('PluginUpdate_2_0', false) ):
 
 /**
  * A simple container class for holding information about an available update.
@@ -1100,7 +1100,7 @@ class PluginUpdate_2_0 {
 	
 endif;
 
-if ( !class_exists('PucFactory') ):
+if ( !class_exists('PucFactory', false) ):
 
 /**
  * A factory that builds instances of other classes from this library.
@@ -1201,14 +1201,14 @@ PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_0', '2.0');
  * Create non-versioned variants of the update checker classes. This allows for backwards
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
-if ( !class_exists('PluginUpdateChecker') ) {
+if ( !class_exists('PluginUpdateChecker', false) ) {
 	class PluginUpdateChecker extends PluginUpdateChecker_2_0 { }
 }
 
-if ( !class_exists('PluginUpdate') ) {
+if ( !class_exists('PluginUpdate', false) ) {
 	class PluginUpdate extends PluginUpdate_2_0 {}
 }
 
-if ( !class_exists('PluginInfo') ) {
+if ( !class_exists('PluginInfo', false) ) {
 	class PluginInfo extends PluginInfo_2_0 {}
 }
