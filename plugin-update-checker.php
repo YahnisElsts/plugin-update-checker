@@ -885,6 +885,7 @@ class PluginInfo_2_0 {
 	public $rating;
 	public $num_ratings;
 	public $downloaded;
+	public $active_installs;
 	public $last_updated;
 	
 	public $id = 0; //The native WP.org API returns numeric plugin IDs, but they're not used for anything.
@@ -944,7 +945,7 @@ class PluginInfo_2_0 {
 		//as those returned by the native WordPress.org API. These can be assigned directly. 
 		$sameFormat = array(
 			'name', 'slug', 'version', 'requires', 'tested', 'rating', 'upgrade_notice',
-			'num_ratings', 'downloaded', 'homepage', 'last_updated',
+			'num_ratings', 'downloaded', 'active_installs', 'homepage', 'last_updated',
 		);
 		foreach($sameFormat as $field){
 			if ( isset($this->$field) ) {
