@@ -551,7 +551,7 @@ class PluginUpdateChecker_2_1 {
 			if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
 				$pluginFile = $skin->plugin;
 			}
-		} elseif ( $upgrader->skin instanceof Bulk_Plugin_Upgrader_Skin ) {
+		} elseif ( ($skin instanceof Bulk_Plugin_Upgrader_Skin) || ($skin instanceof Automatic_Upgrader_Skin) ) {
 			//This case is tricky because Bulk_Plugin_Upgrader_Skin doesn't actually store the plugin
 			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
 			//do is compare those headers to the headers of installed plugins.
