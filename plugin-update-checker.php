@@ -36,6 +36,8 @@ class PluginUpdateChecker_2_1 {
 	private $debugBarPlugin = null;
 	private $cachedInstalledVersion = null;
 
+	private $upgradedPluginFile = null; //The plugin that is currently being upgraded by WordPress.
+
 	/**
 	 * Class constructor.
 	 *
@@ -149,6 +151,11 @@ class PluginUpdateChecker_2_1 {
 
 		//Rename the update directory to be the same as the existing directory.
 		add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
+
+		//Keep track of which plugin WordPress is currently upgrading.
+		add_filter('upgrader_pre_install', array($this, 'setUpgradedPlugin'), 10, 2);
+		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
+		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
 	}
 	
 	/**
@@ -551,33 +558,33 @@ class PluginUpdateChecker_2_1 {
 			if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
 				$pluginFile = $skin->plugin;
 			}
-		} elseif ( ($skin instanceof Bulk_Plugin_Upgrader_Skin) || ($skin instanceof Automatic_Upgrader_Skin) ) {
-			//This case is tricky because Bulk_Plugin_Upgrader_Skin doesn't actually store the plugin
+		} elseif ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
+			//This case is tricky because Bulk_Plugin_Upgrader_Skin (etc) doesn't actually store the plugin
 			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
 			//do is compare those headers to the headers of installed plugins.
-			if ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
-				if ( !function_exists('get_plugins') ){
-					require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-				}
-
-				$installedPlugins = get_plugins();
-				$matches = array();
-				foreach($installedPlugins as $pluginBasename => $headers) {
-					$diff1 = array_diff_assoc($headers, $skin->plugin_info);
-					$diff2 = array_diff_assoc($skin->plugin_info, $headers);
-					if ( empty($diff1) && empty($diff2) ) {
-						$matches[] = $pluginBasename;
-					}
-				}
-
-				//It's possible (though very unlikely) that there could be two plugins with identical
-				//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
-				if ( count($matches) !== 1 ) {
-					return $source;
-				}
-
-				$pluginFile = reset($matches);
+			if ( !function_exists('get_plugins') ){
+				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 			}
+
+			$installedPlugins = get_plugins();
+			$matches = array();
+			foreach($installedPlugins as $pluginBasename => $headers) {
+				$diff1 = array_diff_assoc($headers, $skin->plugin_info);
+				$diff2 = array_diff_assoc($skin->plugin_info, $headers);
+				if ( empty($diff1) && empty($diff2) ) {
+					$matches[] = $pluginBasename;
+				}
+			}
+
+			//It's possible (though very unlikely) that there could be two plugins with identical
+			//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
+			if ( count($matches) !== 1 ) {
+				return $source;
+			}
+
+			$pluginFile = reset($matches);
+		} elseif ( !empty($this->upgradedPluginFile) ) {
+			$pluginFile = $this->upgradedPluginFile;
 		}
 
 		//If WordPress is upgrading anything other than our plugin, leave the directory name unchanged.
@@ -632,6 +639,32 @@ class PluginUpdateChecker_2_1 {
 		return $source;
 	}
 
+	/**
+	 * @access private
+	 *
+	 * @param mixed $input
+	 * @param array $hookExtra
+	 * @return mixed Returns $input unaltered.
+	 */
+	public function setUpgradedPlugin($input, $hookExtra) {
+		if (!empty($hookExtra['plugin']) && is_string($hookExtra['plugin'])) {
+			$this->upgradedPluginFile = $hookExtra['plugin'];
+		} else {
+			$this->upgradedPluginFile = null;
+		}
+		return $input;
+	}
+
+	/**
+	 * @access private
+	 *
+	 * @param mixed $input
+	 * @return mixed Returns $input unaltered.
+	 */
+	public function clearUpgradedPlugin($input = null) {
+		$this->upgradedPluginFile = null;
+		return $input;
+	}
 
 	/**
 	 * Get the details of the currently available update, if any.
