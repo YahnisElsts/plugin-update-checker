@@ -1,23 +1,23 @@
 <?php
 /**
- * Plugin Update Checker Library 2.1.0
+ * Plugin Update Checker Library 2.2.0
  * http://w-shadow.com/
  * 
  * Copyright 2015 Janis Elsts
  * Released under the MIT license. See license.txt for details.
  */
 
-if ( !class_exists('PluginUpdateChecker_2_1', false) ):
+if ( !class_exists('PluginUpdateChecker_2_2', false) ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.1
+ * @version 2.2
  * @access public
  */
-class PluginUpdateChecker_2_1 {
+class PluginUpdateChecker_2_2 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
@@ -230,7 +230,7 @@ class PluginUpdateChecker_2_1 {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo_2_1::fromJson($result['body'], $this->debugMode);
+			$pluginInfo = PluginInfo_2_2::fromJson($result['body'], $this->debugMode);
 			$pluginInfo->filename = $this->pluginFile;
 			$pluginInfo->slug = $this->slug;
 		} else if ( $this->debugMode ) {
@@ -263,7 +263,7 @@ class PluginUpdateChecker_2_1 {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate_2_1::fromPluginInfo($pluginInfo);
+		return PluginUpdate_2_2::fromPluginInfo($pluginInfo);
 	}
 	
 	/**
@@ -426,7 +426,7 @@ class PluginUpdateChecker_2_1 {
 		}
 
 		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
-			$state->update = PluginUpdate_2_1::fromObject($state->update);
+			$state->update = PluginUpdate_2_2::fromObject($state->update);
 		}
 		return $state;
 	}
@@ -887,17 +887,17 @@ class PluginUpdateChecker_2_1 {
 
 endif;
 
-if ( !class_exists('PluginInfo_2_1', false) ):
+if ( !class_exists('PluginInfo_2_2', false) ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.1
+ * @version 2.2
  * @access public
  */
-class PluginInfo_2_1 {
+class PluginInfo_2_2 {
 	//Most fields map directly to the contents of the plugin's info.json file.
 	//See the relevant docs for a description of their meaning.  
 	public $name;
@@ -1018,17 +1018,17 @@ class PluginInfo_2_1 {
 	
 endif;
 
-if ( !class_exists('PluginUpdate_2_1', false) ):
+if ( !class_exists('PluginUpdate_2_2', false) ):
 
 /**
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.1
+ * @version 2.2
  * @access public
  */
-class PluginUpdate_2_1 {
+class PluginUpdate_2_2 {
 	public $id = 0;
 	public $slug;
 	public $version;
@@ -1050,7 +1050,7 @@ class PluginUpdate_2_1 {
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo_2_1::fromJson($json, $triggerErrors);
+		$pluginInfo = PluginInfo_2_2::fromJson($json, $triggerErrors);
 		if ( $pluginInfo != null ) {
 			return self::fromPluginInfo($pluginInfo);
 		} else {
@@ -1226,23 +1226,23 @@ endif;
 require_once(dirname(__FILE__) . '/github-checker.php');
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_1', '2.1');
-PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_1', '2.1');
-PucFactory::addVersion('PluginInfo', 'PluginInfo_2_1', '2.1');
-PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_1', '2.1');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_2', '2.2');
+PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_2', '2.2');
+PucFactory::addVersion('PluginInfo', 'PluginInfo_2_2', '2.2');
+PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_2', '2.2');
 
 /**
  * Create non-versioned variants of the update checker classes. This allows for backwards
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker', false) ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_2_1 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_2_2 { }
 }
 
 if ( !class_exists('PluginUpdate', false) ) {
-	class PluginUpdate extends PluginUpdate_2_1 {}
+	class PluginUpdate extends PluginUpdate_2_2 {}
 }
 
 if ( !class_exists('PluginInfo', false) ) {
-	class PluginInfo extends PluginInfo_2_1 {}
+	class PluginInfo extends PluginInfo_2_2 {}
 }

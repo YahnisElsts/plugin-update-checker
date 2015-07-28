@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('PucGitHubChecker_2_1', false) ):
+if ( !class_exists('PucGitHubChecker_2_2', false) ):
 
-class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
+class PucGitHubChecker_2_2 extends PluginUpdateChecker_2_2 {
 	/**
 	 * @var string GitHub username.
 	 */
@@ -57,7 +57,7 @@ class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
 	 * @return PluginInfo
 	 */
 	public function requestInfo($unusedQueryArgs = array()) {
-		$info = new PluginInfo_2_1();
+		$info = new PluginInfo_2_2();
 		$info->filename = $this->pluginFile;
 		$info->slug = $this->slug;
 		$info->sections = array();
@@ -375,7 +375,7 @@ class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
 	 * Copy plugin metadata from a file header to a PluginInfo object.
 	 *
 	 * @param array $fileHeader
-	 * @param PluginInfo_2_1 $pluginInfo
+	 * @param PluginInfo_2_2 $pluginInfo
 	 */
 	protected function setInfoFromHeader($fileHeader, $pluginInfo) {
 		$headerToPropertyMap = array(
