@@ -94,6 +94,8 @@ class PucGitHubChecker_2_2 extends PluginUpdateChecker_2_2 {
 
 		if ( empty($info->download_url) ) {
 			$info->download_url = $this->buildArchiveDownloadUrl($ref);
+		} else if ( !empty($this->accessToken) ) {
+			$info->download_url = add_query_arg('access_token', $this->accessToken, $info->download_url);
 		}
 
 		//Get headers from the main plugin file in this branch/tag. Its "Version" header and other metadata
