@@ -1,23 +1,23 @@
 <?php
 /**
- * Plugin Update Checker Library 2.2.0
+ * Plugin Update Checker Library 2.3.0
  * http://w-shadow.com/
  * 
  * Copyright 2015 Janis Elsts
  * Released under the MIT license. See license.txt for details.
  */
 
-if ( !class_exists('PluginUpdateChecker_2_2', false) ):
+if ( !class_exists('PluginUpdateChecker_2_3', false) ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.2
+ * @version 2.3
  * @access public
  */
-class PluginUpdateChecker_2_2 {
+class PluginUpdateChecker_2_3 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
@@ -154,6 +154,7 @@ class PluginUpdateChecker_2_2 {
 
 		//Keep track of which plugin WordPress is currently upgrading.
 		add_filter('upgrader_pre_install', array($this, 'setUpgradedPlugin'), 10, 2);
+		add_filter('upgrader_package_options', array($this, 'setUpgradedPluginFromOptions'), 10, 1);
 		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
 		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
 	}
@@ -230,7 +231,7 @@ class PluginUpdateChecker_2_2 {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo_2_2::fromJson($result['body'], $this->debugMode);
+			$pluginInfo = PluginInfo_2_3::fromJson($result['body'], $this->debugMode);
 			$pluginInfo->filename = $this->pluginFile;
 			$pluginInfo->slug = $this->slug;
 		} else if ( $this->debugMode ) {
@@ -263,7 +264,7 @@ class PluginUpdateChecker_2_2 {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate_2_2::fromPluginInfo($pluginInfo);
+		return PluginUpdate_2_3::fromPluginInfo($pluginInfo);
 	}
 	
 	/**
@@ -426,7 +427,7 @@ class PluginUpdateChecker_2_2 {
 		}
 
 		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
-			$state->update = PluginUpdate_2_2::fromObject($state->update);
+			$state->update = PluginUpdate_2_3::fromObject($state->update);
 		}
 		return $state;
 	}
@@ -551,44 +552,8 @@ class PluginUpdateChecker_2_2 {
 			return $source;
 		}
 
-		//Figure out which plugin is being upgraded.
-		$pluginFile = null;
-		$skin = $upgrader->skin;
-		if ( $skin instanceof Plugin_Upgrader_Skin ) {
-			if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
-				$pluginFile = $skin->plugin;
-			}
-		} elseif ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
-			//This case is tricky because Bulk_Plugin_Upgrader_Skin (etc) doesn't actually store the plugin
-			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
-			//do is compare those headers to the headers of installed plugins.
-			if ( !function_exists('get_plugins') ){
-				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-			}
-
-			$installedPlugins = get_plugins();
-			$matches = array();
-			foreach($installedPlugins as $pluginBasename => $headers) {
-				$diff1 = array_diff_assoc($headers, $skin->plugin_info);
-				$diff2 = array_diff_assoc($skin->plugin_info, $headers);
-				if ( empty($diff1) && empty($diff2) ) {
-					$matches[] = $pluginBasename;
-				}
-			}
-
-			//It's possible (though very unlikely) that there could be two plugins with identical
-			//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
-			if ( count($matches) !== 1 ) {
-				return $source;
-			}
-
-			$pluginFile = reset($matches);
-		} elseif ( !empty($this->upgradedPluginFile) ) {
-			$pluginFile = $this->upgradedPluginFile;
-		}
-
 		//If WordPress is upgrading anything other than our plugin, leave the directory name unchanged.
-		if ( empty($pluginFile) || ($pluginFile !== $this->pluginFile) ) {
+		if ( !$this->isPluginBeingUpgraded($upgrader) ) {
 			return $source;
 		}
 
@@ -640,6 +605,73 @@ class PluginUpdateChecker_2_2 {
 	}
 
 	/**
+	 * Is there and update being installed RIGHT NOW, for this specific plugin?
+	 *
+	 * Caution: This method is unreliable. WordPress doesn't make it easy to figure out what it is upgrading,
+	 * and upgrader implementations are liable to change without notice.
+	 *
+	 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+	 * @return bool
+	 */
+	public function isPluginBeingUpgraded($upgrader = null) {
+		if ( isset($upgrader) ) {
+			$pluginFile = $this->getPluginBeingUpgradedBy($upgrader);
+			if ( !empty($pluginFile) ) {
+				$this->upgradedPluginFile = $pluginFile;
+			}
+		}
+		return ( !empty($this->upgradedPluginFile) && ($this->upgradedPluginFile === $this->pluginFile) );
+	}
+
+	/**
+	 * Get the file name of the plugin that's currently being upgraded.
+	 *
+	 * @param Plugin_Upgrader|WP_Upgrader $upgrader
+	 * @return string|null
+	 */
+	private function getPluginBeingUpgradedBy($upgrader) {
+		if ( !isset($upgrader, $upgrader->skin) ) {
+			return null;
+		}
+
+		//Figure out which plugin is being upgraded.
+		$pluginFile = null;
+		$skin = $upgrader->skin;
+		if ( $skin instanceof Plugin_Upgrader_Skin ) {
+			if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
+				$pluginFile = $skin->plugin;
+			}
+		} elseif ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
+			//This case is tricky because Bulk_Plugin_Upgrader_Skin (etc) doesn't actually store the plugin
+			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
+			//do is compare those headers to the headers of installed plugins.
+			if ( !function_exists('get_plugins') ){
+				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+			}
+
+			$installedPlugins = get_plugins();
+			$matches = array();
+			foreach($installedPlugins as $pluginBasename => $headers) {
+				$diff1 = array_diff_assoc($headers, $skin->plugin_info);
+				$diff2 = array_diff_assoc($skin->plugin_info, $headers);
+				if ( empty($diff1) && empty($diff2) ) {
+					$matches[] = $pluginBasename;
+				}
+			}
+
+			//It's possible (though very unlikely) that there could be two plugins with identical
+			//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
+			if ( count($matches) !== 1 ) {
+				return null;
+			}
+
+			$pluginFile = reset($matches);
+		}
+
+		return $pluginFile;
+	}
+
+	/**
 	 * @access private
 	 *
 	 * @param mixed $input
@@ -653,6 +685,21 @@ class PluginUpdateChecker_2_2 {
 			$this->upgradedPluginFile = null;
 		}
 		return $input;
+	}
+
+	/**
+	 * @access private
+	 *
+	 * @param array $options
+	 * @return array
+	 */
+	public function setUpgradedPluginFromOptions($options) {
+		if (isset($options['hook_extra']['plugin']) && is_string($options['hook_extra']['plugin'])) {
+			$this->upgradedPluginFile = $options['hook_extra']['plugin'];
+		} else {
+			$this->upgradedPluginFile = null;
+		}
+		return $options;
 	}
 
 	/**
@@ -888,17 +935,17 @@ class PluginUpdateChecker_2_2 {
 
 endif;
 
-if ( !class_exists('PluginInfo_2_2', false) ):
+if ( !class_exists('PluginInfo_2_3', false) ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.2
+ * @version 2.3
  * @access public
  */
-class PluginInfo_2_2 {
+class PluginInfo_2_3 {
 	//Most fields map directly to the contents of the plugin's info.json file.
 	//See the relevant docs for a description of their meaning.  
 	public $name;
@@ -1019,17 +1066,17 @@ class PluginInfo_2_2 {
 	
 endif;
 
-if ( !class_exists('PluginUpdate_2_2', false) ):
+if ( !class_exists('PluginUpdate_2_3', false) ):
 
 /**
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
  * @copyright 2015
- * @version 2.2
+ * @version 2.3
  * @access public
  */
-class PluginUpdate_2_2 {
+class PluginUpdate_2_3 {
 	public $id = 0;
 	public $slug;
 	public $version;
@@ -1051,7 +1098,7 @@ class PluginUpdate_2_2 {
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo_2_2::fromJson($json, $triggerErrors);
+		$pluginInfo = PluginInfo_2_3::fromJson($json, $triggerErrors);
 		if ( $pluginInfo != null ) {
 			return self::fromPluginInfo($pluginInfo);
 		} else {
@@ -1227,23 +1274,23 @@ endif;
 require_once(dirname(__FILE__) . '/github-checker.php');
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_2', '2.2');
-PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_2', '2.2');
-PucFactory::addVersion('PluginInfo', 'PluginInfo_2_2', '2.2');
-PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_2', '2.2');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_3', '2.3');
+PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_3', '2.3');
+PucFactory::addVersion('PluginInfo', 'PluginInfo_2_3', '2.3');
+PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_3', '2.3');
 
 /**
  * Create non-versioned variants of the update checker classes. This allows for backwards
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker', false) ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_2_2 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_2_3 { }
 }
 
 if ( !class_exists('PluginUpdate', false) ) {
-	class PluginUpdate extends PluginUpdate_2_2 {}
+	class PluginUpdate extends PluginUpdate_2_3 {}
 }
 
 if ( !class_exists('PluginInfo', false) ) {
-	class PluginInfo extends PluginInfo_2_2 {}
+	class PluginInfo extends PluginInfo_2_3 {}
 }
