@@ -818,7 +818,7 @@ class PluginUpdateChecker_2_3 {
 				$message = sprintf('Unknown update checker status "%s"', htmlentities($status));
 			}
 			printf(
-				'<div class="updated"><p>%s</p></div>',
+				'<div class="updated notice is-dismissible"><p>%s</p></div>',
 				apply_filters('puc_manual_check_message-' . $this->slug, $message, $status)
 			);
 		}
