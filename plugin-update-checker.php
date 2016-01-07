@@ -231,7 +231,7 @@ class PluginUpdateChecker_2_3 {
 		//Try to parse the response
 		$pluginInfo = null;
 		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
-			$pluginInfo = PluginInfo_2_3::fromJson($result['body'], $this->debugMode);
+			$pluginInfo = PluginInfo_2_3::fromJson($result['body']);
 			$pluginInfo->filename = $this->pluginFile;
 			$pluginInfo->slug = $this->slug;
 		} else if ( $this->debugMode ) {
@@ -978,31 +978,26 @@ class PluginInfo_2_3 {
 	 * returned by an external update API.
 	 * 
 	 * @param string $json Valid JSON string representing plugin info.
-	 * @param bool $triggerErrors
 	 * @return PluginInfo|null New instance of PluginInfo, or NULL on error.
 	 */
-	public static function fromJson($json, $triggerErrors = false){
+	public static function fromJson($json){
 		/** @var StdClass $apiResponse */
 		$apiResponse = json_decode($json);
 		if ( empty($apiResponse) || !is_object($apiResponse) ){
-			if ( $triggerErrors ) {
-				trigger_error(
-					"Failed to parse plugin metadata. Try validating your .json file with http://jsonlint.com/",
-					E_USER_NOTICE
-				);
-			}
+			trigger_error(
+				"Failed to parse plugin metadata. Try validating your .json file with http://jsonlint.com/",
+				E_USER_NOTICE
+			);
 			return null;
 		}
 		
 		//Very, very basic validation.
 		$valid = isset($apiResponse->name) && !empty($apiResponse->name) && isset($apiResponse->version) && !empty($apiResponse->version);
 		if ( !$valid ){
-			if ( $triggerErrors ) {
-				trigger_error(
-					"The plugin metadata file does not contain the required 'name' and/or 'version' keys.",
-					E_USER_NOTICE
-				);
-			}
+			trigger_error(
+				"The plugin metadata file does not contain the required 'name' and/or 'version' keys.",
+				E_USER_NOTICE
+			);
 			return null;
 		}
 		
@@ -1091,14 +1086,13 @@ class PluginUpdate_2_3 {
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
 	 * 
 	 * @param string $json
-	 * @param bool $triggerErrors
 	 * @return PluginUpdate|null
 	 */
-	public static function fromJson($json, $triggerErrors = false){
+	public static function fromJson($json){
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo_2_3::fromJson($json, $triggerErrors);
+		$pluginInfo = PluginInfo_2_3::fromJson($json);
 		if ( $pluginInfo != null ) {
 			return self::fromPluginInfo($pluginInfo);
 		} else {
