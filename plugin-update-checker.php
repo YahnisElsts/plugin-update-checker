@@ -243,7 +243,7 @@ class PluginUpdateChecker_2_3 {
 			} else {
 				$message .= "wp_remote_get() returned an unexpected result.";
 			}
-			trigger_error($message, E_USER_WARNING);
+			$this->triggerError($message, E_USER_WARNING);
 		}
 
 		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
@@ -283,15 +283,13 @@ class PluginUpdateChecker_2_3 {
 			return $pluginHeader['Version'];
 		} else {
 			//This can happen if the filename points to something that is not a plugin.
-			if ( $this->debugMode ) {
-				trigger_error(
-					sprintf(
-						"Can't to read the Version header for '%s'. The filename is incorrect or is not a plugin.",
-						$this->pluginFile
-					),
-					E_USER_WARNING
-				);
-			}
+			$this->triggerError(
+				sprintf(
+					"Can't to read the Version header for '%s'. The filename is incorrect or is not a plugin.",
+					$this->pluginFile
+				),
+				E_USER_WARNING
+			);
 			return null;
 		}
 	}
@@ -304,15 +302,13 @@ class PluginUpdateChecker_2_3 {
 	protected function getPluginHeader() {
 		if ( !is_file($this->pluginAbsolutePath) ) {
 			//This can happen if the plugin filename is wrong.
-			if ( $this->debugMode ) {
-				trigger_error(
-					sprintf(
-						"Can't to read the plugin header for '%s'. The file does not exist.",
-						$this->pluginFile
-					),
-					E_USER_WARNING
-				);
-			}
+			$this->triggerError(
+				sprintf(
+					"Can't to read the plugin header for '%s'. The file does not exist.",
+					$this->pluginFile
+				),
+				E_USER_WARNING
+			);
 			return array();
 		}
 
@@ -332,12 +328,10 @@ class PluginUpdateChecker_2_3 {
 		$installedVersion = $this->getInstalledVersion();
 		//Fail silently if we can't find the plugin or read its header.
 		if ( $installedVersion === null ) {
-			if ( $this->debugMode ) {
-				trigger_error(
-					sprintf('Skipping update check for %s - installed version unknown.', $this->pluginFile),
-					E_USER_WARNING
-				);
-			}
+			$this->triggerError(
+				sprintf('Skipping update check for %s - installed version unknown.', $this->pluginFile),
+				E_USER_WARNING
+			);
 			return null;
 		}
 
@@ -929,6 +923,18 @@ class PluginUpdateChecker_2_3 {
 		if ( class_exists('Debug_Bar', false) && file_exists($debugBarPlugin) ) {
 			require_once $debugBarPlugin;
 			$this->debugBarPlugin = new PucDebugBarPlugin($this);
+		}
+	}
+
+	/**
+	 * Trigger a PHP error, but only when $debugMode is enabled.
+	 *
+	 * @param string $message
+	 * @param int $errorType
+	 */
+	protected function triggerError($message, $errorType) {
+		if ( $this->debugMode ) {
+			trigger_error($message, $errorType);
 		}
 	}
 }
