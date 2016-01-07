@@ -580,6 +580,7 @@ class PluginUpdateChecker_2_3 {
 				}
 			}
 
+			/** @var WP_Upgrader_Skin $upgrader->skin */
 			$upgrader->skin->feedback(sprintf(
 				'Renaming %s to %s&#8230;',
 				'<span class="code">' . basename($source) . '</span>',
