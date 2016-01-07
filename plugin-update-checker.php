@@ -229,25 +229,51 @@ class PluginUpdateChecker_2_3 {
 		);
 
 		//Try to parse the response
+		$status = $this->validateApiResponse($result);
 		$pluginInfo = null;
-		if ( !is_wp_error($result) && isset($result['response']['code']) && ($result['response']['code'] == 200) && !empty($result['body']) ){
+		if ( !is_wp_error($status) ){
 			$pluginInfo = PluginInfo_2_3::fromJson($result['body']);
 			$pluginInfo->filename = $this->pluginFile;
 			$pluginInfo->slug = $this->slug;
 		} else if ( $this->debugMode ) {
-			$message = sprintf("The URL %s does not point to a valid plugin metadata file. ", $url);
-			if ( is_wp_error($result) ) {
-				$message .= "WP HTTP error: " . $result->get_error_message();
-			} else if ( isset($result['response']['code']) ) {
-				$message .= "HTTP response code is " . $result['response']['code'] . " (expected: 200)";
-			} else {
-				$message .= "wp_remote_get() returned an unexpected result.";
-			}
-			$this->triggerError($message, E_USER_WARNING);
+			$this->triggerError(
+				sprintf('The URL %s does not point to a valid plugin metadata file. ', $url)
+					. $status->get_error_message(),
+				E_USER_WARNING
+			);
 		}
 
 		$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
 		return $pluginInfo;
+	}
+
+	/**
+	 * Check if $result is a successful update API response.
+	 *
+	 * @param array|WP_Error $result
+	 * @return true|WP_Error
+	 */
+	private function validateApiResponse($result) {
+		if ( is_wp_error($result) ) { /** @var WP_Error $result */
+			return new WP_Error($result->get_error_code(), 'WP HTTP Error: ' . $result->get_error_message());
+		}
+
+		if ( !isset($result['response']['code']) ) {
+			return new WP_Error('puc_no_response_code', 'wp_remote_get() returned an unexpected result.');
+		}
+
+		if ( $result['response']['code'] !== 200 ) {
+			return new WP_Error(
+				'puc_unexpected_response_code',
+				'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
+			);
+		}
+
+		if ( empty($result['body']) ) {
+			return new WP_Error('puc_empty_response', 'The metadata file appears to be empty.');
+		}
+
+		return true;
 	}
 
 	/**
