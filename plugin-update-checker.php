@@ -533,12 +533,14 @@ class PluginUpdateChecker_2_3 {
 	 * GitHub and other repositories provide ZIP downloads, but they often use directory names like
 	 * "project-branch" or "project-tag-hash". We need to change the name to the actual plugin folder.
 	 *
+	 * This is a hook callback. Don't call it from a plugin.
+	 *
 	 * @param string $source The directory to copy to /wp-content/plugins. Usually a subdirectory of $remoteSource.
 	 * @param string $remoteSource WordPress has extracted the update to this directory.
 	 * @param WP_Upgrader $upgrader
 	 * @return string|WP_Error
 	 */
-	function fixDirectoryName($source, $remoteSource, $upgrader) {
+	public function fixDirectoryName($source, $remoteSource, $upgrader) {
 		global $wp_filesystem; /** @var WP_Filesystem_Base $wp_filesystem */
 
 		//Basic sanity checks.
