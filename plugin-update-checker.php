@@ -1027,7 +1027,7 @@ class PluginInfo_2_3 {
 		}
 		
 		//Very, very basic validation.
-		$valid = isset($apiResponse->name) && !empty($apiResponse->name) && isset($apiResponse->version) && !empty($apiResponse->version);
+		$valid = isset($apiResponse->name, $apiResponse->version) && !empty($apiResponse->name) && !empty($apiResponse->version);
 		if ( !$valid ){
 			trigger_error(
 				"The plugin metadata file does not contain the required 'name' and/or 'version' keys.",
@@ -1040,6 +1040,9 @@ class PluginInfo_2_3 {
 		foreach(get_object_vars($apiResponse) as $key => $value){
 			$info->$key = $value;
 		}
+
+		//json_decode decodes assoc. arrays as objects. We want it as an array.
+		$info->sections = (array)$info->sections;
 		
 		return $info;		
 	}
@@ -1068,20 +1071,8 @@ class PluginInfo_2_3 {
 
 		//Other fields need to be renamed and/or transformed.
 		$info->download_link = $this->download_url;
-		
-		if ( !empty($this->author_homepage) ){
-			$info->author = sprintf('<a href="%s">%s</a>', $this->author_homepage, $this->author);
-		} else {
-			$info->author = $this->author;
-		}
-		
-		if ( is_object($this->sections) ){
-			$info->sections = get_object_vars($this->sections);
-		} elseif ( is_array($this->sections) ) {
-			$info->sections = $this->sections;
-		} else {
-			$info->sections = array('description' => '');
-		}
+		$info->author = $this->getFormattedAuthor();
+		$info->sections = array_merge(array('description' => ''), $this->sections);
 
 		if ( !empty($this->banners) ) {
 			//WP expects an array with two keys: "high" and "low". Both are optional.
@@ -1091,6 +1082,13 @@ class PluginInfo_2_3 {
 		}
 
 		return $info;
+	}
+
+	protected function getFormattedAuthor() {
+		if ( !empty($this->author_homepage) ){
+			return sprintf('<a href="%s">%s</a>', $this->author_homepage, $this->author);
+		}
+		return $this->author;
 	}
 }
 	
