@@ -372,6 +372,7 @@ class PluginUpdateChecker_2_3 {
 		}
 
 		if ( !function_exists('get_plugin_data') ){
+			/** @noinspection PhpIncludeInspection */
 			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 		}
 		return get_plugin_data($this->pluginAbsolutePath, false, false);
@@ -702,6 +703,7 @@ class PluginUpdateChecker_2_3 {
 			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
 			//do is compare those headers to the headers of installed plugins.
 			if ( !function_exists('get_plugins') ){
+				/** @noinspection PhpIncludeInspection */
 				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 			}
 
