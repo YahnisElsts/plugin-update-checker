@@ -58,7 +58,7 @@ class PluginUpdateChecker_2_3 {
 		$this->checkPeriod = $checkPeriod;
 		$this->slug = $slug;
 		$this->optionName = $optionName;
-		$this->debugMode = defined('WP_DEBUG') && WP_DEBUG;
+		$this->debugMode = (bool)(constant('WP_DEBUG'));
 
 		//If no slug is specified, use the name of the main plugin file as the slug.
 		//For example, 'my-cool-plugin/cool-plugin.php' becomes 'cool-plugin'.
