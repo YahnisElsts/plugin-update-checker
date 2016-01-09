@@ -38,6 +38,8 @@ class PluginUpdateChecker_2_3 {
 
 	private $upgradedPluginFile = null; //The plugin that is currently being upgraded by WordPress.
 
+	private $metadataHost = ''; //The host component of $metadataUrl.
+
 	/**
 	 * Class constructor.
 	 *
@@ -157,6 +159,10 @@ class PluginUpdateChecker_2_3 {
 		add_filter('upgrader_package_options', array($this, 'setUpgradedPluginFromOptions'), 10, 1);
 		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
 		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
+
+		//Allow HTTP requests to the metadata URL even if it's on a local host.
+		$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
+		add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 	}
 	
 	/**
@@ -194,6 +200,31 @@ class PluginUpdateChecker_2_3 {
 		return $this->cronHook;
 	}
 	
+	/**
+	 * Explicitly allow HTTP requests to the metadata URL.
+	 *
+	 * WordPress has a security feature where the HTTP API will reject all requests that are sent to
+	 * another site hosted on the same server as the current site (IP match), a local host, or a local
+	 * IP, unless the host exactly matches the current site.
+	 *
+	 * This feature is opt-in (at least in WP 4.4). Apparently some people enable it.
+	 *
+	 * That can be a problem when you're developing your plugin and you decide to host the update information
+	 * on the same server as your test site. Update requests will mysteriously fail.
+	 *
+	 * We fix that by adding an exception for the metadata host.
+	 *
+	 * @param bool $allow
+	 * @param string $host
+	 * @return bool
+	 */
+	public function allowMetadataHost($allow, $host) {
+		if ( strtolower($host) === strtolower($this->metadataHost) ) {
+			return true;
+		}
+		return $allow;
+	}
+
 	/**
 	 * Retrieve plugin info from the configured API endpoint.
 	 * 
