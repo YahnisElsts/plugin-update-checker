@@ -558,28 +558,49 @@ class PluginUpdateChecker_2_3 {
 		if ( !empty($update) ) {
 			//Let plugins filter the update info before it's passed on to WordPress.
 			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
-			if ( !is_object($updates) ) {
-				$updates = new StdClass();
-				$updates->response = array();
-			}
+			$updates = $this->addUpdateToList($updates, $update);
+		} else {
+			//Clean up any stale update info.
+			$updates = $this->removeUpdateFromList($updates);
+		}
 
-			$wpUpdate = $update->toWpFormat();
-			$pluginFile = $this->pluginFile;
+		return $updates;
+	}
 
-			if ( $this->isMuPlugin() ) {
-				//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
-				$wpUpdate->package = null;
-				$pluginFile = $this->muPluginFile;
-			}
-			$updates->response[$pluginFile] = $wpUpdate;
+	/**
+	 * @param StdClass|null $updates
+	 * @param PluginUpdate $updateToAdd
+	 * @return StdClass
+	 */
+	private function addUpdateToList($updates, $updateToAdd) {
+		if ( !is_object($updates) ) {
+			$updates = new StdClass();
+			$updates->response = array();
+		}
 
-		} else if ( isset($updates, $updates->response) ) {
+		$wpUpdate = $updateToAdd->toWpFormat();
+		$pluginFile = $this->pluginFile;
+
+		if ( $this->isMuPlugin() ) {
+			//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
+			$wpUpdate->package = null;
+			$pluginFile = $this->muPluginFile;
+		}
+		$updates->response[$pluginFile] = $wpUpdate;
+		return $updates;
+	}
+
+	/**
+	 * @param StdClass|null $updates
+	 * @return StdClass|null
+	 */
+	private function removeUpdateFromList($updates) {
+		if ( isset($updates, $updates->response) ) {
 			unset($updates->response[$this->pluginFile]);
 			if ( !empty($this->muPluginFile) ) {
 				unset($updates->response[$this->muPluginFile]);
 			}
 		}
-
 		return $updates;
 	}
 
