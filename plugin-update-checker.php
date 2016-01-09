@@ -268,7 +268,7 @@ class PluginUpdateChecker_2_3 {
 				$pluginInfo->filename = $this->pluginFile;
 				$pluginInfo->slug = $this->slug;
 			}
-		} else if ( $this->debugMode ) {
+		} else {
 			$this->triggerError(
 				sprintf('The URL %s does not point to a valid plugin metadata file. ', $url)
 					. $status->get_error_message(),
