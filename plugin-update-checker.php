@@ -72,7 +72,7 @@ class PluginUpdateChecker_2_3 {
 
 		//Backwards compatibility: If the plugin is a mu-plugin but no $muPluginFile is specified, assume
 		//it's the same as $pluginFile given that it's not in a subdirectory (WP only looks in the base dir).
-		if ( empty($this->muPluginFile) && (strpbrk($this->pluginFile, '/\\') === false) && $this->isMuPlugin() ) {
+		if ( (strpbrk($this->pluginFile, '/\\') === false) && $this->isUnknownMuPlugin() ) {
 			$this->muPluginFile = $this->pluginFile;
 		}
 		
@@ -551,7 +551,7 @@ class PluginUpdateChecker_2_3 {
 
 		//No update notifications for mu-plugins unless explicitly enabled. The MU plugin file
 		//is usually different from the main plugin file so the update wouldn't show up properly anyway.
-		if ( !empty($update) && empty($this->muPluginFile) && $this->isMuPlugin() ) {
+		if ( $this->isUnknownMuPlugin() ) {
 			$update = null;
 		}
 
@@ -899,6 +899,16 @@ class PluginUpdateChecker_2_3 {
 		}
 
 		return $cachedResult;
+	}
+
+	/**
+	 * MU plugins are partially supported, but only when we know which file in mu-plugins
+	 * corresponds to this plugin.
+	 *
+	 * @return bool
+	 */
+	protected function isUnknownMuPlugin() {
+		return empty($this->muPluginFile) && $this->isMuPlugin();
 	}
 
 	/**
