@@ -264,8 +264,10 @@ class PluginUpdateChecker_2_3 {
 		$pluginInfo = null;
 		if ( !is_wp_error($status) ){
 			$pluginInfo = PluginInfo_2_3::fromJson($result['body']);
-			$pluginInfo->filename = $this->pluginFile;
-			$pluginInfo->slug = $this->slug;
+			if ( $pluginInfo !== null ) {
+				$pluginInfo->filename = $this->pluginFile;
+				$pluginInfo->slug = $this->slug;
+			}
 		} else if ( $this->debugMode ) {
 			$this->triggerError(
 				sprintf('The URL %s does not point to a valid plugin metadata file. ', $url)
