@@ -44,7 +44,7 @@ class PucGitHubChecker_2_2 extends PluginUpdateChecker_2_2 {
 			$this->userName = $matches['username'];
 			$this->repositoryName = $matches['repository'];
 		} else {
-			throw new InvalidArgumentException( __('Invalid GitHub repository URL: ', 'plugin-update-checker') . '"' . $repositoryUrl . '"');
+			throw new InvalidArgumentException('Invalid GitHub repository URL: "' . $repositoryUrl . '"');
 		}
 
 		parent::__construct($repositoryUrl, $pluginFile, '', $checkPeriod, $optionName, $muPluginFile);
@@ -302,7 +302,7 @@ class PucGitHubChecker_2_2 extends PluginUpdateChecker_2_2 {
 
 		return new WP_Error(
 			'puc-github-http-error',
-			__('GitHub API error. HTTP status: ', 'plugin-update-checker') . $code
+			'GitHub API error. HTTP status: ' . $code
 		);
 	}
 
