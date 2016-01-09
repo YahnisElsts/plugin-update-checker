@@ -985,6 +985,7 @@ class PluginUpdateChecker_2_3 {
 	public function initDebugBarPanel() {
 		$debugBarPlugin = dirname(__FILE__) . '/debug-bar-plugin.php';
 		if ( class_exists('Debug_Bar', false) && file_exists($debugBarPlugin) ) {
+			/** @noinspection PhpIncludeInspection */
 			require_once $debugBarPlugin;
 			$this->debugBarPlugin = new PucDebugBarPlugin($this);
 		}
