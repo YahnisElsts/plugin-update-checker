@@ -72,7 +72,7 @@ class PluginUpdateChecker_2_3 {
 
 		//Backwards compatibility: If the plugin is a mu-plugin but no $muPluginFile is specified, assume
 		//it's the same as $pluginFile given that it's not in a subdirectory (WP only looks in the base dir).
-		if ( empty($this->muPluginFile) && (strpbrk($this->pluginFile, '/\\') === false) && $this->isMuPlugin() ) {
+		if ( (strpbrk($this->pluginFile, '/\\') === false) && $this->isUnknownMuPlugin() ) {
 			$this->muPluginFile = $this->pluginFile;
 		}
 		
@@ -551,35 +551,56 @@ class PluginUpdateChecker_2_3 {
 
 		//No update notifications for mu-plugins unless explicitly enabled. The MU plugin file
 		//is usually different from the main plugin file so the update wouldn't show up properly anyway.
-		if ( !empty($update) && empty($this->muPluginFile) && $this->isMuPlugin() ) {
+		if ( $this->isUnknownMuPlugin() ) {
 			$update = null;
 		}
 
 		if ( !empty($update) ) {
 			//Let plugins filter the update info before it's passed on to WordPress.
 			$update = apply_filters('puc_pre_inject_update-' . $this->slug, $update);
-			if ( !is_object($updates) ) {
-				$updates = new StdClass();
-				$updates->response = array();
-			}
+			$updates = $this->addUpdateToList($updates, $update);
+		} else {
+			//Clean up any stale update info.
+			$updates = $this->removeUpdateFromList($updates);
+		}
 
-			$wpUpdate = $update->toWpFormat();
-			$pluginFile = $this->pluginFile;
+		return $updates;
+	}
 
-			if ( $this->isMuPlugin() ) {
-				//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
-				$wpUpdate->package = null;
-				$pluginFile = $this->muPluginFile;
-			}
-			$updates->response[$pluginFile] = $wpUpdate;
+	/**
+	 * @param StdClass|null $updates
+	 * @param PluginUpdate $updateToAdd
+	 * @return StdClass
+	 */
+	private function addUpdateToList($updates, $updateToAdd) {
+		if ( !is_object($updates) ) {
+			$updates = new StdClass();
+			$updates->response = array();
+		}
 
-		} else if ( isset($updates, $updates->response) ) {
+		$wpUpdate = $updateToAdd->toWpFormat();
+		$pluginFile = $this->pluginFile;
+
+		if ( $this->isMuPlugin() ) {
+			//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
+			$wpUpdate->package = null;
+			$pluginFile = $this->muPluginFile;
+		}
+		$updates->response[$pluginFile] = $wpUpdate;
+		return $updates;
+	}
+
+	/**
+	 * @param StdClass|null $updates
+	 * @return StdClass|null
+	 */
+	private function removeUpdateFromList($updates) {
+		if ( isset($updates, $updates->response) ) {
 			unset($updates->response[$this->pluginFile]);
 			if ( !empty($this->muPluginFile) ) {
 				unset($updates->response[$this->muPluginFile]);
 			}
 		}
-
 		return $updates;
 	}
 
@@ -899,6 +920,16 @@ class PluginUpdateChecker_2_3 {
 		}
 
 		return $cachedResult;
+	}
+
+	/**
+	 * MU plugins are partially supported, but only when we know which file in mu-plugins
+	 * corresponds to this plugin.
+	 *
+	 * @return bool
+	 */
+	protected function isUnknownMuPlugin() {
+		return empty($this->muPluginFile) && $this->isMuPlugin();
 	}
 
 	/**
