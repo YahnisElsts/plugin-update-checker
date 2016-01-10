@@ -1093,13 +1093,9 @@ class PluginInfo_2_3 {
 			return null;
 		}
 		
-		//Very, very basic validation.
-		$valid = isset($apiResponse->name, $apiResponse->version) && !empty($apiResponse->name) && !empty($apiResponse->version);
-		if ( !$valid ){
-			trigger_error(
-				"The plugin metadata file does not contain the required 'name' and/or 'version' keys.",
-				E_USER_NOTICE
-			);
+		$valid = self::validateMetadata($apiResponse);
+		if ( is_wp_error($valid) ){
+			trigger_error($valid->get_error_message(), E_USER_NOTICE);
 			return null;
 		}
 		
@@ -1113,6 +1109,27 @@ class PluginInfo_2_3 {
 		
 		return $info;		
 	}
+
+	/**
+	 * Very, very basic validation.
+	 *
+	 * @param StdClass $apiResponse
+	 * @return bool|WP_Error
+	 */
+	protected static function validateMetadata($apiResponse) {
+		if (
+			!isset($apiResponse->name, $apiResponse->version)
+			|| empty($apiResponse->name)
+			|| empty($apiResponse->version)
+		) {
+			return new WP_Error(
+				'puc-invalid-metadata',
+				"The plugin metadata file does not contain the required 'name' and/or 'version' keys."
+			);
+		}
+		return true;
+	}
+
 	
 	/**
 	 * Transform plugin info into the format used by the native WordPress.org API
