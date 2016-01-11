@@ -110,24 +110,7 @@ class PucGitHubChecker_2_3 extends PluginUpdateChecker_2_3 {
 		//Try parsing readme.txt. If it's formatted according to WordPress.org standards, it will contain
 		//a lot of useful information like the required/tested WP version, changelog, and so on.
 		if ( $this->readmeTxtExistsLocally() ) {
-			$readmeTxt = $this->getRemoteFile('readme.txt', $ref);
-			if ( !empty($readmeTxt) ) {
-				$readme = $this->parseReadme($readmeTxt);
-
-				if ( isset($readme['sections']) ) {
-					$info->sections = array_merge($info->sections, $readme['sections']);
-				}
-				if ( !empty($readme['tested_up_to']) ) {
-					$info->tested = $readme['tested_up_to'];
-				}
-				if ( !empty($readme['requires_at_least']) ) {
-					$info->requires = $readme['requires_at_least'];
-				}
-
-				if ( isset($readme['upgrade_notice'], $readme['upgrade_notice'][$info->version]) ) {
-					$info->upgrade_notice = $readme['upgrade_notice'][$info->version];
-				}
-			}
+			$this->setInfoFromRemoteReadme($ref, $info);
 		}
 
 		//The changelog might be in a separate file.
@@ -404,6 +387,35 @@ class PucGitHubChecker_2_3 extends PluginUpdateChecker_2_3 {
 		}
 		if ( !empty($fileHeader['Description']) ) {
 			$pluginInfo->sections['description'] = $fileHeader['Description'];
+		}
+	}
+
+	/**
+	 * Copy plugin metadata from the remote readme.txt file.
+	 *
+	 * @param string $ref GitHub tag or branch where to look for the readme.
+	 * @param PluginInfo_2_3 $pluginInfo
+	 */
+	protected function setInfoFromRemoteReadme($ref, $pluginInfo) {
+		$readmeTxt = $this->getRemoteFile('readme.txt', $ref);
+		if ( empty($readmeTxt) ) {
+			return;
+		}
+
+		$readme = $this->parseReadme($readmeTxt);
+
+		if ( isset($readme['sections']) ) {
+			$pluginInfo->sections = array_merge($pluginInfo->sections, $readme['sections']);
+		}
+		if ( !empty($readme['tested_up_to']) ) {
+			$pluginInfo->tested = $readme['tested_up_to'];
+		}
+		if ( !empty($readme['requires_at_least']) ) {
+			$pluginInfo->requires = $readme['requires_at_least'];
+		}
+
+		if ( isset($readme['upgrade_notice'], $readme['upgrade_notice'][$pluginInfo->version]) ) {
+			$pluginInfo->upgrade_notice = $readme['upgrade_notice'][$pluginInfo->version];
 		}
 	}
 
