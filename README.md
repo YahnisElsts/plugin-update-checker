@@ -95,3 +95,11 @@ The GitHub version of the library will pull update details from the following pa
 	- Local plugin headers (i.e. the currently installed version).
 - Ratings, banners, screenshots
 	- Not supported.
+
+Resources
+---------
+
+- [Theme Update Checker](http://w-shadow.com/blog/2011/06/02/automatic-updates-for-commercial-themes/)
+- [Debug Bar](https://wordpress.org/plugins/debug-bar/) - useful for testing and debugging the update checker.
+- [Securing download links](http://w-shadow.com/blog/2013/03/19/plugin-updates-securing-download-links/) - a general overview.
+- [A GUI for entering download credentials](http://open-tools.net/documentation/tutorial-automatic-updates.html#wordpress)
