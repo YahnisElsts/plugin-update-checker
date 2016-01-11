@@ -636,7 +636,7 @@ class PluginUpdateChecker_2_3 {
 
 		//Rename the source to match the existing plugin directory.
 		$pluginDirectoryName = dirname($this->pluginFile);
-		if ( ($pluginDirectoryName === '.') || ($pluginDirectoryName === '/') ) {
+		if ( $pluginDirectoryName === '.' ) {
 			return $source;
 		}
 		$correctedSource = trailingslashit($remoteSource) . $pluginDirectoryName . '/';
@@ -644,21 +644,15 @@ class PluginUpdateChecker_2_3 {
 			//The update archive should contain a single directory that contains the rest of plugin files. Otherwise,
 			//WordPress will try to copy the entire working directory ($source == $remoteSource). We can't rename
 			//$remoteSource because that would break WordPress code that cleans up temporary files after update.
-			$sourceFiles = $wp_filesystem->dirlist($remoteSource);
-			if ( is_array($sourceFiles) ) {
-				$sourceFiles = array_keys($sourceFiles);
-				$firstFilePath = trailingslashit($remoteSource) . $sourceFiles[0];
-
-				if ( (count($sourceFiles) > 1) || (!$wp_filesystem->is_dir($firstFilePath)) ) {
-					return new WP_Error(
-						'puc-incorrect-directory-structure',
-						sprintf(
-							'The directory structure of the update is incorrect. All plugin files should be inside ' .
-							'a directory named <span class="code">%s</span>, not at the root of the ZIP file.',
-							htmlentities($this->slug)
-						)
-					);
-				}
+			if ( $this->isBadDirectoryStructure($remoteSource) ) {
+				return new WP_Error(
+					'puc-incorrect-directory-structure',
+					sprintf(
+						'The directory structure of the update is incorrect. All plugin files should be inside ' .
+						'a directory named <span class="code">%s</span>, not at the root of the ZIP file.',
+						htmlentities($this->slug)
+					)
+				);
 			}
 
 			/** @var WP_Upgrader_Skin $upgrader->skin */
@@ -680,6 +674,27 @@ class PluginUpdateChecker_2_3 {
 		}
 
 		return $source;
+	}
+
+	/**
+	 * Check for incorrect update directory structure. An update must contain a single directory,
+	 * all other files should be inside that directory.
+	 *
+	 * @param string $remoteSource Directory path.
+	 * @return bool
+	 */
+	private function isBadDirectoryStructure($remoteSource) {
+		global $wp_filesystem; /** @var WP_Filesystem_Base $wp_filesystem */
+
+		$sourceFiles = $wp_filesystem->dirlist($remoteSource);
+		if ( is_array($sourceFiles) ) {
+			$sourceFiles = array_keys($sourceFiles);
+			$firstFilePath = trailingslashit($remoteSource) . $sourceFiles[0];
+			return (count($sourceFiles) > 1) || (!$wp_filesystem->is_dir($firstFilePath));
+		}
+
+		//Assume it's fine.
+		return false;
 	}
 
 	/**
