@@ -738,31 +738,41 @@ class PluginUpdateChecker_2_3 {
 			//This case is tricky because Bulk_Plugin_Upgrader_Skin (etc) doesn't actually store the plugin
 			//filename anywhere. Instead, it has the plugin headers in $plugin_info. So the best we can
 			//do is compare those headers to the headers of installed plugins.
-			if ( !function_exists('get_plugins') ){
-				/** @noinspection PhpIncludeInspection */
-				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-			}
-
-			$installedPlugins = get_plugins();
-			$matches = array();
-			foreach($installedPlugins as $pluginBasename => $headers) {
-				$diff1 = array_diff_assoc($headers, $skin->plugin_info);
-				$diff2 = array_diff_assoc($skin->plugin_info, $headers);
-				if ( empty($diff1) && empty($diff2) ) {
-					$matches[] = $pluginBasename;
-				}
-			}
-
-			//It's possible (though very unlikely) that there could be two plugins with identical
-			//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
-			if ( count($matches) !== 1 ) {
-				return null;
-			}
-
-			$pluginFile = reset($matches);
+			$pluginFile = $this->identifyPluginByHeaders($skin->plugin_info);
 		}
 
 		return $pluginFile;
+	}
+
+	/**
+	 * Identify an installed plugin based on its headers.
+	 *
+	 * @param array $searchHeaders The plugin file header to look for.
+	 * @return string|null Plugin basename ("foo/bar.php"), or NULL if we can't identify the plugin.
+	 */
+	private function identifyPluginByHeaders($searchHeaders) {
+		if ( !function_exists('get_plugins') ){
+			/** @noinspection PhpIncludeInspection */
+			require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+		}
+
+		$installedPlugins = get_plugins();
+		$matches = array();
+		foreach($installedPlugins as $pluginBasename => $headers) {
+			$diff1 = array_diff_assoc($headers, $searchHeaders);
+			$diff2 = array_diff_assoc($searchHeaders, $headers);
+			if ( empty($diff1) && empty($diff2) ) {
+				$matches[] = $pluginBasename;
+			}
+		}
+
+		//It's possible (though very unlikely) that there could be two plugins with identical
+		//headers. In that case, we can't unambiguously identify the plugin that's being upgraded.
+		if ( count($matches) !== 1 ) {
+			return null;
+		}
+
+		return reset($matches);
 	}
 
 	/**
