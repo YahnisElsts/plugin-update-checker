@@ -3,7 +3,7 @@
  * Plugin Update Checker Library 2.3.0
  * http://w-shadow.com/
  * 
- * Copyright 2015 Janis Elsts
+ * Copyright 2016 Janis Elsts
  * Released under the MIT license. See license.txt for details.
  */
 
@@ -13,7 +13,7 @@ if ( !class_exists('PluginUpdateChecker_2_3', false) ):
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
- * @copyright 2015
+ * @copyright 2016
  * @version 2.3
  * @access public
  */
@@ -943,7 +943,7 @@ if ( !class_exists('PluginInfo_2_3', false) ):
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
- * @copyright 2015
+ * @copyright 2016
  * @version 2.3
  * @access public
  */
@@ -1084,7 +1084,7 @@ if ( !class_exists('PluginUpdate_2_3', false) ):
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
- * @copyright 2015
+ * @copyright 2016
  * @version 2.3
  * @access public
  */
