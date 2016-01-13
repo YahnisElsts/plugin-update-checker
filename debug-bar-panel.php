@@ -48,20 +48,21 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 		}
 		$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $this->responseBox);
 
-		if ( $this->updateChecker->checkPeriod > 0 ) {
-			$this->row('Automatic checks', 'Every ' . $this->updateChecker->checkPeriod . ' hours');
+		$scheduler = $this->updateChecker->scheduler;
+		if ( $scheduler->checkPeriod > 0 ) {
+			$this->row('Automatic checks', 'Every ' . $scheduler->checkPeriod . ' hours');
 		} else {
 			$this->row('Automatic checks', 'Disabled');
 		}
 
-		if ( isset($this->updateChecker->throttleRedundantChecks) ) {
-			if ( $this->updateChecker->throttleRedundantChecks && ($this->updateChecker->checkPeriod > 0) ) {
+		if ( isset($scheduler->throttleRedundantChecks) ) {
+			if ( $scheduler->throttleRedundantChecks && ($scheduler->checkPeriod > 0) ) {
 				$this->row(
 					'Throttling',
 					sprintf(
 						'Enabled. If an update is already available, check for updates every %1$d hours instead of every %2$d hours.',
-						$this->updateChecker->throttledCheckPeriod,
-						$this->updateChecker->checkPeriod
+						$scheduler->throttledCheckPeriod,
+						$scheduler->checkPeriod
 					)
 				);
 			} else {
@@ -86,7 +87,7 @@ class PluginUpdateCheckerPanel extends Debug_Bar_Panel {
 			$this->row('Last check', 'Never');
 		}
 
-		$nextCheck = wp_next_scheduled($this->updateChecker->getCronHookName());
+		$nextCheck = wp_next_scheduled($this->updateChecker->scheduler->getCronHookName());
 		$this->row('Next automatic check', $this->formatTimeWithDelta($nextCheck));
 
 		if ( isset($state, $state->checkedVersion) ) {

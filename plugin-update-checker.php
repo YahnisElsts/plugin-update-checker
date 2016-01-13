@@ -22,17 +22,13 @@ class PluginUpdateChecker_2_3 {
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 	public $slug = '';        //Plugin slug.
-	public $checkPeriod = 12; //How often to check for updates (in hours).
 	public $optionName = '';  //Where to store the update info.
 	public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
 	public $debugMode = false; //Set to TRUE to enable error reporting. Errors are raised using trigger_error()
                                //and should be logged to the standard PHP error log.
+	public $scheduler;
 
-	public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
-	public $throttledCheckPeriod = 72;
-
-	private $cronHook = null;
 	private $debugBarPlugin = null;
 	private $cachedInstalledVersion = null;
 
@@ -55,7 +51,6 @@ class PluginUpdateChecker_2_3 {
 		$this->pluginAbsolutePath = $pluginFile;
 		$this->pluginFile = plugin_basename($this->pluginAbsolutePath);
 		$this->muPluginFile = $muPluginFile;
-		$this->checkPeriod = $checkPeriod;
 		$this->slug = $slug;
 		$this->optionName = $optionName;
 		$this->debugMode = (bool)(constant('WP_DEBUG'));
@@ -75,8 +70,23 @@ class PluginUpdateChecker_2_3 {
 		if ( (strpbrk($this->pluginFile, '/\\') === false) && $this->isUnknownMuPlugin() ) {
 			$this->muPluginFile = $this->pluginFile;
 		}
-		
+
+		$this->scheduler = $this->createScheduler($checkPeriod);
+
 		$this->installHooks();
+	}
+
+	/**
+	 * Create an instance of the scheduler.
+	 *
+	 * This is implemented as a method to make it possible for plugins to subclass the update checker
+	 * and substitute their own scheduler.
+	 *
+	 * @param int $checkPeriod
+	 * @return PucScheduler
+	 */
+	protected function createScheduler($checkPeriod) {
+		return new PucScheduler($this, $checkPeriod);
 	}
 	
 	/**
@@ -101,50 +111,6 @@ class PluginUpdateChecker_2_3 {
 		add_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
 		add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
 
-		//Set up the periodic update checks
-		$this->cronHook = 'check_plugin_updates-' . $this->slug;
-		if ( $this->checkPeriod > 0 ){
-			
-			//Trigger the check via Cron.
-			//Try to use one of the default schedules if possible as it's less likely to conflict
-			//with other plugins and their custom schedules.
-			$defaultSchedules = array(
-				1  => 'hourly',
-				12 => 'twicedaily',
-				24 => 'daily',
-			);
-			if ( array_key_exists($this->checkPeriod, $defaultSchedules) ) {
-				$scheduleName = $defaultSchedules[$this->checkPeriod];
-			} else {
-				//Use a custom cron schedule.
-				$scheduleName = 'every' . $this->checkPeriod . 'hours';
-				add_filter('cron_schedules', array($this, '_addCustomSchedule'));
-			}
-
-			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
-				wp_schedule_event(time(), $scheduleName, $this->cronHook);
-			}
-			add_action($this->cronHook, array($this, 'maybeCheckForUpdates'));
-			
-			register_deactivation_hook($this->pluginFile, array($this, '_removeUpdaterCron'));
-			
-			//In case Cron is disabled or unreliable, we also manually trigger 
-			//the periodic checks while the user is browsing the Dashboard. 
-			add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
-
-			//Like WordPress itself, we check more often on certain pages.
-			/** @see wp_update_plugins */
-			add_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
-			add_action('load-plugins.php', array($this, 'maybeCheckForUpdates'));
-			add_action('load-update.php', array($this, 'maybeCheckForUpdates'));
-			//This hook fires after a bulk update is complete.
-			add_action('upgrader_process_complete', array($this, 'maybeCheckForUpdates'), 11, 0);
-
-		} else {
-			//Periodic checks are disabled.
-			wp_clear_scheduled_hook($this->cronHook);
-		}
-
 		if ( did_action('plugins_loaded') ) {
 			$this->initDebugBarPanel();
 		} else {
@@ -163,41 +129,6 @@ class PluginUpdateChecker_2_3 {
 		//Allow HTTP requests to the metadata URL even if it's on a local host.
 		$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
 		add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
-	}
-	
-	/**
-	 * Add our custom schedule to the array of Cron schedules used by WP.
-	 * 
-	 * @param array $schedules
-	 * @return array
-	 */
-	public function _addCustomSchedule($schedules){
-		if ( $this->checkPeriod && ($this->checkPeriod > 0) ){
-			$scheduleName = 'every' . $this->checkPeriod . 'hours';
-			$schedules[$scheduleName] = array(
-				'interval' => $this->checkPeriod * 3600, 
-				'display' => sprintf('Every %d hours', $this->checkPeriod),
-			);
-		}
-		return $schedules;
-	}
-
-	/**
-	 * Remove the scheduled cron event that the library uses to check for updates.
-	 *
-	 * @return void
-	 */
-	public function _removeUpdaterCron(){
-		wp_clear_scheduled_hook($this->cronHook);
-	}
-
-	/**
-	 * Get the name of the update checker's WP-cron hook. Mostly useful for debugging.
-	 *
-	 * @return string
-	 */
-	public function getCronHookName() {
-		return $this->cronHook;
 	}
 	
 	/**
@@ -411,62 +342,6 @@ class PluginUpdateChecker_2_3 {
 		$this->setUpdateState($state);
 
 		return $this->getUpdate();
-	}
-	
-	/**
-	 * Check for updates if the configured check interval has already elapsed.
-	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
-	 *
-	 * You can override the default behaviour by using the "puc_check_now-$slug" filter.
-	 * The filter callback will be passed three parameters:
-	 *     - Current decision. TRUE = check updates now, FALSE = don't check now.
-	 *     - Last check time as a Unix timestamp.
-	 *     - Configured check period in hours.
-	 * Return TRUE to check for updates immediately, or FALSE to cancel.
-	 *
-	 * This method is declared public because it's a hook callback. Calling it directly is not recommended.
-	 */
-	public function maybeCheckForUpdates(){
-		if ( empty($this->checkPeriod) ){
-			return;
-		}
-
-		$currentFilter = current_filter();
-		if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
-			//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
-			$timeout = 60;
-		} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
-			//Also check more often on the "Plugins" page and /wp-admin/update.php.
-			$timeout = 3600;
-		} else if ( $this->throttleRedundantChecks && ($this->getUpdate() !== null) ) {
-			//Check less frequently if it's already known that an update is available.
-			$timeout = $this->throttledCheckPeriod * 3600;
-		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
-			//WordPress cron schedules are not exact, so lets do an update check even
-			//if slightly less than $checkPeriod hours have elapsed since the last check.
-			$cronFuzziness = 20 * 60;
-			$timeout = $this->checkPeriod * 3600 - $cronFuzziness;
-		} else {
-			$timeout = $this->checkPeriod * 3600;
-		}
-
-		$state = $this->getUpdateState();
-		$shouldCheck =
-			empty($state) ||
-			!isset($state->lastCheck) ||
-			( (time() - $state->lastCheck) >= $timeout );
-
-		//Let plugin authors substitute their own algorithm.
-		$shouldCheck = apply_filters(
-			'puc_check_now-' . $this->slug,
-			$shouldCheck,
-			(!empty($state) && isset($state->lastCheck)) ? $state->lastCheck : 0,
-			$this->checkPeriod
-		);
-
-		if ( $shouldCheck ){
-			$this->checkForUpdates();
-		}
 	}
 	
 	/**
@@ -1317,6 +1192,176 @@ class PluginUpdate_2_3 {
 }
 	
 endif;
+
+if ( !class_exists('PucScheduler', false) ):
+
+/**
+ * The scheduler decides when and how often to check for updates.
+ * It calls @see PluginUpdateChecker_2_3::checkForUpdates() to perform the actual checks.
+ *
+ * @version 3.0
+ */
+class PucScheduler {
+	public $checkPeriod = 12; //How often to check for updates (in hours).
+	public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
+	public $throttledCheckPeriod = 72;
+
+	/**
+	 * @var PluginUpdateChecker_2_3
+	 */
+	protected $updateChecker;
+
+	private $cronHook = null;
+
+	/**
+	 * Scheduler constructor.
+	 *
+	 * @param PluginUpdateChecker_2_3 $updateChecker
+	 * @param int $checkPeriod How often to check for updates (in hours).
+	 */
+	public function __construct($updateChecker, $checkPeriod) {
+		$this->updateChecker = $updateChecker;
+		$this->checkPeriod = $checkPeriod;
+
+		//Set up the periodic update checks
+		$this->cronHook = 'check_plugin_updates-' . $this->updateChecker->slug;
+		if ( $this->checkPeriod > 0 ){
+
+			//Trigger the check via Cron.
+			//Try to use one of the default schedules if possible as it's less likely to conflict
+			//with other plugins and their custom schedules.
+			$defaultSchedules = array(
+				1  => 'hourly',
+				12 => 'twicedaily',
+				24 => 'daily',
+			);
+			if ( array_key_exists($this->checkPeriod, $defaultSchedules) ) {
+				$scheduleName = $defaultSchedules[$this->checkPeriod];
+			} else {
+				//Use a custom cron schedule.
+				$scheduleName = 'every' . $this->checkPeriod . 'hours';
+				add_filter('cron_schedules', array($this, '_addCustomSchedule'));
+			}
+
+			if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
+				wp_schedule_event(time(), $scheduleName, $this->cronHook);
+			}
+			add_action($this->cronHook, array($this, 'maybeCheckForUpdates'));
+
+			register_deactivation_hook($this->updateChecker->pluginFile, array($this, '_removeUpdaterCron'));
+
+			//In case Cron is disabled or unreliable, we also manually trigger
+			//the periodic checks while the user is browsing the Dashboard.
+			add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
+
+			//Like WordPress itself, we check more often on certain pages.
+			/** @see wp_update_plugins */
+			add_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
+			add_action('load-plugins.php', array($this, 'maybeCheckForUpdates'));
+			add_action('load-update.php', array($this, 'maybeCheckForUpdates'));
+			//This hook fires after a bulk update is complete.
+			add_action('upgrader_process_complete', array($this, 'maybeCheckForUpdates'), 11, 0);
+
+		} else {
+			//Periodic checks are disabled.
+			wp_clear_scheduled_hook($this->cronHook);
+		}
+	}
+
+	/**
+	 * Check for updates if the configured check interval has already elapsed.
+	 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
+	 *
+	 * You can override the default behaviour by using the "puc_check_now-$slug" filter.
+	 * The filter callback will be passed three parameters:
+	 *     - Current decision. TRUE = check updates now, FALSE = don't check now.
+	 *     - Last check time as a Unix timestamp.
+	 *     - Configured check period in hours.
+	 * Return TRUE to check for updates immediately, or FALSE to cancel.
+	 *
+	 * This method is declared public because it's a hook callback. Calling it directly is not recommended.
+	 */
+	public function maybeCheckForUpdates(){
+		if ( empty($this->checkPeriod) ){
+			return;
+		}
+
+		$currentFilter = current_filter();
+		if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
+			//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
+			$timeout = 60;
+		} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
+			//Also check more often on the "Plugins" page and /wp-admin/update.php.
+			$timeout = 3600;
+		} else if ( $this->throttleRedundantChecks && ($this->updateChecker->getUpdate() !== null) ) {
+			//Check less frequently if it's already known that an update is available.
+			$timeout = $this->throttledCheckPeriod * 3600;
+		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
+			//WordPress cron schedules are not exact, so lets do an update check even
+			//if slightly less than $checkPeriod hours have elapsed since the last check.
+			$cronFuzziness = 20 * 60;
+			$timeout = $this->checkPeriod * 3600 - $cronFuzziness;
+		} else {
+			$timeout = $this->checkPeriod * 3600;
+		}
+
+		$state = $this->updateChecker->getUpdateState();
+		$shouldCheck =
+			empty($state) ||
+			!isset($state->lastCheck) ||
+			( (time() - $state->lastCheck) >= $timeout );
+
+		//Let plugin authors substitute their own algorithm.
+		$shouldCheck = apply_filters(
+			'puc_check_now-' . $this->updateChecker->slug,
+			$shouldCheck,
+			(!empty($state) && isset($state->lastCheck)) ? $state->lastCheck : 0,
+			$this->checkPeriod
+		);
+
+		if ( $shouldCheck ) {
+			$this->updateChecker->checkForUpdates();
+		}
+	}
+
+	/**
+	 * Add our custom schedule to the array of Cron schedules used by WP.
+	 *
+	 * @param array $schedules
+	 * @return array
+	 */
+	public function _addCustomSchedule($schedules){
+		if ( $this->checkPeriod && ($this->checkPeriod > 0) ){
+			$scheduleName = 'every' . $this->checkPeriod . 'hours';
+			$schedules[$scheduleName] = array(
+				'interval' => $this->checkPeriod * 3600,
+				'display' => sprintf('Every %d hours', $this->checkPeriod),
+			);
+		}
+		return $schedules;
+	}
+
+	/**
+	 * Remove the scheduled cron event that the library uses to check for updates.
+	 *
+	 * @return void
+	 */
+	public function _removeUpdaterCron(){
+		wp_clear_scheduled_hook($this->cronHook);
+	}
+
+	/**
+	 * Get the name of the update checker's WP-cron hook. Mostly useful for debugging.
+	 *
+	 * @return string
+	 */
+	public function getCronHookName() {
+		return $this->cronHook;
+	}
+}
+
+endif;
+
 
 if ( !class_exists('PucFactory', false) ):
 
