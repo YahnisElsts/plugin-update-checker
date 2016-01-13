@@ -900,7 +900,7 @@ class PluginUpdateChecker_2_3 {
 					     'puc_update_check_result' => $status,
 					     'puc_slug' => $this->slug,
 					),
-					is_network_admin() ? network_admin_url('plugins.php') : admin_url('plugins.php')
+					self_admin_url('plugins.php')
 			));
 		}
 	}
