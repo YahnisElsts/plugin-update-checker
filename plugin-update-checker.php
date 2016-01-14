@@ -160,8 +160,8 @@ class PluginUpdateChecker_2_3 {
 		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
 		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
 		
-		//Adding language support (i18n)
-		load_plugin_textdomain( 'plugin-update-checker', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
+		//Enable language support (i18n).
+		load_plugin_textdomain('plugin-update-checker', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
 		//Allow HTTP requests to the metadata URL even if it's on a local host.
 		$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
@@ -922,7 +922,7 @@ class PluginUpdateChecker_2_3 {
 			} else if ( $status == 'update_available' ) {
 				$message = __('A new version of this plugin is available.', 'plugin-update-checker');
 			} else {
-				$message = sprintf( __('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
+				$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
 			}
 			printf(
 				'<div class="updated notice is-dismissible"><p>%s</p></div>',
