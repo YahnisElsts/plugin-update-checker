@@ -125,6 +125,9 @@ class PluginUpdateChecker_2_3 {
 		add_filter('upgrader_package_options', array($this, 'setUpgradedPluginFromOptions'), 10, 1);
 		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
 		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
+		
+		//Enable language support (i18n).
+		load_plugin_textdomain('plugin-update-checker', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
 		//Allow HTTP requests to the metadata URL even if it's on a local host.
 		$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
@@ -746,7 +749,7 @@ class PluginUpdateChecker_2_3 {
 				'puc_check_for_updates'
 			);
 
-			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, 'Check for updates');
+			$linkText = apply_filters('puc_manual_check_link-' . $this->slug, __('Check for updates', 'plugin-update-checker'));
 			if ( !empty($linkText) ) {
 				$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
 			}
@@ -775,7 +778,7 @@ class PluginUpdateChecker_2_3 {
 					     'puc_update_check_result' => $status,
 					     'puc_slug' => $this->slug,
 					),
-					is_network_admin() ? network_admin_url('plugins.php') : admin_url('plugins.php')
+					self_admin_url('plugins.php')
 			));
 		}
 	}
@@ -790,11 +793,11 @@ class PluginUpdateChecker_2_3 {
 		if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->slug) ) {
 			$status = strval($_GET['puc_update_check_result']);
 			if ( $status == 'no_update' ) {
-				$message = 'This plugin is up to date.';
+				$message = __('This plugin is up to date.', 'plugin-update-checker');
 			} else if ( $status == 'update_available' ) {
-				$message = 'A new version of this plugin is available.';
+				$message = __('A new version of this plugin is available.', 'plugin-update-checker');
 			} else {
-				$message = sprintf('Unknown update checker status "%s"', htmlentities($status));
+				$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
 			}
 			printf(
 				'<div class="updated notice is-dismissible"><p>%s</p></div>',
