@@ -1,23 +1,23 @@
 <?php
 /**
- * Plugin Update Checker Library 2.3.0
+ * Plugin Update Checker Library 3.0
  * http://w-shadow.com/
  * 
  * Copyright 2016 Janis Elsts
  * Released under the MIT license. See license.txt for details.
  */
 
-if ( !class_exists('PluginUpdateChecker_2_3', false) ):
+if ( !class_exists('PluginUpdateChecker_3_0', false) ):
 
 /**
  * A custom plugin update checker. 
  * 
  * @author Janis Elsts
  * @copyright 2016
- * @version 2.3
+ * @version 3.0
  * @access public
  */
-class PluginUpdateChecker_2_3 {
+class PluginUpdateChecker_3_0 {
 	public $metadataUrl = ''; //The URL of the plugin's metadata file.
 	public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 	public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
@@ -83,10 +83,10 @@ class PluginUpdateChecker_2_3 {
 	 * and substitute their own scheduler.
 	 *
 	 * @param int $checkPeriod
-	 * @return PucScheduler
+	 * @return PucScheduler_3_0
 	 */
 	protected function createScheduler($checkPeriod) {
-		return new PucScheduler($this, $checkPeriod);
+		return new PucScheduler_3_0($this, $checkPeriod);
 	}
 	
 	/**
@@ -197,7 +197,7 @@ class PluginUpdateChecker_2_3 {
 		$status = $this->validateApiResponse($result);
 		$pluginInfo = null;
 		if ( !is_wp_error($status) ){
-			$pluginInfo = PluginInfo_2_3::fromJson($result['body']);
+			$pluginInfo = PluginInfo_3_0::fromJson($result['body']);
 			if ( $pluginInfo !== null ) {
 				$pluginInfo->filename = $this->pluginFile;
 				$pluginInfo->slug = $this->slug;
@@ -257,7 +257,7 @@ class PluginUpdateChecker_2_3 {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate_2_3::fromPluginInfo($pluginInfo);
+		return PluginUpdate_3_0::fromPluginInfo($pluginInfo);
 	}
 	
 	/**
@@ -359,7 +359,7 @@ class PluginUpdateChecker_2_3 {
 		}
 
 		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
-			$state->update = PluginUpdate_2_3::fromObject($state->update);
+			$state->update = PluginUpdate_3_0::fromObject($state->update);
 		}
 		return $state;
 	}
@@ -940,17 +940,17 @@ class PluginUpdateChecker_2_3 {
 
 endif;
 
-if ( !class_exists('PluginInfo_2_3', false) ):
+if ( !class_exists('PluginInfo_3_0', false) ):
 
 /**
  * A container class for holding and transforming various plugin metadata.
  * 
  * @author Janis Elsts
  * @copyright 2016
- * @version 2.3
+ * @version 3.0
  * @access public
  */
-class PluginInfo_2_3 {
+class PluginInfo_3_0 {
 	//Most fields map directly to the contents of the plugin's info.json file.
 	//See the relevant docs for a description of their meaning.  
 	public $name;
@@ -1081,17 +1081,17 @@ class PluginInfo_2_3 {
 	
 endif;
 
-if ( !class_exists('PluginUpdate_2_3', false) ):
+if ( !class_exists('PluginUpdate_3_0', false) ):
 
 /**
  * A simple container class for holding information about an available update.
  * 
  * @author Janis Elsts
  * @copyright 2016
- * @version 2.3
+ * @version 3.0
  * @access public
  */
-class PluginUpdate_2_3 {
+class PluginUpdate_3_0 {
 	public $id = 0;
 	public $slug;
 	public $version;
@@ -1112,7 +1112,7 @@ class PluginUpdate_2_3 {
 		//Since update-related information is simply a subset of the full plugin info,
 		//we can parse the update JSON as if it was a plugin info string, then copy over
 		//the parts that we care about.
-		$pluginInfo = PluginInfo_2_3::fromJson($json);
+		$pluginInfo = PluginInfo_3_0::fromJson($json);
 		if ( $pluginInfo != null ) {
 			return self::fromPluginInfo($pluginInfo);
 		} else {
@@ -1196,21 +1196,21 @@ class PluginUpdate_2_3 {
 	
 endif;
 
-if ( !class_exists('PucScheduler', false) ):
+if ( !class_exists('PucScheduler_3_0', false) ):
 
 /**
  * The scheduler decides when and how often to check for updates.
- * It calls @see PluginUpdateChecker_2_3::checkForUpdates() to perform the actual checks.
+ * It calls @see PluginUpdateChecker_3_0::checkForUpdates() to perform the actual checks.
  *
  * @version 3.0
  */
-class PucScheduler {
+class PucScheduler_3_0 {
 	public $checkPeriod = 12; //How often to check for updates (in hours).
 	public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
 	public $throttledCheckPeriod = 72;
 
 	/**
-	 * @var PluginUpdateChecker_2_3
+	 * @var PluginUpdateChecker_3_0
 	 */
 	protected $updateChecker;
 
@@ -1219,7 +1219,7 @@ class PucScheduler {
 	/**
 	 * Scheduler constructor.
 	 *
-	 * @param PluginUpdateChecker_2_3 $updateChecker
+	 * @param PluginUpdateChecker_3_0 $updateChecker
 	 * @param int $checkPeriod How often to check for updates (in hours).
 	 */
 	public function __construct($updateChecker, $checkPeriod) {
@@ -1458,23 +1458,23 @@ endif;
 require_once(dirname(__FILE__) . '/github-checker.php');
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_2_3', '2.3');
-PucFactory::addVersion('PluginUpdate', 'PluginUpdate_2_3', '2.3');
-PucFactory::addVersion('PluginInfo', 'PluginInfo_2_3', '2.3');
-PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_2_3', '2.3');
+PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_3_0', '3.0');
+PucFactory::addVersion('PluginUpdate', 'PluginUpdate_3_0', '3.0');
+PucFactory::addVersion('PluginInfo', 'PluginInfo_3_0', '3.0');
+PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_3_0', '3.0');
 
 /**
  * Create non-versioned variants of the update checker classes. This allows for backwards
  * compatibility with versions that did not use a factory, and it simplifies doc-comments.
  */
 if ( !class_exists('PluginUpdateChecker', false) ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_2_3 { }
+	class PluginUpdateChecker extends PluginUpdateChecker_3_0 { }
 }
 
 if ( !class_exists('PluginUpdate', false) ) {
-	class PluginUpdate extends PluginUpdate_2_3 {}
+	class PluginUpdate extends PluginUpdate_3_0 {}
 }
 
 if ( !class_exists('PluginInfo', false) ) {
-	class PluginInfo extends PluginInfo_2_3 {}
+	class PluginInfo extends PluginInfo_3_0 {}
 }
