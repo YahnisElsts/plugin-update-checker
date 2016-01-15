@@ -121,12 +121,6 @@ class PluginUpdateChecker_3_0 {
 		//Rename the update directory to be the same as the existing directory.
 		add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 
-		//Keep track of which plugin WordPress is currently upgrading.
-		add_filter('upgrader_pre_install', array($this, 'setUpgradedPlugin'), 10, 2);
-		add_filter('upgrader_package_options', array($this, 'setUpgradedPluginFromOptions'), 10, 1);
-		add_filter('upgrader_post_install', array($this, 'clearUpgradedPlugin'), 10, 1);
-		add_action('upgrader_process_complete', array($this, 'clearUpgradedPlugin'), 10, 1);
-		
 		//Enable language support (i18n).
 		load_plugin_textdomain('plugin-update-checker', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
