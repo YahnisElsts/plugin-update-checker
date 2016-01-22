@@ -1250,6 +1250,9 @@ class PucScheduler_3_0 {
 
 endif;
 
+
+if ( !class_exists('PucUpgraderStatus_3_0', false) ):
+
 /**
  * A utility class that helps figure out which plugin WordPress is upgrading.
  *
@@ -1389,6 +1392,8 @@ class PucUpgraderStatus_3_0 {
 		return $input;
 	}
 }
+
+endif;
 
 
 if ( !class_exists('PucFactory', false) ):
