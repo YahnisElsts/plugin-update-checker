@@ -160,7 +160,7 @@ class PluginUpdateChecker_3_0 {
 	 * @uses wp_remote_get()
 	 * 
 	 * @param array $queryArgs Additional query arguments to append to the request. Optional.
-	 * @return PluginInfo
+	 * @return PluginInfo_3_0
 	 */
 	public function requestInfo($queryArgs = array()){
 		//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
@@ -243,7 +243,7 @@ class PluginUpdateChecker_3_0 {
 	 *
 	 * @uses PluginUpdateChecker::requestInfo()
 	 *
-	 * @return PluginUpdate An instance of PluginUpdate, or NULL when no updates are available.
+	 * @return PluginUpdate_3_0 An instance of PluginUpdate, or NULL when no updates are available.
 	 */
 	public function requestUpdate(){
 		//For the sake of simplicity, this function just calls requestInfo() 
@@ -311,7 +311,7 @@ class PluginUpdateChecker_3_0 {
 	 * Check for plugin updates.
 	 * The results are stored in the DB option specified in $optionName.
 	 *
-	 * @return PluginUpdate|null
+	 * @return PluginUpdate_3_0|null
 	 */
 	public function checkForUpdates(){
 		$installedVersion = $this->getInstalledVersion();
@@ -368,7 +368,7 @@ class PluginUpdateChecker_3_0 {
 	 */
 	private function setUpdateState($state) {
 		if ( isset($state->update) && is_object($state->update) && method_exists($state->update, 'toStdClass') ) {
-			$update = $state->update; /** @var PluginUpdate $update */
+			$update = $state->update; /** @var PluginUpdate_3_0 $update */
 			$state->update = $update->toStdClass();
 		}
 		update_site_option($this->optionName, $state);
@@ -442,7 +442,7 @@ class PluginUpdateChecker_3_0 {
 
 	/**
 	 * @param StdClass|null $updates
-	 * @param PluginUpdate $updateToAdd
+	 * @param PluginUpdate_3_0 $updateToAdd
 	 * @return StdClass
 	 */
 	private function addUpdateToList($updates, $updateToAdd) {
@@ -589,7 +589,7 @@ class PluginUpdateChecker_3_0 {
 	 * Uses cached update data. To retrieve update information straight from
 	 * the metadata URL, call requestUpdate() instead.
 	 *
-	 * @return PluginUpdate|null
+	 * @return PluginUpdate_3_0|null
 	 */
 	public function getUpdate() {
 		$state = $this->getUpdateState(); /** @var StdClass $state */
@@ -868,7 +868,7 @@ class PluginInfo_3_0 {
 	 * returned by an external update API.
 	 * 
 	 * @param string $json Valid JSON string representing plugin info.
-	 * @return PluginInfo|null New instance of PluginInfo, or NULL on error.
+	 * @return PluginInfo_3_0|null New instance of PluginInfo, or NULL on error.
 	 */
 	public static function fromJson($json){
 		/** @var StdClass $apiResponse */
@@ -991,7 +991,7 @@ class PluginUpdate_3_0 {
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
 	 * 
 	 * @param string $json
-	 * @return PluginUpdate|null
+	 * @return PluginUpdate_3_0|null
 	 */
 	public static function fromJson($json){
 		//Since update-related information is simply a subset of the full plugin info,
@@ -1009,8 +1009,8 @@ class PluginUpdate_3_0 {
 	 * Create a new instance of PluginUpdate based on an instance of PluginInfo.
 	 * Basically, this just copies a subset of fields from one object to another.
 	 * 
-	 * @param PluginInfo $info
-	 * @return PluginUpdate
+	 * @param PluginInfo_3_0 $info
+	 * @return PluginUpdate_3_0
 	 */
 	public static function fromPluginInfo($info){
 		return self::fromObject($info);
@@ -1020,8 +1020,8 @@ class PluginUpdate_3_0 {
 	 * Create a new instance of PluginUpdate by copying the necessary fields from 
 	 * another object.
 	 *  
-	 * @param StdClass|PluginInfo|PluginUpdate $object The source object.
-	 * @return PluginUpdate The new copy.
+	 * @param StdClass|PluginInfo_3_0|PluginUpdate_3_0 $object The source object.
+	 * @return PluginUpdate_3_0 The new copy.
 	 */
 	public static function fromObject($object) {
 		$update = new self();
@@ -1425,7 +1425,7 @@ class PucFactory {
 	 * @param int $checkPeriod
 	 * @param string $optionName
 	 * @param string $muPluginFile
-	 * @return PluginUpdateChecker
+	 * @return PluginUpdateChecker_3_0
 	 */
 	public static function buildUpdateChecker($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 		$class = self::getLatestClassVersion('PluginUpdateChecker');
@@ -1492,19 +1492,3 @@ PucFactory::addVersion('PluginUpdateChecker', 'PluginUpdateChecker_3_0', '3.0');
 PucFactory::addVersion('PluginUpdate', 'PluginUpdate_3_0', '3.0');
 PucFactory::addVersion('PluginInfo', 'PluginInfo_3_0', '3.0');
 PucFactory::addVersion('PucGitHubChecker', 'PucGitHubChecker_3_0', '3.0');
-
-/**
- * Create non-versioned variants of the update checker classes. This allows for backwards
- * compatibility with versions that did not use a factory, and it simplifies doc-comments.
- */
-if ( !class_exists('PluginUpdateChecker', false) ) {
-	class PluginUpdateChecker extends PluginUpdateChecker_3_0 { }
-}
-
-if ( !class_exists('PluginUpdate', false) ) {
-	class PluginUpdate extends PluginUpdate_3_0 {}
-}
-
-if ( !class_exists('PluginInfo', false) ) {
-	class PluginInfo extends PluginInfo_3_0 {}
-}
