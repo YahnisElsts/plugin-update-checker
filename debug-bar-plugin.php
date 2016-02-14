@@ -2,7 +2,7 @@
 if ( !class_exists('PucDebugBarPlugin', false) ) {
 
 class PucDebugBarPlugin {
-	/** @var PluginUpdateChecker */
+	/** @var PluginUpdateChecker_3_0 */
 	private $updateChecker;
 
 	public function __construct($updateChecker) {

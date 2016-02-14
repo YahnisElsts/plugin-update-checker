@@ -54,7 +54,7 @@ class PucGitHubChecker_3_0 extends PluginUpdateChecker_3_0 {
 	 * Retrieve details about the latest plugin version from GitHub.
 	 *
 	 * @param array $unusedQueryArgs Unused.
-	 * @return PluginInfo
+	 * @return PluginInfo_3_0
 	 */
 	public function requestInfo($unusedQueryArgs = array()) {
 		$info = new PluginInfo_3_0();
