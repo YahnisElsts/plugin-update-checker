@@ -983,9 +983,13 @@ class PluginUpdate_3_0 {
 	public $homepage;
 	public $download_url;
 	public $upgrade_notice;
+	public $tested;
 	public $filename; //Plugin filename relative to the plugins directory.
 
-	private static $fields = array('id', 'slug', 'version', 'homepage', 'download_url', 'upgrade_notice', 'filename');
+	private static $fields = array(
+		'id', 'slug', 'version', 'homepage', 'tested',
+		'download_url', 'upgrade_notice', 'filename'
+	);
 	
 	/**
 	 * Create a new instance of PluginUpdate from its JSON-encoded representation.
@@ -1069,6 +1073,7 @@ class PluginUpdate_3_0 {
 		$update->new_version = $this->version;
 		$update->url = $this->homepage;
 		$update->package = $this->download_url;
+		$update->tested = $this->tested;
 		$update->plugin = $this->filename;
 
 		if ( !empty($this->upgrade_notice) ){
