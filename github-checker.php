@@ -240,7 +240,7 @@ class PucGitHubChecker_3_0 extends PluginUpdateChecker_3_0 {
 	 */
 	protected function parseMarkdown($markdown) {
 		if ( !class_exists('Parsedown', false) ) {
-			require_once(dirname(__FILE__) . '/vendor/Parsedown.php');
+			require_once(dirname(__FILE__) . '/vendor/Parsedown' . (version_compare(PHP_VERSION, '5.3.0', '>=') ? '' : 'Legacy') . '.php');
 		}
 
 		$instance = Parsedown::instance();
