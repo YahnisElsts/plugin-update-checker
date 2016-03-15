@@ -17,7 +17,7 @@ class Parsedown
 {
     # ~
 
-    const version = '1.6.0';
+    const version = '1.5.0';
 
     # ~
 
@@ -107,6 +107,12 @@ class Parsedown
 
     # ~
 
+    protected $DefinitionTypes = array(
+        '[' => array('Reference'),
+    );
+
+    # ~
+
     protected $unmarkedBlockTypes = array(
         'Code',
     );
@@ -115,7 +121,7 @@ class Parsedown
     # Blocks
     #
 
-    protected function lines(array $lines)
+    private function lines(array $lines)
     {
         $CurrentBlock = null;
 
@@ -163,7 +169,7 @@ class Parsedown
 
             # ~
 
-            if (isset($CurrentBlock['continuable']))
+            if (isset($CurrentBlock['incomplete']))
             {
                 $Block = $this->{'block'.$CurrentBlock['type'].'Continue'}($Line, $CurrentBlock);
 
@@ -175,10 +181,12 @@ class Parsedown
                 }
                 else
                 {
-                    if ($this->isBlockCompletable($CurrentBlock['type']))
+                    if (method_exists($this, 'block'.$CurrentBlock['type'].'Complete'))
                     {
                         $CurrentBlock = $this->{'block'.$CurrentBlock['type'].'Complete'}($CurrentBlock);
                     }
+
+                    unset($CurrentBlock['incomplete']);
                 }
             }
 
@@ -216,9 +224,9 @@ class Parsedown
                         $Block['identified'] = true;
                     }
 
-                    if ($this->isBlockContinuable($blockType))
+                    if (method_exists($this, 'block'.$blockType.'Continue'))
                     {
-                        $Block['continuable'] = true;
+                        $Block['incomplete'] = true;
                     }
 
                     $CurrentBlock = $Block;
@@ -245,7 +253,7 @@ class Parsedown
 
         # ~
 
-        if (isset($CurrentBlock['continuable']) and $this->isBlockCompletable($CurrentBlock['type']))
+        if (isset($CurrentBlock['incomplete']) and method_exists($this, 'block'.$CurrentBlock['type'].'Complete'))
         {
             $CurrentBlock = $this->{'block'.$CurrentBlock['type'].'Complete'}($CurrentBlock);
         }
@@ -276,16 +284,6 @@ class Parsedown
         # ~
 
         return $markup;
-    }
-
-    protected function isBlockContinuable($Type)
-    {
-        return method_exists($this, 'block'.$Type.'Continue');
-    }
-
-    protected function isBlockCompletable($Type)
-    {
-        return method_exists($this, 'block'.$Type.'Complete');
     }
 
     #
@@ -396,16 +394,16 @@ class Parsedown
 
     protected function blockFencedCode($Line)
     {
-        if (preg_match('/^['.$Line['text'][0].']{3,}[ ]*([\w-]+)?[ ]*$/', $Line['text'], $matches))
+        if (preg_match('/^(['.$Line['text'][0].']{3,})[ ]*([\w-]+)?[ ]*$/', $Line['text'], $matches))
         {
             $Element = array(
                 'name' => 'code',
                 'text' => '',
             );
 
-            if (isset($matches[1]))
+            if (isset($matches[2]))
             {
-                $class = 'language-'.$matches[1];
+                $class = 'language-'.$matches[2];
 
                 $Element['attributes'] = array(
                     'class' => $class,
@@ -675,9 +673,7 @@ class Parsedown
 
         if (preg_match('/^<(\w*)(?:[ ]*'.$this->regexHtmlAttribute.')*[ ]*(\/)?>/', $Line['text'], $matches))
         {
-            $element = strtolower($matches[1]);
-
-            if (in_array($element, $this->textLevelElements))
+            if (in_array($matches[1], $this->textLevelElements))
             {
                 return;
             }
@@ -740,6 +736,8 @@ class Parsedown
             {
                 $Block['closed'] = true;
             }
+
+            $Block['markup'] .= $matches[1];
         }
 
         if (isset($Block['interrupted']))
@@ -991,13 +989,15 @@ class Parsedown
     {
         $markup = '';
 
-        # $excerpt is based on the first occurrence of a marker
+        $unexaminedText = $text;
 
-        while ($excerpt = strpbrk($text, $this->inlineMarkerList))
+        $markerPosition = 0;
+
+        while ($excerpt = strpbrk($unexaminedText, $this->inlineMarkerList))
         {
             $marker = $excerpt[0];
 
-            $markerPosition = strpos($text, $marker);
+            $markerPosition += strpos($unexaminedText, $marker);
 
             $Excerpt = array('text' => $excerpt, 'context' => $text);
 
@@ -1010,42 +1010,34 @@ class Parsedown
                     continue;
                 }
 
-                # makes sure that the inline belongs to "our" marker
-
-                if (isset($Inline['position']) and $Inline['position'] > $markerPosition)
+                if (isset($Inline['position']) and $Inline['position'] > $markerPosition) # position is ahead of marker
                 {
                     continue;
                 }
-
-                # sets a default inline position
 
                 if ( ! isset($Inline['position']))
                 {
                     $Inline['position'] = $markerPosition;
                 }
 
-                # the text that comes before the inline
                 $unmarkedText = substr($text, 0, $Inline['position']);
 
-                # compile the unmarked text
                 $markup .= $this->unmarkedText($unmarkedText);
 
-                # compile the inline
                 $markup .= isset($Inline['markup']) ? $Inline['markup'] : $this->element($Inline['element']);
 
-                # remove the examined text
                 $text = substr($text, $Inline['position'] + $Inline['extent']);
+
+                $unexaminedText = $text;
+
+                $markerPosition = 0;
 
                 continue 2;
             }
 
-            # the marker does not belong to an inline
+            $unexaminedText = substr($excerpt, 1);
 
-            $unmarkedText = substr($text, 0, $markerPosition + 1);
-
-            $markup .= $this->unmarkedText($unmarkedText);
-
-            $text = substr($text, $markerPosition + 1);
+            $markerPosition ++;
         }
 
         $markup .= $this->unmarkedText($text);
@@ -1207,7 +1199,7 @@ class Parsedown
             return;
         }
 
-        if (preg_match('/^[(]((?:[^ ()]|[(][^ )]+[)])+)(?:[ ]+("[^"]*"|\'[^\']*\'))?[)]/', $remainder, $matches))
+        if (preg_match('/^[(]((?:[^ (]|[(][^ )]+[)])+)(?:[ ]+("[^"]+"|\'[^\']+\'))?[)]/', $remainder, $matches))
         {
             $Element['attributes']['href'] = $matches[1];
 
@@ -1222,7 +1214,7 @@ class Parsedown
         {
             if (preg_match('/^\s*\[(.*?)\]/', $remainder, $matches))
             {
-                $definition = strlen($matches[1]) ? $matches[1] : $Element['text'];
+                $definition = $matches[1] ? $matches[1] : $Element['text'];
                 $definition = strtolower($definition);
 
                 $extent += strlen($matches[0]);
@@ -1368,6 +1360,11 @@ class Parsedown
         }
     }
 
+    #
+    # ~
+
+    protected $unmarkedInlineTypes = array("\n" => 'Break', '://' => 'Url');
+
     # ~
 
     protected function unmarkedText($text)
@@ -1412,7 +1409,7 @@ class Parsedown
 
             if (isset($Element['handler']))
             {
-                $markup .= $this->{$Element['handler']}($Element['text']);
+                $markup .= $this->$Element['handler']($Element['text']);
             }
             else
             {
@@ -1486,7 +1483,7 @@ class Parsedown
             return self::$instances[$name];
         }
 
-        $instance = new static();
+        $instance = new self();
 
         self::$instances[$name] = $instance;
 
