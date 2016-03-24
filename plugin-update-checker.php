@@ -659,11 +659,11 @@ class PluginUpdateChecker_3_0 {
 			$update = $this->checkForUpdates();
 			$status = ($update === null) ? 'no_update' : 'update_available';
 			wp_redirect(add_query_arg(
-					array(
-					     'puc_update_check_result' => $status,
-					     'puc_slug' => $this->slug,
-					),
-					self_admin_url('plugins.php')
+				array(
+					'puc_update_check_result' => $status,
+					'puc_slug' => $this->slug,
+				),
+				self_admin_url('plugins.php')
 			));
 		}
 	}
