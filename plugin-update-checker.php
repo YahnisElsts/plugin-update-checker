@@ -326,7 +326,7 @@ class PluginUpdateChecker_3_0 {
 
 		$state = $this->getUpdateState();
 		if ( empty($state) ){
-			$state = new StdClass;
+			$state = new stdClass;
 			$state->lastCheck = 0;
 			$state->checkedVersion = '';
 			$state->update = null;
@@ -345,7 +345,7 @@ class PluginUpdateChecker_3_0 {
 	/**
 	 * Load the update checker state from the DB.
 	 *  
-	 * @return StdClass|null
+	 * @return stdClass|null
 	 */
 	public function getUpdateState() {
 		$state = get_site_option($this->optionName, null);
@@ -447,7 +447,7 @@ class PluginUpdateChecker_3_0 {
 	 */
 	private function addUpdateToList($updates, $updateToAdd) {
 		if ( !is_object($updates) ) {
-			$updates = new StdClass();
+			$updates = new stdClass();
 			$updates->response = array();
 		}
 
@@ -464,8 +464,8 @@ class PluginUpdateChecker_3_0 {
 	}
 
 	/**
-	 * @param StdClass|null $updates
-	 * @return StdClass|null
+	 * @param stdClass|null $updates
+	 * @return stdClass|null
 	 */
 	private function removeUpdateFromList($updates) {
 		if ( isset($updates, $updates->response) ) {
@@ -925,7 +925,7 @@ class PluginInfo_3_0 {
 	 * @return object
 	 */
 	public function toWpFormat(){
-		$info = new StdClass;
+		$info = new stdClass;
 		
 		//The custom update API is built so that many fields have the same name and format
 		//as those returned by the native WordPress.org API. These can be assigned directly. 
@@ -1050,7 +1050,7 @@ class PluginUpdate_3_0 {
 	 * @return StdClass
 	 */
 	public function toStdClass() {
-		$object = new StdClass();
+		$object = new stdClass();
 		$fields = self::$fields;
 		if ( !empty($this->slug) ) {
 			$fields = apply_filters('puc_retain_fields-' . $this->slug, $fields);
@@ -1070,7 +1070,7 @@ class PluginUpdate_3_0 {
 	 * @return object
 	 */
 	public function toWpFormat(){
-		$update = new StdClass;
+		$update = new stdClass;
 
 		$update->id = $this->id;
 		$update->slug = $this->slug;
