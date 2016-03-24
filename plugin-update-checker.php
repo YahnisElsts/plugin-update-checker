@@ -353,7 +353,7 @@ class PluginUpdateChecker_3_0 {
 			$state = null;
 		}
 
-		if ( !empty($state) && isset($state->update) && is_object($state->update) ){
+		if ( isset($state, $state->update) && is_object($state->update) ) {
 			$state->update = PluginUpdate_3_0::fromObject($state->update);
 		}
 		return $state;
@@ -594,8 +594,8 @@ class PluginUpdateChecker_3_0 {
 	public function getUpdate() {
 		$state = $this->getUpdateState(); /** @var StdClass $state */
 
-		//Is there an update available insert?
-		if ( !empty($state) && isset($state->update) && !empty($state->update) ){
+		//Is there an update available?
+		if ( isset($state, $state->update) ) {
 			$update = $state->update;
 			//Check if the update is actually newer than the currently installed version.
 			$installedVersion = $this->getInstalledVersion();
