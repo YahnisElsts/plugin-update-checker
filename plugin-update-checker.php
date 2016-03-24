@@ -1183,30 +1183,11 @@ class PucScheduler_3_0 {
 			return;
 		}
 
-		$currentFilter = current_filter();
-		if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
-			//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
-			$timeout = 60;
-		} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
-			//Also check more often on the "Plugins" page and /wp-admin/update.php.
-			$timeout = 3600;
-		} else if ( $this->throttleRedundantChecks && ($this->updateChecker->getUpdate() !== null) ) {
-			//Check less frequently if it's already known that an update is available.
-			$timeout = $this->throttledCheckPeriod * 3600;
-		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
-			//WordPress cron schedules are not exact, so lets do an update check even
-			//if slightly less than $checkPeriod hours have elapsed since the last check.
-			$cronFuzziness = 20 * 60;
-			$timeout = $this->checkPeriod * 3600 - $cronFuzziness;
-		} else {
-			$timeout = $this->checkPeriod * 3600;
-		}
-
 		$state = $this->updateChecker->getUpdateState();
 		$shouldCheck =
 			empty($state) ||
 			!isset($state->lastCheck) ||
-			( (time() - $state->lastCheck) >= $timeout );
+			( (time() - $state->lastCheck) >= $this->getEffectiveCheckPeriod() );
 
 		//Let plugin authors substitute their own algorithm.
 		$shouldCheck = apply_filters(
@@ -1219,6 +1200,34 @@ class PucScheduler_3_0 {
 		if ( $shouldCheck ) {
 			$this->updateChecker->checkForUpdates();
 		}
+	}
+
+	/**
+	 * Calculate the actual check period based on the current status and environment.
+	 *
+	 * @return int Check period in seconds.
+	 */
+	protected function getEffectiveCheckPeriod() {
+		$currentFilter = current_filter();
+		if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
+			//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
+			$period = 60;
+		} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
+			//Also check more often on the "Plugins" page and /wp-admin/update.php.
+			$period = 3600;
+		} else if ( $this->throttleRedundantChecks && ($this->updateChecker->getUpdate() !== null) ) {
+			//Check less frequently if it's already known that an update is available.
+			$period = $this->throttledCheckPeriod * 3600;
+		} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
+			//WordPress cron schedules are not exact, so lets do an update check even
+			//if slightly less than $checkPeriod hours have elapsed since the last check.
+			$cronFuzziness = 20 * 60;
+			$period = $this->checkPeriod * 3600 - $cronFuzziness;
+		} else {
+			$period = $this->checkPeriod * 3600;
+		}
+
+		return $period;
 	}
 
 	/**
