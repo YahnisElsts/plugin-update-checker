@@ -399,13 +399,13 @@ class PluginUpdateChecker_3_0 {
     	$relevant = ($action == 'plugin_information') && isset($args->slug) && (
 			($args->slug == $this->slug) || ($args->slug == dirname($this->pluginFile))
 		);
-		if ( !$relevant ){
+		if ( !$relevant ) {
 			return $result;
 		}
 		
 		$pluginInfo = $this->requestInfo();
 		$pluginInfo = apply_filters('puc_pre_inject_info-' . $this->slug, $pluginInfo);
-		if ($pluginInfo){
+		if ( $pluginInfo ) {
 			return $pluginInfo->toWpFormat();
 		}
 				
