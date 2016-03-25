@@ -842,7 +842,7 @@ class PluginInfo_3_0 {
 	public $slug;
 	public $version;
 	public $homepage;
-	public $sections;
+	public $sections = array();
 	public $banners;
 	public $download_url;
 

@@ -60,7 +60,6 @@ class PucGitHubChecker_3_0 extends PluginUpdateChecker_3_0 {
 		$info = new PluginInfo_3_0();
 		$info->filename = $this->pluginFile;
 		$info->slug = $this->slug;
-		$info->sections = array();
 
 		$this->setInfoFromHeader($this->getPluginHeader(), $info);
 
@@ -382,9 +381,6 @@ class PucGitHubChecker_3_0 extends PluginUpdateChecker_3_0 {
 			}
 		}
 
-		if ( !isset($pluginInfo->sections) ) {
-			$pluginInfo->sections = array();
-		}
 		if ( !empty($fileHeader['Description']) ) {
 			$pluginInfo->sections['description'] = $fileHeader['Description'];
 		}
