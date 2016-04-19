@@ -710,6 +710,8 @@ class PluginUpdateChecker_3_0 {
 
 	/**
 	 * Remove all cached translation updates.
+	 *
+	 * @see wp_clean_update_cache
 	 */
 	public function clearCachedTranslationUpdates() {
 		$state = $this->getUpdateState();
