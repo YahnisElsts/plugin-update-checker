@@ -100,9 +100,10 @@ class PluginUpdateChecker_3_0 {
 		//Override requests for plugin information
 		add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 		
-		//Insert our update info into the update array maintained by WP
+		//Insert our update info into the update array maintained by WP.
 		add_filter('site_transient_update_plugins', array($this,'injectUpdate')); //WP 3.0+
 		add_filter('transient_update_plugins', array($this,'injectUpdate')); //WP 2.8+
+		add_filter('site_transient_update_plugins', array($this, 'injectTranslationUpdates'));
 
 		add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 		add_action('admin_init', array($this, 'handleManualCheck'));
@@ -111,6 +112,10 @@ class PluginUpdateChecker_3_0 {
 		//Clear the version number cache when something - anything - is upgraded or WP clears the update cache.
 		add_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
 		add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
+		//Clear translation updates when WP clears the update cache.
+		//This needs to be done directly because the library doesn't actually remove obsolete plugin updates,
+		//it just hides them (see getUpdate()). We can't do that with translations - too much disk I/O.
+		add_action('delete_site_transient_update_plugins', array($this, 'clearCachedTranslationUpdates'));
 
 		if ( did_action('plugins_loaded') ) {
 			$this->initDebugBarPanel();
@@ -252,7 +257,35 @@ class PluginUpdateChecker_3_0 {
 		if ( $pluginInfo == null ){
 			return null;
 		}
-		return PluginUpdate_3_0::fromPluginInfo($pluginInfo);
+		$update = PluginUpdate_3_0::fromPluginInfo($pluginInfo);
+
+		//Remove translation updates that don't apply to this site.
+		$languages = array_flip(array_values(get_available_languages()));
+		$installedTranslations = wp_get_installed_translations('plugins');
+		if ( isset($installedTranslations[$this->slug]) ) {
+			$installedTranslations = $installedTranslations[$this->slug];
+		} else {
+			$installedTranslations = array();
+		}
+
+		$applicableTranslations = array();
+		foreach($update->translations as $translation) {
+			//Does it match one of the available core languages?
+			$isApplicable = array_key_exists($translation->language, $languages);
+			//Is it more recent than an already-installed translation?
+			if ( isset($installedTranslations[$translation->language]) ) {
+				$updateTimestamp = strtotime($translation->updated);
+				$installedTimestamp = strtotime($installedTranslations[$translation->language]['PO-Revision-Date']);
+				$isApplicable = $updateTimestamp > $installedTimestamp;
+			}
+
+			if ( $isApplicable ) {
+				$applicableTranslations[] = $translation;
+			}
+		}
+		$update->translations = $applicableTranslations;
+
+		return $update;
 	}
 	
 	/**
@@ -478,6 +511,58 @@ class PluginUpdateChecker_3_0 {
 	}
 
 	/**
+	 * Insert translation updates into the list maintained by WordPress.
+	 *
+	 * @param stdClass $updates
+	 * @return stdClass
+	 */
+	public function injectTranslationUpdates($updates) {
+		$translationUpdates = $this->getTranslationUpdates();
+		if ( empty($translationUpdates) ) {
+			return $updates;
+		}
+
+		//Being defensive.
+		if ( !is_object($updates) ) {
+			$updates = new stdClass();
+		}
+		if ( !isset($updates->translations) ) {
+			$updates->translations = array();
+		}
+
+		//In case there's a name collision with a plugin hosted on wordpress.org,
+		//remove any preexisting updates that match our plugin.
+		$translationType = 'plugin';
+		$filteredTranslations = array();
+		foreach($updates->translations as $translation) {
+			if ( ($translation['type'] === $translationType) && ($translation['slug'] === $this->slug) ) {
+				continue;
+			}
+			$filteredTranslations[] = $translation;
+		}
+		$updates->translations = $filteredTranslations;
+
+		//Add our updates to the list.
+		foreach($translationUpdates as $update) {
+			$convertedUpdate = array_merge(
+				array(
+					'type' => $translationType,
+					'slug' => $this->slug,
+					'autoupdate' => 0,
+					//AFAICT, WordPress doesn't actually use the "version" field for anything.
+					//But lets make sure it's there, just in case.
+					'version' => isset($update->version) ? $update->version : ('1.' . strtotime($update->updated)),
+				),
+				(array)$update
+			);
+
+			$updates->translations[] = $convertedUpdate;
+		}
+
+		return $updates;
+	}
+
+	/**
 	 * Rename the update directory to match the existing plugin directory.
 	 *
 	 * When WordPress installs a plugin or theme update, it assumes that the ZIP file will contain
@@ -605,6 +690,33 @@ class PluginUpdateChecker_3_0 {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Get a list of available translation updates.
+	 *
+	 * This method will return an empty array if there are no updates.
+	 * Uses cached update data.
+	 *
+	 * @return array
+	 */
+	public function getTranslationUpdates() {
+		$state = $this->getUpdateState();
+		if ( isset($state, $state->update, $state->update->translations) ) {
+			return $state->update->translations;
+		}
+		return array();
+	}
+
+	/**
+	 * Remove all cached translation updates.
+	 */
+	public function clearCachedTranslationUpdates() {
+		$state = $this->getUpdateState();
+		if ( isset($state, $state->update, $state->update->translations) ) {
+			$state->update->translations = array();
+			$this->setUpdateState($state);
+		}
 	}
 
 	/**
@@ -844,6 +956,7 @@ class PluginInfo_3_0 {
 	public $homepage;
 	public $sections = array();
 	public $banners;
+	public $translations = array();
 	public $download_url;
 
 	public $author;
@@ -984,11 +1097,13 @@ class PluginUpdate_3_0 {
 	public $download_url;
 	public $upgrade_notice;
 	public $tested;
+	public $translations = array();
 	public $filename; //Plugin filename relative to the plugins directory.
 
 	private static $fields = array(
 		'id', 'slug', 'version', 'homepage', 'tested',
-		'download_url', 'upgrade_notice', 'filename'
+		'download_url', 'upgrade_notice', 'filename',
+		'translations'
 	);
 	
 	/**
