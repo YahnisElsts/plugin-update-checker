@@ -259,7 +259,20 @@ class PluginUpdateChecker_3_0 {
 		}
 		$update = PluginUpdate_3_0::fromPluginInfo($pluginInfo);
 
-		//Remove translation updates that don't apply to this site.
+		//Keep only those translation updates that apply to this site.
+		$update->translations = $this->filterApplicableTranslations($update->translations);
+
+		return $update;
+	}
+
+	/**
+	 * Filter a list of translation updates and return a new list that contains only updates
+	 * that apply to the current site.
+	 *
+	 * @param array $translations
+	 * @return array
+	 */
+	private function filterApplicableTranslations($translations) {
 		$languages = array_flip(array_values(get_available_languages()));
 		$installedTranslations = wp_get_installed_translations('plugins');
 		if ( isset($installedTranslations[$this->slug]) ) {
@@ -269,7 +282,7 @@ class PluginUpdateChecker_3_0 {
 		}
 
 		$applicableTranslations = array();
-		foreach($update->translations as $translation) {
+		foreach($translations as $translation) {
 			//Does it match one of the available core languages?
 			$isApplicable = array_key_exists($translation->language, $languages);
 			//Is it more recent than an already-installed translation?
@@ -283,9 +296,8 @@ class PluginUpdateChecker_3_0 {
 				$applicableTranslations[] = $translation;
 			}
 		}
-		$update->translations = $applicableTranslations;
 
-		return $update;
+		return $applicableTranslations;
 	}
 	
 	/**
