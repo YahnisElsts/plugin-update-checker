@@ -932,7 +932,7 @@ class PluginUpdateChecker_3_0 {
 		if ( class_exists('Debug_Bar', false) && file_exists($debugBarPlugin) ) {
 			/** @noinspection PhpIncludeInspection */
 			require_once $debugBarPlugin;
-			$this->debugBarPlugin = new PucDebugBarPlugin($this);
+			$this->debugBarPlugin = new PucDebugBarPlugin_3_0($this);
 		}
 	}
 
