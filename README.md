@@ -34,13 +34,15 @@ Getting Started
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'http://example.com/path/to/metadata.json',
-		__FILE__
+		__FILE__,
+		'unique-plugin-slug'
 	);
 	```
 
 #### Notes
-- You could use [wp-update-server](https://github.com/YahnisElsts/wp-update-server) to automatically generate JSON metadata from ZIP packages.
+- You can use [wp-update-server](https://github.com/YahnisElsts/wp-update-server) to automatically generate JSON metadata from ZIP packages.
 - The second argument passed to `buildUpdateChecker` should be the full path to the main plugin file.
+- The `$slug` argument is optional but recommended. If it's omitted, the update checker will use the name of the main plugin file as the slug (e.g. `my-cool-plugin.php` &rarr; `my-cool-plugin`). This can lead to conflicts if your plugin has a generic file name like `plugin.php`.  
 - There are more options available - see the [blog](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for details.
 
 ### Plugins Hosted on GitHub
