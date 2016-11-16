@@ -60,6 +60,19 @@ class PluginUpdateChecker_3_1 {
 		if ( empty($this->slug) ){
 			$this->slug = basename($this->pluginFile, '.php');
 		}
+
+		//Plugin slugs must be unique.
+		$slugCheckFilter = 'puc_is_slug_in_use-' . $this->slug;
+		$slugUsedBy = apply_filters($slugCheckFilter, false);
+		if ( $slugUsedBy ) {
+			$this->triggerError(sprintf(
+				'Plugin slug "%s" is already in use by %s. Slugs must be unique.',
+				htmlentities($this->slug),
+				htmlentities($slugUsedBy)
+			), E_USER_ERROR);
+		}
+		add_filter($slugCheckFilter, array($this, 'getAbsolutePath'));
+
 		
 		if ( empty($this->optionName) ){
 			$this->optionName = 'external_updates-' . $this->slug;
@@ -856,6 +869,15 @@ class PluginUpdateChecker_3_1 {
 	public function clearCachedVersion($filterArgument = null) {
 		$this->cachedInstalledVersion = null;
 		return $filterArgument;
+	}
+
+	/**
+	 * Get absolute path to the main plugin file.
+	 *
+	 * @return string
+	 */
+	public function getAbsolutePath() {
+		return $this->pluginAbsolutePath;
 	}
 
 	/**
