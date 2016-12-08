@@ -1,12 +1,12 @@
 <?php
 
-if ( !class_exists('PluginUpdateCheckerPanel_3_1', false) && class_exists('Debug_Bar_Panel', false) ) {
+if ( !class_exists('PluginUpdateCheckerPanel_3_2', false) && class_exists('Debug_Bar_Panel', false) ) {
 
 /**
  * A Debug Bar panel for the plugin update checker.
  */
-class PluginUpdateCheckerPanel_3_1 extends Debug_Bar_Panel {
-	/** @var PluginUpdateChecker_3_1 */
+class PluginUpdateCheckerPanel_3_2 extends Debug_Bar_Panel {
+	/** @var PluginUpdateChecker_3_2 */
 	private $updateChecker;
 
 	private $responseBox = '<div class="puc-ajax-response" style="display: none;"></div>';
