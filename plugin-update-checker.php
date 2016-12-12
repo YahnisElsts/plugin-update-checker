@@ -101,7 +101,7 @@ class PucFactory {
 endif;
 
 //Register classes defined in this file with the factory.
-PucFactory::addVersion('PluginUpdateChecker', 'Puc_v4_Plugin_UpdateChecker', '3.2');
-PucFactory::addVersion('PluginUpdate', 'Puc_v4_Plugin_Update', '3.2');
-PucFactory::addVersion('PluginInfo', 'Puc_v4_Plugin_Info', '3.2');
-PucFactory::addVersion('PucGitHubChecker', 'Puc_v4_GitHub_PluginChecker', '3.2');
+PucFactory::addVersion('PluginUpdateChecker', 'Puc_v4_Plugin_UpdateChecker', '4.0');
+PucFactory::addVersion('PluginUpdate', 'Puc_v4_Plugin_Update', '4.0');
+PucFactory::addVersion('PluginInfo', 'Puc_v4_Plugin_Info', '4.0');
+PucFactory::addVersion('PucGitHubChecker', 'Puc_v4_GitHub_PluginChecker', '4.0');

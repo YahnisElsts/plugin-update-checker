@@ -23,7 +23,7 @@ class PucDebugBarPlugin_3_2 {
 	 */
 	public function addDebugBarPanel($panels) {
 		require_once dirname(__FILE__) . '/debug-bar-panel.php';
-		if ( current_user_can('update_plugins') && class_exists('PluginUpdateCheckerPanel_3_2', false) ) {
+		if ( $this->updateChecker->userCanInstallUpdates() && class_exists('PluginUpdateCheckerPanel_3_2', false) ) {
 			$panels[] = new PluginUpdateCheckerPanel_3_2($this->updateChecker);
 		}
 		return $panels;
@@ -89,7 +89,7 @@ class PucDebugBarPlugin_3_2 {
 	 * Check access permissions and enable error display (for debugging).
 	 */
 	private function preAjaxReqest() {
-		if ( !current_user_can('update_plugins') ) {
+		if ( !$this->updateChecker->userCanInstallUpdates() ) {
 			die('Access denied');
 		}
 		check_ajax_referer('puc-ajax');

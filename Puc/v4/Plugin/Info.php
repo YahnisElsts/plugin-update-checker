@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4_Plugin_Info', false) ):
 	 * @copyright 2016
 	 * @access public
 	 */
-	class Puc_v4_Plugin_Info {
+	class Puc_v4_Plugin_Info extends Puc_v4_Metadata {
 		//Most fields map directly to the contents of the plugin's info.json file.
 		//See the relevant docs for a description of their meaning.
 		public $name;
@@ -38,38 +38,23 @@ if ( !class_exists('Puc_v4_Plugin_Info', false) ):
 		public $filename; //Plugin filename relative to the plugins directory.
 
 		/**
-		 * Create a new instance of PluginInfo from JSON-encoded plugin info
+		 * Create a new instance of Plugin Info from JSON-encoded plugin info
 		 * returned by an external update API.
 		 *
 		 * @param string $json Valid JSON string representing plugin info.
-		 * @return Puc_v4_Plugin_Info|null New instance of PluginInfo, or NULL on error.
+		 * @return self|null New instance of Plugin Info, or NULL on error.
 		 */
 		public static function fromJson($json){
-			/** @var StdClass $apiResponse */
-			$apiResponse = json_decode($json);
-			if ( empty($apiResponse) || !is_object($apiResponse) ){
-				trigger_error(
-					"Failed to parse plugin metadata. Try validating your .json file with http://jsonlint.com/",
-					E_USER_NOTICE
-				);
-				return null;
-			}
+			$instance = new self();
 
-			$valid = self::validateMetadata($apiResponse);
-			if ( is_wp_error($valid) ){
-				trigger_error($valid->get_error_message(), E_USER_NOTICE);
+			if ( !parent::createFromJson($json, $instance) ) {
 				return null;
-			}
-
-			$info = new self();
-			foreach(get_object_vars($apiResponse) as $key => $value){
-				$info->$key = $value;
 			}
 
 			//json_decode decodes assoc. arrays as objects. We want it as an array.
-			$info->sections = (array)$info->sections;
+			$instance->sections = (array)$instance->sections;
 
-			return $info;
+			return $instance;
 		}
 
 		/**
@@ -78,7 +63,7 @@ if ( !class_exists('Puc_v4_Plugin_Info', false) ):
 		 * @param StdClass $apiResponse
 		 * @return bool|WP_Error
 		 */
-		protected static function validateMetadata($apiResponse) {
+		protected function validateMetadata($apiResponse) {
 			if (
 				!isset($apiResponse->name, $apiResponse->version)
 				|| empty($apiResponse->name)

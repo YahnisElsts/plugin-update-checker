@@ -8,15 +8,14 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 	 * @copyright 2016
 	 * @access public
 	 */
-	class Puc_v4_Plugin_UpdateChecker {
+	class Puc_v4_Plugin_UpdateChecker extends Puc_v4_UpdateChecker {
 		public $metadataUrl = ''; //The URL of the plugin's metadata file.
 		public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 		public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 		public $slug = '';        //Plugin slug.
-		public $optionName = '';  //Where to store the update info.
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
-		public $debugMode = false; //Set to TRUE to enable error reporting. Errors are raised using trigger_error()
+		//Set to TRUE to enable error reporting. Errors are raised using trigger_error()
 		//and should be logged to the standard PHP error log.
 		public $scheduler;
 
@@ -224,7 +223,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @param array|WP_Error $result
 		 * @return true|WP_Error
 		 */
-		private function validateApiResponse($result) {
+		protected function validateApiResponse($result) {
 			if ( is_wp_error($result) ) { /** @var WP_Error $result */
 				return new WP_Error($result->get_error_code(), 'WP HTTP Error: ' . $result->get_error_message());
 			}
@@ -254,7 +253,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 *
 		 * @return Puc_v4_Plugin_Update An instance of PluginUpdate, or NULL when no updates are available.
 		 */
-		public function requestUpdate(){
+		public function requestUpdate() {
 			//For the sake of simplicity, this function just calls requestInfo()
 			//and transforms the result accordingly.
 			$pluginInfo = $this->requestInfo(array('checking_for_updates' => '1'));
@@ -563,7 +562,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 				$convertedUpdate = array_merge(
 					array(
 						'type' => $translationType,
-						'slug' => $this->slug,
+						'slug' => $this->slug, //FIXME: This should actually be the directory name, not the internal slug.
 						'autoupdate' => 0,
 						//AFAICT, WordPress doesn't actually use the "version" field for anything.
 						//But lets make sure it's there, just in case.
@@ -752,7 +751,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			$isRelevant = ($pluginFile == $this->pluginFile)
 				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
 
-			if ( $isRelevant && current_user_can('update_plugins') ) {
+			if ( $isRelevant && $this->userCanInstallUpdates() ) {
 				$linkUrl = wp_nonce_url(
 					add_query_arg(
 						array(
@@ -766,6 +765,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 
 				$linkText = apply_filters('puc_manual_check_link-' . $this->slug, __('Check for updates', 'plugin-update-checker'));
 				if ( !empty($linkText) ) {
+					/** @noinspection HtmlUnknownTarget */
 					$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
 				}
 			}
@@ -782,7 +782,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			$shouldCheck =
 				isset($_GET['puc_check_for_updates'], $_GET['puc_slug'])
 				&& $_GET['puc_slug'] == $this->slug
-				&& current_user_can('update_plugins')
+				&& $this->userCanInstallUpdates()
 				&& check_admin_referer('puc_check_for_updates');
 
 			if ( $shouldCheck ) {
@@ -819,6 +819,15 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 					apply_filters('puc_manual_check_message-' . $this->slug, $message, $status)
 				);
 			}
+		}
+
+		/**
+		 * Check if the current user has the required permissions to install updates.
+		 *
+		 * @return bool
+		 */
+		public function userCanInstallUpdates() {
+			return current_user_can('update_plugins');
 		}
 
 		/**
@@ -949,17 +958,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			}
 		}
 
-		/**
-		 * Trigger a PHP error, but only when $debugMode is enabled.
-		 *
-		 * @param string $message
-		 * @param int $errorType
-		 */
-		protected function triggerError($message, $errorType) {
-			if ( $this->debugMode ) {
-				trigger_error($message, $errorType);
-			}
-		}
+
 	}
 
 endif;
