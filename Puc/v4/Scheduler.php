@@ -3,15 +3,17 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 
 	/**
 	 * The scheduler decides when and how often to check for updates.
-	 * It calls @see Puc_v4_Plugin_UpdateChecker::checkForUpdates() to perform the actual checks.
+	 * It calls @see Puc_v4_UpdateChecker::checkForUpdates() to perform the actual checks.
 	 */
 	class Puc_v4_Scheduler {
 		public $checkPeriod = 12; //How often to check for updates (in hours).
 		public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
 		public $throttledCheckPeriod = 72;
 
+		protected $hourlyCheckHooks = array('load-update.php');
+
 		/**
-		 * @var Puc_v4_Plugin_UpdateChecker
+		 * @var Puc_v4_UpdateChecker
 		 */
 		protected $updateChecker;
 
@@ -20,15 +22,16 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 		/**
 		 * Scheduler constructor.
 		 *
-		 * @param Puc_v4_Plugin_UpdateChecker $updateChecker
+		 * @param Puc_v4_UpdateChecker $updateChecker
 		 * @param int $checkPeriod How often to check for updates (in hours).
+		 * @param array $hourlyHooks
 		 */
-		public function __construct($updateChecker, $checkPeriod) {
+		public function __construct($updateChecker, $checkPeriod, $hourlyHooks = array('load-plugins.php')) {
 			$this->updateChecker = $updateChecker;
 			$this->checkPeriod = $checkPeriod;
 
 			//Set up the periodic update checks
-			$this->cronHook = 'check_plugin_updates-' . $this->updateChecker->slug;
+			$this->cronHook = $this->updateChecker->getFilterName('cron_check_updates');
 			if ( $this->checkPeriod > 0 ){
 
 				//Trigger the check via Cron.
@@ -52,8 +55,6 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 				}
 				add_action($this->cronHook, array($this, 'maybeCheckForUpdates'));
 
-				register_deactivation_hook($this->updateChecker->pluginFile, array($this, '_removeUpdaterCron'));
-
 				//In case Cron is disabled or unreliable, we also manually trigger
 				//the periodic checks while the user is browsing the Dashboard.
 				add_action( 'admin_init', array($this, 'maybeCheckForUpdates') );
@@ -61,8 +62,11 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 				//Like WordPress itself, we check more often on certain pages.
 				/** @see wp_update_plugins */
 				add_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
-				add_action('load-plugins.php', array($this, 'maybeCheckForUpdates'));
-				add_action('load-update.php', array($this, 'maybeCheckForUpdates'));
+				//"load-update.php" and "load-plugins.php" or "load-themes.php".
+				$this->hourlyCheckHooks = array_merge($this->hourlyCheckHooks, $hourlyHooks);
+				foreach($this->hourlyCheckHooks as $hook) {
+					add_action($hook, array($this, 'maybeCheckForUpdates'));
+				}
 				//This hook fires after a bulk update is complete.
 				add_action('upgrader_process_complete', array($this, 'maybeCheckForUpdates'), 11, 0);
 
@@ -98,7 +102,7 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 
 			//Let plugin authors substitute their own algorithm.
 			$shouldCheck = apply_filters(
-				'puc_check_now-' . $this->updateChecker->slug,
+				$this->updateChecker->getFilterName('check_now'),
 				$shouldCheck,
 				(!empty($state) && isset($state->lastCheck)) ? $state->lastCheck : 0,
 				$this->checkPeriod
@@ -119,8 +123,8 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 			if ( in_array($currentFilter, array('load-update-core.php', 'upgrader_process_complete')) ) {
 				//Check more often when the user visits "Dashboard -> Updates" or does a bulk update.
 				$period = 60;
-			} else if ( in_array($currentFilter, array('load-plugins.php', 'load-update.php')) ) {
-				//Also check more often on the "Plugins" page and /wp-admin/update.php.
+			} else if ( in_array($currentFilter, $this->hourlyCheckHooks) ) {
+				//Also check more often on /wp-admin/update.php and the "Plugins" or "Themes" page.
 				$period = 3600;
 			} else if ( $this->throttleRedundantChecks && ($this->updateChecker->getUpdate() !== null) ) {
 				//Check less frequently if it's already known that an update is available.
@@ -159,7 +163,7 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 		 *
 		 * @return void
 		 */
-		public function _removeUpdaterCron(){
+		public function removeUpdaterCron(){
 			wp_clear_scheduled_hook($this->cronHook);
 		}
 

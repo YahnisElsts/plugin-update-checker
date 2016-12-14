@@ -9,22 +9,16 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 	 * @access public
 	 */
 	class Puc_v4_Plugin_UpdateChecker extends Puc_v4_UpdateChecker {
-		public $metadataUrl = ''; //The URL of the plugin's metadata file.
+		protected $updateClass = 'Puc_v4_Plugin_Update';
+
 		public $pluginAbsolutePath = ''; //Full path of the main plugin file.
 		public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
-		public $slug = '';        //Plugin slug.
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
-
-		//Set to TRUE to enable error reporting. Errors are raised using trigger_error()
-		//and should be logged to the standard PHP error log.
-		public $scheduler;
 
 		protected $upgraderStatus;
 
 		private $debugBarPlugin = null;
 		private $cachedInstalledVersion = null;
-
-		private $metadataHost = ''; //The host component of $metadataUrl.
 
 		/**
 		 * Class constructor.
@@ -37,18 +31,14 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @param string $muPluginFile Optional. The plugin filename relative to the mu-plugins directory.
 		 */
 		public function __construct($metadataUrl, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = ''){
-			$this->metadataUrl = $metadataUrl;
 			$this->pluginAbsolutePath = $pluginFile;
 			$this->pluginFile = plugin_basename($this->pluginAbsolutePath);
 			$this->muPluginFile = $muPluginFile;
-			$this->slug = $slug;
-			$this->optionName = $optionName;
-			$this->debugMode = (bool)(constant('WP_DEBUG'));
 
 			//If no slug is specified, use the name of the main plugin file as the slug.
 			//For example, 'my-cool-plugin/cool-plugin.php' becomes 'cool-plugin'.
-			if ( empty($this->slug) ){
-				$this->slug = basename($this->pluginFile, '.php');
+			if ( empty($slug) ){
+				$slug = basename($this->pluginFile, '.php');
 			}
 
 			//Plugin slugs must be unique.
@@ -63,21 +53,15 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			}
 			add_filter($slugCheckFilter, array($this, 'getAbsolutePath'));
 
-
-			if ( empty($this->optionName) ){
-				$this->optionName = 'external_updates-' . $this->slug;
-			}
-
 			//Backwards compatibility: If the plugin is a mu-plugin but no $muPluginFile is specified, assume
 			//it's the same as $pluginFile given that it's not in a subdirectory (WP only looks in the base dir).
 			if ( (strpbrk($this->pluginFile, '/\\') === false) && $this->isUnknownMuPlugin() ) {
 				$this->muPluginFile = $this->pluginFile;
 			}
 
-			$this->scheduler = $this->createScheduler($checkPeriod);
 			$this->upgraderStatus = new Puc_v4_UpgraderStatus();
 
-			$this->installHooks();
+			parent::__construct($metadataUrl, $slug, $checkPeriod, $optionName);
 		}
 
 		/**
@@ -90,7 +74,9 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @return Puc_v4_Scheduler
 		 */
 		protected function createScheduler($checkPeriod) {
-			return new Puc_v4_Scheduler($this, $checkPeriod);
+			$scheduler = new Puc_v4_Scheduler($this, $checkPeriod, array('load-plugins.php'));
+			register_deactivation_hook($this->pluginFile, array($scheduler, 'removeUpdaterCron'));
+			return $scheduler;
 		}
 
 		/**
@@ -130,36 +116,10 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 
 			//Enable language support (i18n).
+			//TODO: The directory path has changed.
 			load_plugin_textdomain('plugin-update-checker', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
-			//Allow HTTP requests to the metadata URL even if it's on a local host.
-			$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
-			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
-		}
-
-		/**
-		 * Explicitly allow HTTP requests to the metadata URL.
-		 *
-		 * WordPress has a security feature where the HTTP API will reject all requests that are sent to
-		 * another site hosted on the same server as the current site (IP match), a local host, or a local
-		 * IP, unless the host exactly matches the current site.
-		 *
-		 * This feature is opt-in (at least in WP 4.4). Apparently some people enable it.
-		 *
-		 * That can be a problem when you're developing your plugin and you decide to host the update information
-		 * on the same server as your test site. Update requests will mysteriously fail.
-		 *
-		 * We fix that by adding an exception for the metadata host.
-		 *
-		 * @param bool $allow
-		 * @param string $host
-		 * @return bool
-		 */
-		public function allowMetadataHost($allow, $host) {
-			if ( strtolower($host) === strtolower($this->metadataHost) ) {
-				return true;
-			}
-			return $allow;
+			parent::installHooks();
 		}
 
 		/**
@@ -355,82 +315,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			return get_plugin_data($this->pluginAbsolutePath, false, false);
 		}
 
-		/**
-		 * Check for plugin updates.
-		 * The results are stored in the DB option specified in $optionName.
-		 *
-		 * @return Puc_v4_Plugin_Update|null
-		 */
-		public function checkForUpdates(){
-			$installedVersion = $this->getInstalledVersion();
-			//Fail silently if we can't find the plugin or read its header.
-			if ( $installedVersion === null ) {
-				$this->triggerError(
-					sprintf('Skipping update check for %s - installed version unknown.', $this->pluginFile),
-					E_USER_WARNING
-				);
-				return null;
-			}
-
-			$state = $this->getUpdateState();
-			if ( empty($state) ){
-				$state = new stdClass;
-				$state->lastCheck = 0;
-				$state->checkedVersion = '';
-				$state->update = null;
-			}
-
-			$state->lastCheck = time();
-			$state->checkedVersion = $installedVersion;
-			$this->setUpdateState($state); //Save before checking in case something goes wrong
-
-			$state->update = $this->requestUpdate();
-			$this->setUpdateState($state);
-
-			return $this->getUpdate();
-		}
-
-		/**
-		 * Load the update checker state from the DB.
-		 *
-		 * @return stdClass|null
-		 */
-		public function getUpdateState() {
-			$state = get_site_option($this->optionName, null);
-			if ( empty($state) || !is_object($state)) {
-				$state = null;
-			}
-
-			if ( isset($state, $state->update) && is_object($state->update) ) {
-				$state->update = Puc_v4_Plugin_Update::fromObject($state->update);
-			}
-			return $state;
-		}
-
-
-		/**
-		 * Persist the update checker state to the DB.
-		 *
-		 * @param StdClass $state
-		 * @return void
-		 */
-		private function setUpdateState($state) {
-			if ( isset($state->update) && is_object($state->update) && method_exists($state->update, 'toStdClass') ) {
-				$update = $state->update; /** @var Puc_v4_Plugin_Update $update */
-				$state->update = $update->toStdClass();
-			}
-			update_site_option($this->optionName, $state);
-		}
-
-		/**
-		 * Reset update checker state - i.e. last check time, cached update data and so on.
-		 *
-		 * Call this when your plugin is being uninstalled, or if you want to
-		 * clear the update cache.
-		 */
-		public function resetUpdateState() {
-			delete_site_option($this->optionName);
-		}
 
 		/**
 		 * Intercept plugins_api() calls that request information about our plugin and
@@ -692,19 +576,11 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @return Puc_v4_Plugin_Update|null
 		 */
 		public function getUpdate() {
-			$state = $this->getUpdateState(); /** @var StdClass $state */
-
-			//Is there an update available?
-			if ( isset($state, $state->update) ) {
-				$update = $state->update;
-				//Check if the update is actually newer than the currently installed version.
-				$installedVersion = $this->getInstalledVersion();
-				if ( ($installedVersion !== null) && version_compare($update->version, $installedVersion, '>') ){
-					$update->filename = $this->pluginFile;
-					return $update;
-				}
+			$update = parent::getUpdate();
+			if ( isset($update) ) {
+				$update->filename = $this->pluginFile;
 			}
-			return null;
+			return $update;
 		}
 
 		/**
@@ -928,22 +804,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 */
 		public function addResultFilter($callback){
 			add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
-		}
-
-		/**
-		 * Register a callback for one of the update checker filters.
-		 *
-		 * Identical to add_filter(), except it automatically adds the "puc_" prefix
-		 * and the "-$plugin_slug" suffix to the filter name. For example, "request_info_result"
-		 * becomes "puc_request_info_result-your_plugin_slug".
-		 *
-		 * @param string $tag
-		 * @param callable $callback
-		 * @param int $priority
-		 * @param int $acceptedArgs
-		 */
-		public function addFilter($tag, $callback, $priority = 10, $acceptedArgs = 1) {
-			add_filter('puc_' . $tag . '-' . $this->slug, $callback, $priority, $acceptedArgs);
 		}
 
 		/**

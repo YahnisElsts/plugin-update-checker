@@ -4,6 +4,7 @@ if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 
 	class Puc_v4_Theme_UpdateChecker extends Puc_v4_UpdateChecker {
 		protected $filterPrefix = 'tuc_';
+		protected $updateClass = 'Puc_v4_Theme_Update';
 
 		/**
 		 * @var string Theme directory name.
@@ -22,7 +23,39 @@ if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			$this->stylesheet = $stylesheet;
 			$this->theme = wp_get_theme($this->stylesheet);
 
-			parent::__construct($metadataUrl, $customSlug ? $customSlug : $stylesheet);
+			parent::__construct($metadataUrl, $customSlug ? $customSlug : $stylesheet, $checkPeriod, $optionName);
+		}
+
+		protected function installHooks() {
+			parent::installHooks();
+
+			//Insert our update info into the update list maintained by WP.
+			add_filter('site_transient_update_themes', array($this,'injectUpdate'));
+
+			//TODO: Rename the update directory to be the same as the existing directory.
+			//add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
+		}
+
+		/**
+		 * Insert the latest update (if any) into the update list maintained by WP.
+		 *
+		 * @param StdClass $updates Update list.
+		 * @return StdClass Modified update list.
+		 */
+		public function injectUpdate($updates) {
+			//Is there an update to insert?
+			$update = $this->getUpdate();
+
+			if ( !empty($update) ) {
+				//Let themes filter the update info before it's passed on to WordPress.
+				$update = apply_filters($this->getFilterName('pre_inject_update'), $update);
+				$updates->response[$this->stylesheet] = $update->toWpFormat();
+			} else {
+				//Clean up any stale update info.
+				unset($updates->response[$this->stylesheet]);
+			}
+
+			return $updates;
 		}
 
 		/**
@@ -86,6 +119,18 @@ if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		public function getInstalledVersion() {
 			return $this->theme->get('Version');
 		}
+
+		/**
+		 * Create an instance of the scheduler.
+		 *
+		 * @param int $checkPeriod
+		 * @return Puc_v4_Scheduler
+		 */
+		protected function createScheduler($checkPeriod) {
+			return new Puc_v4_Scheduler($this, $checkPeriod, array('load-themes.php'));
+		}
+
+		//TODO: Various add*filter utilities for backwards compatibility.
 	}
 
 endif;
