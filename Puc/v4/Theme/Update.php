@@ -1,6 +1,6 @@
 <?php
 
-if ( class_exists('Puc_v4_Theme_Update', false) ):
+if ( !class_exists('Puc_v4_Theme_Update', false) ):
 
 	class Puc_v4_Theme_Update extends Puc_v4_Update {
 		public $details_url = '';
@@ -10,15 +10,18 @@ if ( class_exists('Puc_v4_Theme_Update', false) ):
 		/**
 		 * Transform the metadata into the format used by WordPress core.
 		 *
-		 * @return object
+		 * @return array
 		 */
 		public function toWpFormat() {
-			$update = parent::toWpFormat();
+			$update = array(
+				'theme' => $this->slug,
+				'new_version' => $this->version,
+				'url' => $this->details_url,
+			);
 
-			$update->theme = $this->slug;
-			$update->new_version = $this->version;
-			$update->package = $this->download_url;
-			$update->details_url = $this->details_url;
+			if ( !empty($this->download_url) ) {
+				$update['package'] = $this->download_url;
+			}
 
 			return $update;
 		}
@@ -35,6 +38,18 @@ if ( class_exists('Puc_v4_Theme_Update', false) ):
 				return null;
 			}
 			return $instance;
+		}
+
+		/**
+		 * Create a new instance by copying the necessary fields from another object.
+		 *
+		 * @param StdClass|Puc_v4_Theme_Update $object The source object.
+		 * @return Puc_v4_Theme_Update The new copy.
+		 */
+		public static function fromObject($object) {
+			$update = new self();
+			$update->copyFields($object, $update);
+			return $update;
 		}
 
 		/**

@@ -1,10 +1,12 @@
 <?php
 
-if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
+if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 
 	class Puc_v4_Theme_UpdateChecker extends Puc_v4_UpdateChecker {
 		protected $filterPrefix = 'tuc_';
 		protected $updateClass = 'Puc_v4_Theme_Update';
+		protected $updateTransient = 'update_themes';
+		protected $translationType = 'theme';
 
 		/**
 		 * @var string Theme directory name.
@@ -23,14 +25,25 @@ if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			$this->stylesheet = $stylesheet;
 			$this->theme = wp_get_theme($this->stylesheet);
 
-			parent::__construct($metadataUrl, $customSlug ? $customSlug : $stylesheet, $checkPeriod, $optionName);
+			parent::__construct(
+				$metadataUrl,
+				$stylesheet,
+				$customSlug ? $customSlug : $stylesheet,
+				$checkPeriod,
+				$optionName
+			);
+
+			add_action('admin_notices', function() {
+				//var_dump(get_site_transient('update_plugins'));
+				//var_dump(get_site_transient('update_themes'));
+			});
 		}
 
 		protected function installHooks() {
 			parent::installHooks();
 
 			//Insert our update info into the update list maintained by WP.
-			add_filter('site_transient_update_themes', array($this,'injectUpdate'));
+			add_filter('site_transient_update_themes', array($this, 'injectUpdate'));
 
 			//TODO: Rename the update directory to be the same as the existing directory.
 			//add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
@@ -45,6 +58,10 @@ if ( class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		public function injectUpdate($updates) {
 			//Is there an update to insert?
 			$update = $this->getUpdate();
+
+			if ( !$this->shouldShowUpdates() ) {
+				$update = null;
+			}
 
 			if ( !empty($update) ) {
 				//Let themes filter the update info before it's passed on to WordPress.

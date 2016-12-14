@@ -5,6 +5,8 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 	abstract class Puc_v4_UpdateChecker {
 		protected $filterPrefix = 'puc_';
 		protected $updateClass = '';
+		protected $updateTransient = '';
+		protected $translationType = ''; //"plugin" or "theme".
 
 		/**
 		 * Set to TRUE to enable error reporting. Errors are raised using trigger_error()
@@ -24,7 +26,13 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		public $metadataUrl = '';
 
 		/**
-		 * @var string Plugin slug or theme directory name.
+		 * @var string Plugin or theme directory name.
+		 */
+		public $directoryName = '';
+
+		/**
+		 * @var string The slug that will be used in update checker hooks and remote API requests.
+		 * Usually matches the directory name unless the plugin/theme directory has been renamed.
 		 */
 		public $slug = '';
 
@@ -38,10 +46,11 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 */
 		protected $metadataHost = '';
 
-		public function __construct($metadataUrl, $slug, $checkPeriod = 12, $optionName = '') {
+		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
-			$this->slug = $slug;
+			$this->directoryName = $directoryName;
+			$this->slug = !empty($slug) ? $slug : $this->directoryName;
 
 			$this->optionName = $optionName;
 			if ( empty($this->optionName) ) {
@@ -75,8 +84,20 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		}
 
 		protected function installHooks() {
-			//TODO: Translation updates
 			//TODO: Fix directory name
+
+			if ( !empty($this->updateTransient) ) {
+				//Insert translation updates into the update list.
+				add_filter('site_transient_' . $this->updateTransient, array($this, 'injectTranslationUpdates'));
+
+				//Clear translation updates when WP clears the update cache.
+				//This needs to be done directly because the library doesn't actually remove obsolete plugin updates,
+				//it just hides them (see getUpdate()). We can't do that with translations - too much disk I/O.
+				add_action(
+					'delete_site_transient_' . $this->updateTransient,
+					array($this, 'clearCachedTranslationUpdates')
+				);
+			}
 
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
@@ -145,6 +166,9 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			$this->setUpdateState($state); //Save before checking in case something goes wrong
 
 			$state->update = $this->requestUpdate();
+			if ( isset($state->update, $state->update->translations) ) {
+				$state->update->translations = $this->filterApplicableTranslations($state->update->translations);
+			}
 			$this->setUpdateState($state);
 
 			return $this->getUpdate();
@@ -302,6 +326,160 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		protected function triggerError($message, $errorType) {
 			if ($this->debugMode) {
 				trigger_error($message, $errorType);
+			}
+		}
+
+		/* -------------------------------------------------------------------
+		 * Inject updates
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Should we show available updates?
+		 *
+		 * Usually the answer is "yes", but there are exceptions. For example, WordPress doesn't
+		 * support automatic updates installation for mu-plugins, so PUC usually won't show update
+		 * notifications in that case. See the plugin-specific subclass for details.
+		 *
+		 * Note: This method only applies to updates that are displayed (or not) in the WordPress
+		 * admin. It doesn't affect APIs like requestUpdate and getUpdate.
+		 *
+		 * @return bool
+		 */
+		protected function shouldShowUpdates() {
+			return true;
+		}
+
+		/* -------------------------------------------------------------------
+		 * Language packs / Translation updates
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Filter a list of translation updates and return a new list that contains only updates
+		 * that apply to the current site.
+		 *
+		 * @param array $translations
+		 * @return array
+		 */
+		protected function filterApplicableTranslations($translations) {
+			$languages = array_flip(array_values(get_available_languages()));
+			$installedTranslations = $this->getInstalledTranslations();
+
+			$applicableTranslations = array();
+			foreach($translations as $translation) {
+				//Does it match one of the available core languages?
+				$isApplicable = array_key_exists($translation->language, $languages);
+				//Is it more recent than an already-installed translation?
+				if ( isset($installedTranslations[$translation->language]) ) {
+					$updateTimestamp = strtotime($translation->updated);
+					$installedTimestamp = strtotime($installedTranslations[$translation->language]['PO-Revision-Date']);
+					$isApplicable = $updateTimestamp > $installedTimestamp;
+				}
+
+				if ( $isApplicable ) {
+					$applicableTranslations[] = $translation;
+				}
+			}
+
+			return $applicableTranslations;
+		}
+
+		/**
+		 * Get a list of installed translations for this plugin or theme.
+		 *
+		 * @return array
+		 */
+		protected function getInstalledTranslations() {
+			$installedTranslations = wp_get_installed_translations($this->translationType . 's');
+			if ( isset($installedTranslations[$this->directoryName]) ) {
+				$installedTranslations = $installedTranslations[$this->directoryName];
+			} else {
+				$installedTranslations = array();
+			}
+			return $installedTranslations;
+		}
+
+		/**
+		 * Insert translation updates into the list maintained by WordPress.
+		 *
+		 * @param stdClass $updates
+		 * @return stdClass
+		 */
+		public function injectTranslationUpdates($updates) {
+			$translationUpdates = $this->getTranslationUpdates();
+			if ( empty($translationUpdates) ) {
+				return $updates;
+			}
+
+			//Being defensive.
+			if ( !is_object($updates) ) {
+				$updates = new stdClass();
+			}
+			if ( !isset($updates->translations) ) {
+				$updates->translations = array();
+			}
+
+			//In case there's a name collision with a plugin or theme hosted on wordpress.org,
+			//remove any preexisting updates that match our thing.
+			$filteredTranslations = array();
+			foreach($updates->translations as $translation) {
+				if (
+					($translation['type'] === $this->translationType)
+					&& ($translation['slug'] === $this->directoryName)
+				) {
+					continue;
+				}
+				$filteredTranslations[] = $translation;
+			}
+			$updates->translations = $filteredTranslations;
+
+			//Add our updates to the list.
+			foreach($translationUpdates as $update) {
+				$convertedUpdate = array_merge(
+					array(
+						'type' => $this->translationType,
+						'slug' => $this->directoryName,
+						'autoupdate' => 0,
+						//AFAICT, WordPress doesn't actually use the "version" field for anything.
+						//But lets make sure it's there, just in case.
+						'version' => isset($update->version) ? $update->version : ('1.' . strtotime($update->updated)),
+					),
+					(array)$update
+				);
+
+				$updates->translations[] = $convertedUpdate;
+			}
+
+			return $updates;
+		}
+
+		/**
+		 * Get a list of available translation updates.
+		 *
+		 * This method will return an empty array if there are no updates.
+		 * Uses cached update data.
+		 *
+		 * @return array
+		 */
+		public function getTranslationUpdates() {
+			$state = $this->getUpdateState();
+			if ( isset($state, $state->update, $state->update->translations) ) {
+				return $state->update->translations;
+			}
+			return array();
+		}
+
+		/**
+		 * Remove all cached translation updates.
+		 *
+		 * @see wp_clean_update_cache
+		 */
+		public function clearCachedTranslationUpdates() {
+			$state = $this->getUpdateState();
+			if ( isset($state, $state->update, $state->update->translations) ) {
+				$state->update->translations = array();
+				$this->setUpdateState($state);
 			}
 		}
 	}
