@@ -9,6 +9,7 @@ if ( !class_exists('Puc_v4_Theme_Update', false) ):
 
 		/**
 		 * Transform the metadata into the format used by WordPress core.
+		 * Note the inconsistency: WP stores plugin updates as objects and theme updates as arrays.
 		 *
 		 * @return array
 		 */

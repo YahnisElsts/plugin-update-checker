@@ -46,6 +46,11 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 */
 		protected $metadataHost = '';
 
+		/**
+		 * @var Puc_v4_UpgraderStatus
+		 */
+		protected $upgraderStatus;
+
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
@@ -64,6 +69,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			}
 
 			$this->scheduler = $this->createScheduler($checkPeriod);
+			$this->upgraderStatus = new Puc_v4_UpgraderStatus();
 
 			$this->loadTextDomain();
 			$this->installHooks();
@@ -84,24 +90,29 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		}
 
 		protected function installHooks() {
-			//TODO: Fix directory name
+			//Insert our update info into the update array maintained by WP.
+			add_filter('site_transient_' . $this->updateTransient, array($this,'injectUpdate'));
 
-			if ( !empty($this->updateTransient) ) {
-				//Insert translation updates into the update list.
-				add_filter('site_transient_' . $this->updateTransient, array($this, 'injectTranslationUpdates'));
+			//Insert translation updates into the update list.
+			add_filter('site_transient_' . $this->updateTransient, array($this, 'injectTranslationUpdates'));
 
-				//Clear translation updates when WP clears the update cache.
-				//This needs to be done directly because the library doesn't actually remove obsolete plugin updates,
-				//it just hides them (see getUpdate()). We can't do that with translations - too much disk I/O.
-				add_action(
-					'delete_site_transient_' . $this->updateTransient,
-					array($this, 'clearCachedTranslationUpdates')
-				);
-			}
+			//Clear translation updates when WP clears the update cache.
+			//This needs to be done directly because the library doesn't actually remove obsolete plugin updates,
+			//it just hides them (see getUpdate()). We can't do that with translations - too much disk I/O.
+			add_action(
+				'delete_site_transient_' . $this->updateTransient,
+				array($this, 'clearCachedTranslationUpdates')
+			);
+
+			//Rename the update directory to be the same as the existing directory.
+			add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
+
+			//TODO: Debugbar
+			//TODO: Utility functions for adding filters.
 		}
 
 		/**
@@ -131,6 +142,9 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 		/**
 		 * Create an instance of the scheduler.
+		 *
+		 * This is implemented as a method to make it possible for plugins to subclass the update checker
+		 * and substitute their own scheduler.
 		 *
 		 * @param int $checkPeriod
 		 * @return Puc_v4_Scheduler
@@ -167,6 +181,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 			$state->update = $this->requestUpdate();
 			if ( isset($state->update, $state->update->translations) ) {
+				//TODO: Should this be called in requestUpdate, like PluginUpdater does?
 				$state->update->translations = $this->filterApplicableTranslations($state->update->translations);
 			}
 			$this->setUpdateState($state);
@@ -225,7 +240,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * Uses cached update data. To retrieve update information straight from
 		 * the metadata URL, call requestUpdate() instead.
 		 *
-		 * @return Puc_v4_Update|Puc_v4_Plugin_Update|Puc_v4_Theme_Update|null
+		 * @return Puc_v4_Update|null
 		 */
 		public function getUpdate() {
 			$state = $this->getUpdateState(); /** @var StdClass $state */
@@ -333,6 +348,67 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * Inject updates
 		 * -------------------------------------------------------------------
 		 */
+
+		/**
+		 * Insert the latest update (if any) into the update list maintained by WP.
+		 *
+		 * @param stdClass $updates Update list.
+		 * @return stdClass Modified update list.
+		 */
+		public function injectUpdate($updates) {
+			//Is there an update to insert?
+			$update = $this->getUpdate();
+
+			if ( !$this->shouldShowUpdates() ) {
+				$update = null;
+			}
+
+			if ( !empty($update) ) {
+				//Let plugins filter the update info before it's passed on to WordPress.
+				$update = apply_filters($this->getFilterName('pre_inject_update'), $update);
+				$updates = $this->addUpdateToList($updates, $update->toWpFormat());
+			} else {
+				//Clean up any stale update info.
+				$updates = $this->removeUpdateFromList($updates);
+			}
+
+			return $updates;
+		}
+
+		/**
+		 * @param stdClass|null $updates
+		 * @param stdClass|array $updateToAdd
+		 * @return stdClass
+		 */
+		protected function addUpdateToList($updates, $updateToAdd) {
+			if ( !is_object($updates) ) {
+				$updates = new stdClass();
+				$updates->response = array();
+			}
+
+			$updates->response[$this->getUpdateListKey()] = $updateToAdd;
+			return $updates;
+		}
+
+		/**
+		 * @param stdClass|null $updates
+		 * @return stdClass|null
+		 */
+		protected function removeUpdateFromList($updates) {
+			if ( isset($updates, $updates->response) ) {
+				unset($updates->response[$this->getUpdateListKey()]);
+			}
+			return $updates;
+		}
+
+		/**
+		 * Get the key that will be used when adding updates to the update list that's maintained
+		 * by the WordPress core. The list is always an associative array, but the key is different
+		 * for plugins and themes.
+		 *
+		 * @return string
+		 */
+		abstract protected function getUpdateListKey();
 
 		/**
 		 * Should we show available updates?
@@ -481,6 +557,116 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 				$state->update->translations = array();
 				$this->setUpdateState($state);
 			}
+		}
+
+		/* -------------------------------------------------------------------
+		 * Fix directory name when installing updates
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Rename the update directory to match the existing plugin/theme directory.
+		 *
+		 * When WordPress installs a plugin or theme update, it assumes that the ZIP file will contain
+		 * exactly one directory, and that the directory name will be the same as the directory where
+		 * the plugin or theme is currently installed.
+		 *
+		 * GitHub and other repositories provide ZIP downloads, but they often use directory names like
+		 * "project-branch" or "project-tag-hash". We need to change the name to the actual plugin folder.
+		 *
+		 * This is a hook callback. Don't call it from a plugin.
+		 *
+		 * @access protected
+		 *
+		 * @param string $source The directory to copy to /wp-content/plugins or /wp-content/themes. Usually a subdirectory of $remoteSource.
+		 * @param string $remoteSource WordPress has extracted the update to this directory.
+		 * @param WP_Upgrader $upgrader
+		 * @return string|WP_Error
+		 */
+		public function fixDirectoryName($source, $remoteSource, $upgrader) {
+			global $wp_filesystem;
+			/** @var WP_Filesystem_Base $wp_filesystem */
+
+			//Basic sanity checks.
+			if ( !isset($source, $remoteSource, $upgrader, $upgrader->skin, $wp_filesystem) ) {
+				return $source;
+			}
+
+			//If WordPress is upgrading anything other than our plugin/theme, leave the directory name unchanged.
+			if ( !$this->isBeingUpgraded($upgrader) ) {
+				return $source;
+			}
+
+			//Rename the source to match the existing directory.
+			if ( $this->directoryName === '.' ) {
+				return $source;
+			}
+			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
+			if ( $source !== $correctedSource ) {
+				//The update archive should contain a single directory that contains the rest of plugin/theme files.
+				//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
+				//We can't rename $remoteSource because that would break WordPress code that cleans up temporary files
+				//after update.
+				if ($this->isBadDirectoryStructure($remoteSource)) {
+					return new WP_Error(
+						'puc-incorrect-directory-structure',
+						sprintf(
+							'The directory structure of the update is incorrect. All files should be inside ' .
+							'a directory named <span class="code">%s</span>, not at the root of the ZIP archive.',
+							htmlentities($this->slug)
+						)
+					);
+				}
+
+				/** @var WP_Upgrader_Skin $upgrader ->skin */
+				$upgrader->skin->feedback(sprintf(
+					'Renaming %s to %s&#8230;',
+					'<span class="code">' . basename($source) . '</span>',
+					'<span class="code">' . $this->directoryName . '</span>'
+				));
+
+				if ($wp_filesystem->move($source, $correctedSource, true)) {
+					$upgrader->skin->feedback('Directory successfully renamed.');
+					return $correctedSource;
+				} else {
+					return new WP_Error(
+						'puc-rename-failed',
+						'Unable to rename the update to match the existing directory.'
+					);
+				}
+			}
+
+			return $source;
+		}
+
+		/**
+		 * Is there an update being installed right now, for this plugin or theme?
+		 *
+		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @return bool
+		 */
+		abstract public function isBeingUpgraded($upgrader = null);
+
+		/**
+		 * Check for incorrect update directory structure. An update must contain a single directory,
+		 * all other files should be inside that directory.
+		 *
+		 * @param string $remoteSource Directory path.
+		 * @return bool
+		 */
+		protected function isBadDirectoryStructure($remoteSource) {
+			global $wp_filesystem;
+			/** @var WP_Filesystem_Base $wp_filesystem */
+
+			$sourceFiles = $wp_filesystem->dirlist($remoteSource);
+			if ( is_array($sourceFiles) ) {
+				$sourceFiles = array_keys($sourceFiles);
+				$firstFilePath = trailingslashit($remoteSource) . $sourceFiles[0];
+				return (count($sourceFiles) > 1) || (!$wp_filesystem->is_dir($firstFilePath));
+			}
+
+			//Assume it's fine.
+			return false;
 		}
 	}
 

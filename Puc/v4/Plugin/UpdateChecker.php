@@ -17,8 +17,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
-		protected $upgraderStatus;
-
 		private $debugBarPlugin = null;
 		private $cachedInstalledVersion = null;
 
@@ -61,16 +59,11 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 				$this->muPluginFile = $this->pluginFile;
 			}
 
-			$this->upgraderStatus = new Puc_v4_UpgraderStatus();
-
-			parent::__construct($metadataUrl, $slug, $checkPeriod, $optionName);
+			parent::__construct($metadataUrl, dirname($this->pluginFile), $slug, $checkPeriod, $optionName);
 		}
 
 		/**
 		 * Create an instance of the scheduler.
-		 *
-		 * This is implemented as a method to make it possible for plugins to subclass the update checker
-		 * and substitute their own scheduler.
 		 *
 		 * @param int $checkPeriod
 		 * @return Puc_v4_Scheduler
@@ -91,10 +84,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
-			//Insert our update info into the update array maintained by WP.
-			add_filter('site_transient_update_plugins', array($this,'injectUpdate')); //WP 3.0+
-			add_filter('transient_update_plugins', array($this,'injectUpdate')); //WP 2.8+
-
 			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 			add_action('admin_init', array($this, 'handleManualCheck'));
 			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -108,13 +97,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			} else {
 				add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
 			}
-
-			//Rename the update directory to be the same as the existing directory.
-			add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
-
-			//Enable language support (i18n).
-			//TODO: The directory path has changed.
-			load_plugin_textdomain('plugin-update-checker', false, plugin_basename(dirname(__FILE__)) . '/languages');
 
 			parent::installHooks();
 		}
@@ -172,35 +154,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 
 			$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
 			return $pluginInfo;
-		}
-
-		/**
-		 * Check if $result is a successful update API response.
-		 *
-		 * @param array|WP_Error $result
-		 * @return true|WP_Error
-		 */
-		protected function validateApiResponse($result) {
-			if ( is_wp_error($result) ) { /** @var WP_Error $result */
-				return new WP_Error($result->get_error_code(), 'WP HTTP Error: ' . $result->get_error_message());
-			}
-
-			if ( !isset($result['response']['code']) ) {
-				return new WP_Error('puc_no_response_code', 'wp_remote_get() returned an unexpected result.');
-			}
-
-			if ( $result['response']['code'] !== 200 ) {
-				return new WP_Error(
-					'puc_unexpected_response_code',
-					'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
-				);
-			}
-
-			if ( empty($result['body']) ) {
-				return new WP_Error('puc_empty_response', 'The metadata file appears to be empty.');
-			}
-
-			return true;
 		}
 
 		/**
@@ -298,40 +251,12 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			}
 
 			$pluginInfo = $this->requestInfo();
-			$pluginInfo = apply_filters('puc_pre_inject_info-' . $this->slug, $pluginInfo);
+			$pluginInfo = apply_filters($this->getFilterName('pre_inject_info'), $pluginInfo);
 			if ( $pluginInfo ) {
 				return $pluginInfo->toWpFormat();
 			}
 
 			return $result;
-		}
-
-		/**
-		 * Insert the latest update (if any) into the update list maintained by WP.
-		 *
-		 * @param StdClass $updates Update list.
-		 * @return StdClass Modified update list.
-		 */
-		public function injectUpdate($updates){
-			//TODO: Unify this.
-
-			//Is there an update to insert?
-			$update = $this->getUpdate();
-
-			if ( !$this->shouldShowUpdates() ) {
-				$update = null;
-			}
-
-			if ( !empty($update) ) {
-				//Let plugins filter the update info before it's passed on to WordPress.
-				$update = apply_filters($this->getFilterName('pre_inject_update'), $update);
-				$updates = $this->addUpdateToList($updates, $update);
-			} else {
-				//Clean up any stale update info.
-				$updates = $this->removeUpdateFromList($updates);
-			}
-
-			return $updates;
 		}
 
 		protected function shouldShowUpdates() {
@@ -341,142 +266,62 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @param StdClass|null $updates
-		 * @param Puc_v4_Plugin_Update $updateToAdd
-		 * @return StdClass
+		 * @param stdClass|null $updates
+		 * @param stdClass $updateToAdd
+		 * @return stdClass
 		 */
-		private function addUpdateToList($updates, $updateToAdd) {
-			if ( !is_object($updates) ) {
-				$updates = new stdClass();
-				$updates->response = array();
-			}
-
-			$wpUpdate = $updateToAdd->toWpFormat();
-			$pluginFile = $this->pluginFile;
-
+		protected function addUpdateToList($updates, $updateToAdd) {
 			if ( $this->isMuPlugin() ) {
-				//WP does not support automatic update installation for mu-plugins, but we can still display a notice.
-				$wpUpdate->package = null;
-				$pluginFile = $this->muPluginFile;
+				//WP does not support automatic update installation for mu-plugins, but we can
+				//still display a notice.
+				$updateToAdd->package = null;
 			}
-			$updates->response[$pluginFile] = $wpUpdate;
-			return $updates;
+			return parent::addUpdateToList($updates, $updateToAdd);
 		}
 
 		/**
 		 * @param stdClass|null $updates
 		 * @return stdClass|null
 		 */
-		private function removeUpdateFromList($updates) {
-			if ( isset($updates, $updates->response) ) {
-				unset($updates->response[$this->pluginFile]);
-				if ( !empty($this->muPluginFile) ) {
-					unset($updates->response[$this->muPluginFile]);
-				}
+		protected function removeUpdateFromList($updates) {
+			$updates = parent::removeUpdateFromList($updates);
+			if ( !empty($this->muPluginFile) && isset($updates, $updates->response) ) {
+				unset($updates->response[$this->muPluginFile]);
 			}
 			return $updates;
 		}
 
 		/**
-		 * Rename the update directory to match the existing plugin directory.
+		 * For plugins, the update array is indexed by the plugin filename relative to the "plugins"
+		 * directory. Example: "plugin-name/plugin.php".
 		 *
-		 * When WordPress installs a plugin or theme update, it assumes that the ZIP file will contain
-		 * exactly one directory, and that the directory name will be the same as the directory where
-		 * the plugin/theme is currently installed.
-		 *
-		 * GitHub and other repositories provide ZIP downloads, but they often use directory names like
-		 * "project-branch" or "project-tag-hash". We need to change the name to the actual plugin folder.
-		 *
-		 * This is a hook callback. Don't call it from a plugin.
-		 *
-		 * @param string $source The directory to copy to /wp-content/plugins. Usually a subdirectory of $remoteSource.
-		 * @param string $remoteSource WordPress has extracted the update to this directory.
-		 * @param WP_Upgrader $upgrader
-		 * @return string|WP_Error
+		 * @return string
 		 */
-		public function fixDirectoryName($source, $remoteSource, $upgrader) {
-			global $wp_filesystem; /** @var WP_Filesystem_Base $wp_filesystem */
-
-			//Basic sanity checks.
-			if ( !isset($source, $remoteSource, $upgrader, $upgrader->skin, $wp_filesystem) ) {
-				return $source;
+		protected function getUpdateListKey() {
+			if ( $this->isMuPlugin() ) {
+				return $this->muPluginFile;
 			}
-
-			//If WordPress is upgrading anything other than our plugin, leave the directory name unchanged.
-			if ( !$this->isPluginBeingUpgraded($upgrader) ) {
-				return $source;
-			}
-
-			//Rename the source to match the existing plugin directory.
-			$pluginDirectoryName = dirname($this->pluginFile);
-			if ( $pluginDirectoryName === '.' ) {
-				return $source;
-			}
-			$correctedSource = trailingslashit($remoteSource) . $pluginDirectoryName . '/';
-			if ( $source !== $correctedSource ) {
-				//The update archive should contain a single directory that contains the rest of plugin files. Otherwise,
-				//WordPress will try to copy the entire working directory ($source == $remoteSource). We can't rename
-				//$remoteSource because that would break WordPress code that cleans up temporary files after update.
-				if ( $this->isBadDirectoryStructure($remoteSource) ) {
-					return new WP_Error(
-						'puc-incorrect-directory-structure',
-						sprintf(
-							'The directory structure of the update is incorrect. All plugin files should be inside ' .
-							'a directory named <span class="code">%s</span>, not at the root of the ZIP file.',
-							htmlentities($this->slug)
-						)
-					);
-				}
-
-				/** @var WP_Upgrader_Skin $upgrader->skin */
-				$upgrader->skin->feedback(sprintf(
-					'Renaming %s to %s&#8230;',
-					'<span class="code">' . basename($source) . '</span>',
-					'<span class="code">' . $pluginDirectoryName . '</span>'
-				));
-
-				if ( $wp_filesystem->move($source, $correctedSource, true) ) {
-					$upgrader->skin->feedback('Plugin directory successfully renamed.');
-					return $correctedSource;
-				} else {
-					return new WP_Error(
-						'puc-rename-failed',
-						'Unable to rename the update to match the existing plugin directory.'
-					);
-				}
-			}
-
-			return $source;
+			return $this->pluginFile;
 		}
 
 		/**
-		 * Check for incorrect update directory structure. An update must contain a single directory,
-		 * all other files should be inside that directory.
+		 * Alias for isBeingUpgraded().
 		 *
-		 * @param string $remoteSource Directory path.
-		 * @return bool
-		 */
-		private function isBadDirectoryStructure($remoteSource) {
-			global $wp_filesystem; /** @var WP_Filesystem_Base $wp_filesystem */
-
-			$sourceFiles = $wp_filesystem->dirlist($remoteSource);
-			if ( is_array($sourceFiles) ) {
-				$sourceFiles = array_keys($sourceFiles);
-				$firstFilePath = trailingslashit($remoteSource) . $sourceFiles[0];
-				return (count($sourceFiles) > 1) || (!$wp_filesystem->is_dir($firstFilePath));
-			}
-
-			//Assume it's fine.
-			return false;
-		}
-
-		/**
-		 * Is there and update being installed RIGHT NOW, for this specific plugin?
-		 *
+		 * @deprecated
 		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool
 		 */
 		public function isPluginBeingUpgraded($upgrader = null) {
+			return $this->isBeingUpgraded($upgrader);
+		}
+
+		/**
+		 * Is there an update being installed for this plugin, right now?
+		 *
+		 * @param WP_Upgrader|null $upgrader
+		 * @return bool
+		 */
+		public function isBeingUpgraded($upgrader = null) {
 			return $this->upgraderStatus->isPluginBeingUpgraded($this->pluginFile, $upgrader);
 		}
 
@@ -494,6 +339,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		public function getUpdate() {
 			$update = parent::getUpdate();
 			if ( isset($update) ) {
+				/** @var Puc_v4_Plugin_Update $update */
 				$update->filename = $this->pluginFile;
 			}
 			return $update;

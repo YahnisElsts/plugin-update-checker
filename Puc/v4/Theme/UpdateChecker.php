@@ -41,38 +41,15 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 
 		protected function installHooks() {
 			parent::installHooks();
-
-			//Insert our update info into the update list maintained by WP.
-			add_filter('site_transient_update_themes', array($this, 'injectUpdate'));
-
-			//TODO: Rename the update directory to be the same as the existing directory.
-			//add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 		}
 
 		/**
-		 * Insert the latest update (if any) into the update list maintained by WP.
+		 * For themes, the update array is indexed by theme directory name.
 		 *
-		 * @param StdClass $updates Update list.
-		 * @return StdClass Modified update list.
+		 * @return string
 		 */
-		public function injectUpdate($updates) {
-			//Is there an update to insert?
-			$update = $this->getUpdate();
-
-			if ( !$this->shouldShowUpdates() ) {
-				$update = null;
-			}
-
-			if ( !empty($update) ) {
-				//Let themes filter the update info before it's passed on to WordPress.
-				$update = apply_filters($this->getFilterName('pre_inject_update'), $update);
-				$updates->response[$this->stylesheet] = $update->toWpFormat();
-			} else {
-				//Clean up any stale update info.
-				unset($updates->response[$this->stylesheet]);
-			}
-
-			return $updates;
+		protected function getUpdateListKey() {
+			return $this->directoryName;
 		}
 
 		/**
@@ -148,6 +125,16 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		}
 
 		//TODO: Various add*filter utilities for backwards compatibility.
+
+		/**
+		 * Is there an update being installed right now for this theme?
+		 *
+		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @return bool
+		 */
+		public function isBeingUpgraded($upgrader = null) {
+			return $this->upgraderStatus->isThemeBeingUpgraded($this->stylesheet, $upgrader);
+		}
 	}
 
 endif;
