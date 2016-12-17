@@ -64,7 +64,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 				if ( $this->filterSuffix === '' ) {
 					$this->optionName = 'external_updates-' . $this->slug;
 				} else {
-					$this->optionName = $this->getFilterName('external_updates');
+					$this->optionName = $this->getUniqueName('external_updates');
 				}
 			}
 
@@ -117,9 +117,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			} else {
 				add_action('plugins_loaded', array($this, 'maybeInitDebugBar'));
 			}
-
-			//TODO: Debugbar
-			//TODO: Utility functions for adding filters.
 		}
 
 		/**
@@ -194,10 +191,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			$this->setUpdateState($state); //Save before checking in case something goes wrong
 
 			$state->update = $this->requestUpdate();
-			if ( isset($state->update, $state->update->translations) ) {
-				//TODO: Should this be called in requestUpdate, like PluginUpdater does?
-				$state->update->translations = $this->filterApplicableTranslations($state->update->translations);
-			}
 			$this->setUpdateState($state);
 
 			return $this->getUpdate();
@@ -274,9 +267,30 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		/**
 		 * Retrieve the latest update (if any) from the configured API endpoint.
 		 *
+		 * Subclasses should run the update through filterUpdateResult before returning it.
+		 *
 		 * @return Puc_v4_Update An instance of Update, or NULL when no updates are available.
 		 */
 		abstract public function requestUpdate();
+
+		/**
+		 * Filter the result of a requestUpdate() call.
+		 *
+		 * @param Puc_v4_Update $update
+		 * @param array|WP_Error|null $httpResult The value returned by wp_remote_get(), if any.
+		 * @return Puc_v4_Update
+		 */
+		protected function filterUpdateResult($update, $httpResult = null) {
+			//Let plugins/themes modify the update.
+			$update = apply_filters($this->getUniqueName('request_update_result'), $update, $httpResult);
+
+			if ( isset($update, $update->translations) ) {
+				//Keep only those translation updates that apply to this site.
+				$update->translations = $this->filterApplicableTranslations($update->translations);
+			}
+
+			return $update;
+		}
 
 		/**
 		 * Check if $result is a successful update API response.
@@ -318,39 +332,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		abstract public function getInstalledVersion();
 
 		/**
-		 * Register a callback for one of the update checker filters.
-		 *
-		 * Identical to add_filter(), except it automatically adds the "puc_"/"tuc_" prefix
-		 * and the "-$slug" suffix to the filter name. For example, "request_info_result"
-		 * becomes "puc_request_info_result-your_plugin_slug".
-		 *
-		 * @param string $tag
-		 * @param callable $callback
-		 * @param int $priority
-		 * @param int $acceptedArgs
-		 */
-		public function addFilter($tag, $callback, $priority = 10, $acceptedArgs = 1) {
-			add_filter($this->getFilterName($tag), $callback, $priority, $acceptedArgs);
-		}
-
-		/**
-		 * Get the full name of an update checker filter or action.
-		 *
-		 * This method adds the "puc_"/"tuc_" prefix and the "-$slug" suffix to the filter name.
-		 * For example, "pre_inject_update" becomes "puc_pre_inject_update-plugin-slug".
-		 *
-		 * @param string $baseTag
-		 * @return string
-		 */
-		public function getFilterName($baseTag) {
-			$name = 'puc_' . $baseTag;
-			if ($this->filterSuffix !== '') {
-				$name .= '_' . $this->filterSuffix;
-			}
-			return $name . '-' . $this->slug;
-		}
-
-		/**
 		 * Trigger a PHP error, but only when $debugMode is enabled.
 		 *
 		 * @param string $message
@@ -360,6 +341,44 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			if ($this->debugMode) {
 				trigger_error($message, $errorType);
 			}
+		}
+
+		/**
+		 * Get the full name of an update checker filter, action or DB entry.
+		 *
+		 * This method adds the "puc_" prefix and the "-$slug" suffix to the filter name.
+		 * For example, "pre_inject_update" becomes "puc_pre_inject_update-plugin-slug".
+		 *
+		 * @param string $baseTag
+		 * @return string
+		 */
+		public function getUniqueName($baseTag) {
+			$name = 'puc_' . $baseTag;
+			if ($this->filterSuffix !== '') {
+				$name .= '_' . $this->filterSuffix;
+			}
+			return $name . '-' . $this->slug;
+		}
+
+		/* -------------------------------------------------------------------
+		 * PUC filters and filter utilities
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Register a callback for one of the update checker filters.
+		 *
+		 * Identical to add_filter(), except it automatically adds the "puc_" prefix
+		 * and the "-$slug" suffix to the filter name. For example, "request_info_result"
+		 * becomes "puc_request_info_result-your_plugin_slug".
+		 *
+		 * @param string $tag
+		 * @param callable $callback
+		 * @param int $priority
+		 * @param int $acceptedArgs
+		 */
+		public function addFilter($tag, $callback, $priority = 10, $acceptedArgs = 1) {
+			add_filter($this->getUniqueName($tag), $callback, $priority, $acceptedArgs);
 		}
 
 		/* -------------------------------------------------------------------
@@ -383,7 +402,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 			if ( !empty($update) ) {
 				//Let plugins filter the update info before it's passed on to WordPress.
-				$update = apply_filters($this->getFilterName('pre_inject_update'), $update);
+				$update = apply_filters($this->getUniqueName('pre_inject_update'), $update);
 				$updates = $this->addUpdateToList($updates, $update->toWpFormat());
 			} else {
 				//Clean up any stale update info.

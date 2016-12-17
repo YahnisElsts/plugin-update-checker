@@ -129,7 +129,7 @@ class Puc_v4_GitHub_PluginChecker extends Puc_v4_Plugin_UpdateChecker {
 			}
 		}
 
-		$info = apply_filters('puc_request_info_result-' . $this->slug, $info, null);
+		$info = apply_filters($this->getUniqueName('request_info_result'), $info, null);
 		return $info;
 	}
 
@@ -238,10 +238,7 @@ class Puc_v4_GitHub_PluginChecker extends Puc_v4_Plugin_UpdateChecker {
 	 * @return string
 	 */
 	protected function parseMarkdown($markdown) {
-		if ( !class_exists('Parsedown', false) ) {
-			require_once(dirname(__FILE__) . '/vendor/Parsedown' . (version_compare(PHP_VERSION, '5.3.0', '>=') ? '' : 'Legacy') . '.php');
-		}
-
+		/** @noinspection PhpUndefinedClassInspection */
 		$instance = Parsedown::instance();
 		return $instance->text($markdown);
 	}
@@ -416,10 +413,6 @@ class Puc_v4_GitHub_PluginChecker extends Puc_v4_Plugin_UpdateChecker {
 	}
 
 	protected function parseReadme($content) {
-		//TODO: Autoload this and Parsedown.
-		if ( !class_exists('PucReadmeParser', false) ) {
-			require_once(dirname(__FILE__) . '/vendor/readme-parser.php');
-		}
 		$parser = new PucReadmeParser();
 		return $parser->parse_readme_contents($content);
 	}

@@ -55,7 +55,7 @@ if ( !class_exists('Puc_v4_DebugBar_Extension', false) ):
 		 * the update checking process works as expected.
 		 */
 		public function ajaxCheckNow() {
-			if ( $_POST['uid'] !== $this->updateChecker->getFilterName('uid') ) {
+			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
 				return;
 			}
 			$this->preAjaxReqest();

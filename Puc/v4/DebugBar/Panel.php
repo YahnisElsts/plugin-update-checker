@@ -12,7 +12,7 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 			$this->updateChecker = $updateChecker;
 			$title = sprintf(
 				'<span id="puc-debug-menu-link-%s">PUC (%s)</span>',
-				esc_attr($this->updateChecker->getFilterName('uid')),
+				esc_attr($this->updateChecker->getUniqueName('uid')),
 				$this->updateChecker->slug
 			);
 			parent::__construct($title);
@@ -21,9 +21,9 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 		public function render() {
 			printf(
 				'<div class="puc-debug-bar-panel-v4" id="%1$s" data-slug="%2$s" data-uid="%3$s" data-nonce="%4$s">',
-				esc_attr($this->updateChecker->getFilterName('debug-bar-panel')),
+				esc_attr($this->updateChecker->getUniqueName('debug-bar-panel')),
 				esc_attr($this->updateChecker->slug),
-				esc_attr($this->updateChecker->getFilterName('uid')),
+				esc_attr($this->updateChecker->getUniqueName('uid')),
 				esc_attr(wp_create_nonce('puc-ajax'))
 			);
 
@@ -87,7 +87,7 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 					'secondary',
 					'puc-check-now-button',
 					false,
-					array('id' => $this->updateChecker->getFilterName('check-now-button'))
+					array('id' => $this->updateChecker->getUniqueName('check-now-button'))
 				);
 			}
 

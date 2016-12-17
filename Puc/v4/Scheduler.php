@@ -31,7 +31,7 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 			$this->checkPeriod = $checkPeriod;
 
 			//Set up the periodic update checks
-			$this->cronHook = $this->updateChecker->getFilterName('cron_check_updates');
+			$this->cronHook = $this->updateChecker->getUniqueName('cron_check_updates');
 			if ( $this->checkPeriod > 0 ){
 
 				//Trigger the check via Cron.
@@ -102,7 +102,7 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 
 			//Let plugin authors substitute their own algorithm.
 			$shouldCheck = apply_filters(
-				$this->updateChecker->getFilterName('check_now'),
+				$this->updateChecker->getUniqueName('check_now'),
 				$shouldCheck,
 				(!empty($state) && isset($state->lastCheck)) ? $state->lastCheck : 0,
 				$this->checkPeriod

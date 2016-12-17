@@ -15,7 +15,7 @@ if ( !class_exists('Puc_v4_DebugBar_PluginExtension', false) ):
 		 * Request plugin info and output it.
 		 */
 		public function ajaxRequestInfo() {
-			if ( $_POST['uid'] !== $this->updateChecker->getFilterName('uid') ) {
+			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
 				return;
 			}
 			$this->preAjaxReqest();

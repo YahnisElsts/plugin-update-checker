@@ -32,11 +32,6 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 				$checkPeriod,
 				$optionName
 			);
-
-			add_action('admin_notices', function() {
-				//var_dump(get_site_transient('update_plugins'));
-				//var_dump(get_site_transient('update_themes'));
-			});
 		}
 
 		protected function installHooks() {
@@ -63,7 +58,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			$installedVersion = $this->getInstalledVersion();
 			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
 
-			$queryArgs = apply_filters($this->getFilterName('request_update_query_args'), $queryArgs);
+			$queryArgs = apply_filters($this->getUniqueName('request_update_query_args'), $queryArgs);
 
 			//Various options for the wp_remote_get() call. Plugins can filter these, too.
 			$options = array(
@@ -72,7 +67,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 					'Accept' => 'application/json'
 				),
 			);
-			$options = apply_filters($this->getFilterName('request_update_options'), $options);
+			$options = apply_filters($this->getUniqueName('request_update_options'), $options);
 
 			$url = $this->metadataUrl;
 			if ( !empty($queryArgs) ){
@@ -97,11 +92,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 				);
 			}
 
-			$themeUpdate = apply_filters(
-				$this->getFilterName('request_update_result'),
-				$themeUpdate,
-				$result
-			);
+			$themeUpdate = $this->filterUpdateResult($themeUpdate, $result);
 			return $themeUpdate;
 		}
 
@@ -128,8 +119,6 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			return new Puc_v4_Scheduler($this, $checkPeriod, array('load-themes.php'));
 		}
 
-		//TODO: Various add*filter utilities for backwards compatibility.
-
 		/**
 		 * Is there an update being installed right now for this theme?
 		 *
@@ -144,6 +133,53 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			return new Puc_v4_DebugBar_Extension($this, 'Puc_v4_DebugBar_ThemePanel');
 		}
 
+		/**
+		 * Register a callback for filtering query arguments.
+		 *
+		 * The callback function should take one argument - an associative array of query arguments.
+		 * It should return a modified array of query arguments.
+		 *
+		 * @param callable $callback
+		 * @return void
+		 */
+		public function addQueryArgFilter($callback){
+			$this->addFilter('request_update_query_args', $callback);
+		}
+
+		/**
+		 * Register a callback for filtering arguments passed to wp_remote_get().
+		 *
+		 * The callback function should take one argument - an associative array of arguments -
+		 * and return a modified array or arguments. See the WP documentation on wp_remote_get()
+		 * for details on what arguments are available and how they work.
+		 *
+		 * @uses add_filter() This method is a convenience wrapper for add_filter().
+		 *
+		 * @param callable $callback
+		 * @return void
+		 */
+		public function addHttpRequestArgFilter($callback) {
+			$this->addFilter('request_update_options', $callback);
+		}
+
+		/**
+		 * Register a callback for filtering theme updates retrieved from the external API.
+		 *
+		 * The callback function should take two arguments. If the theme update was retrieved
+		 * successfully, the first argument passed will be an instance of Theme_Update. Otherwise,
+		 * it will be NULL. The second argument will be the corresponding return value of
+		 * wp_remote_get (see WP docs for details).
+		 *
+		 * The callback function should return a new or modified instance of Theme_Update or NULL.
+		 *
+		 * @uses add_filter() This method is a convenience wrapper for add_filter().
+		 *
+		 * @param callable $callback
+		 * @return void
+		 */
+		public function addResultFilter($callback) {
+			$this->addFilter('request_update_result', $callback, 10, 2);
+		}
 	}
 
 endif;

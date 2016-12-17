@@ -20,7 +20,7 @@ if ( !class_exists('Puc_v4_DebugBar_PluginPanel', false) ):
 					'secondary',
 					'puc-request-info-button',
 					false,
-					array('id' => $this->updateChecker->getFilterName('request-info-button'))
+					array('id' => $this->updateChecker->getUniqueName('request-info-button'))
 				);
 			}
 			return $requestInfoButton;

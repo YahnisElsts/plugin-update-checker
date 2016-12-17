@@ -4,15 +4,31 @@ class Puc_v4_Autoloader {
 	private $prefix = '';
 	private $rootDir = '';
 
+	private $staticMap;
+
 	public function __construct() {
 		$this->rootDir = dirname(__FILE__) . '/';
 		$nameParts = explode('_', __CLASS__, 3);
 		$this->prefix = $nameParts[0] . '_' . $nameParts[1] . '_';
 
+		$this->staticMap = array(
+			'PucReadmeParser' => 'vendor/readme-parser.php',
+			'Parsedown' => 'vendor/ParsedownLegacy.php',
+		);
+		if ( version_compare(PHP_VERSION, '5.3.0', '>=') ) {
+			$this->staticMap['Parsedown'] = 'vendor/Parsedown.php';
+		}
+
 		spl_autoload_register(array($this, 'autoload'));
 	}
 
 	public function autoload($className) {
+		if ( isset($this->staticMap[$className]) && file_exists($this->rootDir . $this->staticMap[$className]) ) {
+			/** @noinspection PhpIncludeInspection */
+			include ($this->rootDir . $this->staticMap[$className]);
+			return;
+		}
+
 		if (strpos($className, $this->prefix) === 0) {
 			$path = substr($className, strlen($this->prefix));
 			$path = str_replace('_', '/', $path);

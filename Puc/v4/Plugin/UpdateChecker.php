@@ -154,7 +154,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 *
 		 * @uses PluginUpdateChecker::requestInfo()
 		 *
-		 * @return Puc_v4_Plugin_Update An instance of PluginUpdate, or NULL when no updates are available.
+		 * @return Puc_v4_Update An instance of Plugin_Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
 			//For the sake of simplicity, this function just calls requestInfo()
@@ -165,8 +165,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			}
 			$update = Puc_v4_Plugin_Update::fromPluginInfo($pluginInfo);
 
-			//Keep only those translation updates that apply to this site.
-			$update->translations = $this->filterApplicableTranslations($update->translations);
+			$update = $this->filterUpdateResult($update);
 
 			return $update;
 		}
@@ -244,7 +243,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			}
 
 			$pluginInfo = $this->requestInfo();
-			$pluginInfo = apply_filters($this->getFilterName('pre_inject_info'), $pluginInfo);
+			$pluginInfo = apply_filters($this->getUniqueName('pre_inject_info'), $pluginInfo);
 			if ( $pluginInfo ) {
 				return $pluginInfo->toWpFormat();
 			}
@@ -494,7 +493,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @return void
 		 */
 		public function addQueryArgFilter($callback){
-			add_filter('puc_request_info_query_args-'.$this->slug, $callback);
+			$this->addFilter('request_info_query_args', $callback);
 		}
 
 		/**
@@ -509,8 +508,8 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @param callable $callback
 		 * @return void
 		 */
-		public function addHttpRequestArgFilter($callback){
-			add_filter('puc_request_info_options-'.$this->slug, $callback);
+		public function addHttpRequestArgFilter($callback) {
+			$this->addFilter('request_info_options', $callback);
 		}
 
 		/**
@@ -528,8 +527,8 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @param callable $callback
 		 * @return void
 		 */
-		public function addResultFilter($callback){
-			add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
+		public function addResultFilter($callback) {
+			$this->addFilter('request_info_result', $callback, 10, 2);
 		}
 
 		protected function createDebugBarExtension() {
