@@ -3,7 +3,7 @@
 if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 	abstract class Puc_v4_UpdateChecker {
-		protected $filterPrefix = 'puc_';
+		protected $filterSuffix = '';
 		protected $updateClass = '';
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
@@ -61,10 +61,10 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			if ( empty($this->optionName) ) {
 				//BC: Initially the library only supported plugin updates and didn't use type prefixes
 				//in the option name. Lets use the same prefix-less name when possible.
-				if ( $this->filterPrefix === 'puc_' ) {
+				if ( $this->filterSuffix === '' ) {
 					$this->optionName = 'external_updates-' . $this->slug;
 				} else {
-					$this->optionName = $this->filterPrefix . 'external_updates-' . $this->slug;
+					$this->optionName = $this->getFilterName('external_updates');
 				}
 			}
 
@@ -111,9 +111,23 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
+			//DebugBar integration.
+			if ( did_action('plugins_loaded') ) {
+				$this->maybeInitDebugBar();
+			} else {
+				add_action('plugins_loaded', array($this, 'maybeInitDebugBar'));
+			}
+
 			//TODO: Debugbar
 			//TODO: Utility functions for adding filters.
 		}
+
+		/**
+		 * Check if the current user has the required permissions to install updates.
+		 *
+		 * @return bool
+		 */
+		abstract public function userCanInstallUpdates();
 
 		/**
 		 * Explicitly allow HTTP requests to the metadata URL.
@@ -277,20 +291,20 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 			if ( !isset($result['response']['code']) ) {
 				return new WP_Error(
-					$this->filterPrefix . 'no_response_code',
+					'puc_no_response_code',
 					'wp_remote_get() returned an unexpected result.'
 				);
 			}
 
 			if ( $result['response']['code'] !== 200 ) {
 				return new WP_Error(
-					$this->filterPrefix . 'unexpected_response_code',
+					'puc_unexpected_response_code',
 					'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
 				);
 			}
 
 			if ( empty($result['body']) ) {
-				return new WP_Error($this->filterPrefix . 'empty_response', 'The metadata file appears to be empty.');
+				return new WP_Error('puc_empty_response', 'The metadata file appears to be empty.');
 			}
 
 			return true;
@@ -329,7 +343,11 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @return string
 		 */
 		public function getFilterName($baseTag) {
-			return $this->filterPrefix . $baseTag . '-' . $this->slug;
+			$name = 'puc_' . $baseTag;
+			if ($this->filterSuffix !== '') {
+				$name .= '_' . $this->filterSuffix;
+			}
+			return $name . '-' . $this->slug;
 		}
 
 		/**
@@ -668,6 +686,25 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			//Assume it's fine.
 			return false;
 		}
+
+		/* -------------------------------------------------------------------
+		 * DebugBar integration
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Initialize the update checker Debug Bar plugin/add-on thingy.
+		 */
+		public function maybeInitDebugBar() {
+			if ( class_exists('Debug_Bar', false) && file_exists(dirname(__FILE__ . '/DebugBar')) ) {
+				$this->createDebugBarExtension();
+			}
+		}
+
+		protected function createDebugBarExtension() {
+			return new Puc_v4_DebugBar_Extension($this);
+		}
+
 	}
 
 endif;

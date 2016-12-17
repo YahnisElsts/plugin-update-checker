@@ -76,8 +76,8 @@ if ( !class_exists('Puc_v4_Theme_Update', false) ):
 			return array_merge(parent::getFieldNames(), self::$extraFields);
 		}
 
-		protected function getFilterPrefix() {
-			return 'tuc_';
+		protected function getPrefixedFilter($tag) {
+			return parent::getPrefixedFilter($tag) . '_theme';
 		}
 	}
 

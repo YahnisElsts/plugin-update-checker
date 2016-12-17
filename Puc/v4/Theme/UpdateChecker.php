@@ -3,7 +3,7 @@
 if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 
 	class Puc_v4_Theme_UpdateChecker extends Puc_v4_UpdateChecker {
-		protected $filterPrefix = 'tuc_';
+		protected $filterSuffix = 'theme';
 		protected $updateClass = 'Puc_v4_Theme_Update';
 		protected $updateTransient = 'update_themes';
 		protected $translationType = 'theme';
@@ -63,7 +63,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			$installedVersion = $this->getInstalledVersion();
 			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
 
-			$queryArgs = apply_filters($this->filterPrefix . 'request_update_query_args-' . $this->slug, $queryArgs);
+			$queryArgs = apply_filters($this->getFilterName('request_update_query_args'), $queryArgs);
 
 			//Various options for the wp_remote_get() call. Plugins can filter these, too.
 			$options = array(
@@ -72,7 +72,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 					'Accept' => 'application/json'
 				),
 			);
-			$options = apply_filters($this->filterPrefix . 'request_update_options-' . $this->slug, $options);
+			$options = apply_filters($this->getFilterName('request_update_options'), $options);
 
 			$url = $this->metadataUrl;
 			if ( !empty($queryArgs) ){
@@ -98,11 +98,15 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			}
 
 			$themeUpdate = apply_filters(
-				$this->filterPrefix . 'request_update_result-' . $this->slug,
+				$this->getFilterName('request_update_result'),
 				$themeUpdate,
 				$result
 			);
 			return $themeUpdate;
+		}
+
+		public function userCanInstallUpdates() {
+			return current_user_can('update_themes');
 		}
 
 		/**
@@ -135,6 +139,11 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		public function isBeingUpgraded($upgrader = null) {
 			return $this->upgraderStatus->isThemeBeingUpgraded($this->stylesheet, $upgrader);
 		}
+
+		protected function createDebugBarExtension() {
+			return new Puc_v4_DebugBar_Extension($this, 'Puc_v4_DebugBar_ThemePanel');
+		}
+
 	}
 
 endif;

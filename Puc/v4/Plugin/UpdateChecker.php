@@ -17,7 +17,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
-		private $debugBarPlugin = null;
 		private $cachedInstalledVersion = null;
 
 		/**
@@ -91,12 +90,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			//Clear the version number cache when something - anything - is upgraded or WP clears the update cache.
 			add_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
 			add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
-
-			if ( did_action('plugins_loaded') ) {
-				$this->initDebugBarPanel();
-			} else {
-				add_action('plugins_loaded', array($this, 'initDebugBarPanel'));
-			}
 
 			parent::installHooks();
 		}
@@ -539,19 +532,9 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			add_filter('puc_request_info_result-'.$this->slug, $callback, 10, 2);
 		}
 
-		/**
-		 * Initialize the update checker Debug Bar plugin/add-on thingy.
-		 */
-		public function initDebugBarPanel() {
-			$debugBarPlugin = dirname(__FILE__) . '/../../../debug-bar-plugin.php';
-			if ( class_exists('Debug_Bar', false) && file_exists($debugBarPlugin) ) {
-				/** @noinspection PhpIncludeInspection */
-				require_once $debugBarPlugin;
-				$this->debugBarPlugin = new PucDebugBarPlugin_3_2($this);
-			}
+		protected function createDebugBarExtension() {
+			return new Puc_v4_DebugBar_PluginExtension($this);
 		}
-
-
 	}
 
 endif;

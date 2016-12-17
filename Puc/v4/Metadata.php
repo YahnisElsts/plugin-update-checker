@@ -103,7 +103,7 @@ if ( !class_exists('Puc_v4_Metadata', false) ):
 
 			if ( property_exists($from, 'slug') && !empty($from->slug) ) {
 				//Let plugins add extra fields without having to create subclasses.
-				$fields = apply_filters($this->getFilterPrefix() . 'retain_fields-' . $from->slug, $fields);
+				$fields = apply_filters($this->getPrefixedFilter('retain_fields') . $from->slug, $fields);
 			}
 
 			foreach ($fields as $field) {
@@ -123,8 +123,8 @@ if ( !class_exists('Puc_v4_Metadata', false) ):
 		/**
 		 * @return string
 		 */
-		protected function getFilterPrefix() {
-			return 'puc_';
+		protected function getPrefixedFilter($tag) {
+			return 'puc_' . $tag . '-';
 		}
 	}
 

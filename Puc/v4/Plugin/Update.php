@@ -17,8 +17,7 @@ if ( !class_exists('Puc_v4_Plugin_Update', false) ):
 		public $filename; //Plugin filename relative to the plugins directory.
 
 		protected static $extraFields = array(
-			'id', 'homepage', 'tested', 'download_url', 'upgrade_notice',
-			'filename', 'translations',
+			'id', 'homepage', 'tested', 'upgrade_notice', 'filename',
 		);
 
 		/**
