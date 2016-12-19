@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4_DebugBar_PluginExtension', false) ):
 		public function __construct($updateChecker) {
 			parent::__construct($updateChecker, 'Puc_v4_DebugBar_PluginPanel');
 
-			add_action('wp_ajax_puc_debug_request_info', array($this, 'ajaxRequestInfo'));
+			add_action('wp_ajax_puc_v4_debug_request_info', array($this, 'ajaxRequestInfo'));
 		}
 
 		/**
