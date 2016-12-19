@@ -180,6 +180,25 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		public function addResultFilter($callback) {
 			$this->addFilter('request_update_result', $callback, 10, 2);
 		}
+
+		/**
+		 * @return array
+		 */
+		protected function getHeaderNames() {
+			return array(
+				'Name'        => 'Theme Name',
+				'ThemeURI'    => 'Theme URI',
+				'Description' => 'Description',
+				'Author'      => 'Author',
+				'AuthorURI'   => 'Author URI',
+				'Version'     => 'Version',
+				'Template'    => 'Template',
+				'Status'      => 'Status',
+				'Tags'        => 'Tags',
+				'TextDomain'  => 'Text Domain',
+				'DomainPath'  => 'Domain Path',
+			);
+		}
 	}
 
 endif;

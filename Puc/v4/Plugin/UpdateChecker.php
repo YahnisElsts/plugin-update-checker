@@ -222,6 +222,30 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			return get_plugin_data($this->pluginAbsolutePath, false, false);
 		}
 
+		/**
+		 * @return array
+		 */
+		protected function getHeaderNames() {
+			return array(
+				'Name' => 'Plugin Name',
+				'PluginURI' => 'Plugin URI',
+				'Version' => 'Version',
+				'Description' => 'Description',
+				'Author' => 'Author',
+				'AuthorURI' => 'Author URI',
+				'TextDomain' => 'Text Domain',
+				'DomainPath' => 'Domain Path',
+				'Network' => 'Network',
+
+				//The newest WordPress version that this plugin requires or has been tested with.
+				//We support several different formats for compatibility with other libraries.
+				'Tested WP' => 'Tested WP',
+				'Requires WP' => 'Requires WP',
+				'Tested up to' => 'Tested up to',
+				'Requires at least' => 'Requires at least',
+			);
+		}
+
 
 		/**
 		 * Intercept plugins_api() calls that request information about our plugin and
