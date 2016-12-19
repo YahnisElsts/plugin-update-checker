@@ -14,7 +14,7 @@ if ( !class_exists('Puc_v4_UpgraderStatus', false) ):
 
 		public function __construct() {
 			//Keep track of which plugin/theme WordPress is currently upgrading.
-			add_filter('upgrader_pre_install', array($this, 'setUpgradedPlugin'), 10, 2);
+			add_filter('upgrader_pre_install', array($this, 'setUpgradedThing'), 10, 2);
 			add_filter('upgrader_package_options', array($this, 'setUpgradedPluginFromOptions'), 10, 1);
 			add_filter('upgrader_post_install', array($this, 'clearUpgradedThing'), 10, 1);
 			add_action('upgrader_process_complete', array($this, 'clearUpgradedThing'), 10, 1);
@@ -89,17 +89,15 @@ if ( !class_exists('Puc_v4_UpgraderStatus', false) ):
 			$themeDirectoryName = null;
 
 			$skin = $upgrader->skin;
-			if ( $skin instanceof Plugin_Upgrader_Skin ) {
+			if ( isset($skin->theme_info) && ($skin->theme_info instanceof WP_Theme) ) {
+				$themeDirectoryName = $skin->theme_info->get_stylesheet();
+			} elseif ( $skin instanceof Plugin_Upgrader_Skin ) {
 				if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
 					$pluginFile = $skin->plugin;
 				}
 			} elseif ( $skin instanceof Theme_Upgrader_Skin ) {
 				if ( isset($skin->theme) && is_string($skin->theme) && ($skin->theme !== '') ) {
 					$themeDirectoryName = $skin->theme;
-				}
-			} elseif ( $upgrader->skin instanceof Bulk_Theme_Upgrader_Skin ) {
-				if ( isset($skin->theme_info) && ($skin->theme_info instanceof WP_Theme) ) {
-					$themeDirectoryName = $skin->theme_info->get_stylesheet();
 				}
 			} elseif ( isset($skin->plugin_info) && is_array($skin->plugin_info) ) {
 				//This case is tricky because Bulk_Plugin_Upgrader_Skin (etc) doesn't actually store the plugin
@@ -154,10 +152,13 @@ if ( !class_exists('Puc_v4_UpgraderStatus', false) ):
 		 * @param array $hookExtra
 		 * @return mixed Returns $input unaltered.
 		 */
-		public function setUpgradedPlugin($input, $hookExtra) {
-			if (!empty($hookExtra['plugin']) && is_string($hookExtra['plugin'])) {
+		public function setUpgradedThing($input, $hookExtra) {
+			if ( !empty($hookExtra['plugin']) && is_string($hookExtra['plugin']) ) {
 				$this->currentId = $hookExtra['plugin'];
 				$this->currentType = 'plugin';
+			} elseif ( !empty($hookExtra['theme']) && is_string($hookExtra['theme']) ) {
+				$this->currentId = $hookExtra['theme'];
+				$this->currentType = 'theme';
 			} else {
 				$this->currentType = null;
 				$this->currentId = null;
@@ -172,7 +173,7 @@ if ( !class_exists('Puc_v4_UpgraderStatus', false) ):
 		 * @return array
 		 */
 		public function setUpgradedPluginFromOptions($options) {
-			if (isset($options['hook_extra']['plugin']) && is_string($options['hook_extra']['plugin'])) {
+			if ( isset($options['hook_extra']['plugin']) && is_string($options['hook_extra']['plugin']) ) {
 				$this->currentType = 'plugin';
 				$this->currentId = $options['hook_extra']['plugin'];
 			} else {
