@@ -61,7 +61,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 					case 'github.com':
 						$service = 'GitHub';
 						break;
-					case 'bitbucket.com':
+					case 'bitbucket.org':
 						$service = 'BitBucket';
 						break;
 					case 'gitlab.com':

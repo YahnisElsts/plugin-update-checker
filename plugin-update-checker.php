@@ -15,3 +15,5 @@ Puc_v4_Factory::addVersion('Plugin_UpdateChecker', 'Puc_v4_Plugin_UpdateChecker'
 Puc_v4_Factory::addVersion('Theme_UpdateChecker', 'Puc_v4_Theme_UpdateChecker', '4.0');
 Puc_v4_Factory::addVersion('GitHub_PluginUpdateChecker', 'Puc_v4_GitHub_PluginUpdateChecker', '4.0');
 Puc_v4_Factory::addVersion('GitHub_ThemeUpdateChecker', 'Puc_v4_GitHub_ThemeUpdateChecker', '4.0');
+
+Puc_v4_Factory::addVersion('BitBucket_PluginUpdateChecker', 'Puc_v4_BitBucket_PluginUpdateChecker', '4.0');
