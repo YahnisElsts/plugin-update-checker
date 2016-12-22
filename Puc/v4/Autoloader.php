@@ -3,6 +3,7 @@
 class Puc_v4_Autoloader {
 	private $prefix = '';
 	private $rootDir = '';
+	private $libraryDir = '';
 
 	private $staticMap;
 
@@ -11,6 +12,7 @@ class Puc_v4_Autoloader {
 		$nameParts = explode('_', __CLASS__, 3);
 		$this->prefix = $nameParts[0] . '_' . $nameParts[1] . '_';
 
+		$this->libraryDir = realpath($this->rootDir . '../..') . '/';
 		$this->staticMap = array(
 			'PucReadmeParser' => 'vendor/readme-parser.php',
 			'Parsedown' => 'vendor/ParsedownLegacy.php',
@@ -23,9 +25,9 @@ class Puc_v4_Autoloader {
 	}
 
 	public function autoload($className) {
-		if ( isset($this->staticMap[$className]) && file_exists($this->rootDir . $this->staticMap[$className]) ) {
+		if ( isset($this->staticMap[$className]) && file_exists($this->libraryDir . $this->staticMap[$className]) ) {
 			/** @noinspection PhpIncludeInspection */
-			include ($this->rootDir . $this->staticMap[$className]);
+			include ($this->libraryDir . $this->staticMap[$className]);
 			return;
 		}
 
