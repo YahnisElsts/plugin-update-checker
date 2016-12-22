@@ -5,24 +5,17 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 		/**
 		 * @var string
 		 */
-		protected $repositoryUrl;
-
-		/**
-		 * @var string
-		 */
-		protected $branch;
+		protected $branch = 'master';
 
 		/**
 		 * @var Puc_v4_BitBucket_Api
 		 */
 		protected $api;
 
+		protected $credentials = array();
+
 		public function requestInfo($queryArgs = array()) {
-			//TODO: BitBucket support
-			$api = $this->api = new Puc_v4_BitBucket_Api(
-				$this->repositoryUrl,
-				array()
-			);
+			$api = $this->api = new Puc_v4_BitBucket_Api($this->metadataUrl, $this->credentials);
 
 			$info = new Puc_v4_Plugin_Info();
 			$info->filename = $this->pluginFile;
@@ -42,7 +35,6 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 					$ref = $tag->name;
 					$info->version = ltrim($tag->name, 'v');
 					$info->last_updated = $tag->target->date;
-					//TODO: Download url
 					$foundVersion = true;
 				}
 			}
@@ -54,7 +46,6 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 					$ref = $tag->name;
 					$info->version = ltrim($tag->name, 'v');
 					$info->last_updated = $tag->target->date;
-					//TODO: Download url
 					$foundVersion = true;
 				}
 			}
@@ -62,8 +53,9 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 			//If all else fails, use the specified branch itself.
 			if ( !$foundVersion ) {
 				$ref = $this->branch;
-				//TODO: Download url for this branch.
 			}
+
+			$info->download_url = trailingslashit($this->metadataUrl) . 'get/' . $ref . '.zip';
 
 			//Get headers from the main plugin file in this branch/tag. Its "Version" header and other metadata
 			//are what the WordPress install will actually see after upgrading, so they take precedence over releases/tags.
@@ -76,7 +68,7 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 
 			//Try parsing readme.txt. If it's formatted according to WordPress.org standards, it will contain
 			//a lot of useful information like the required/tested WP version, changelog, and so on.
-			if ( $this->readmeTxtExistsLocally() ) {
+			if ( $this->readmeTxtExistsLocally() || !empty($remoteReadme) ) {
 				$this->setInfoFromRemoteReadme($ref, $info);
 			}
 
@@ -98,6 +90,16 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 
 			$info = apply_filters($this->getUniqueName('request_info_result'), $info, null);
 			return $info;
+		}
+
+		public function setAuthentication($credentials) {
+			$this->credentials = array_merge(
+				array(
+					'consumer_key' => '',
+					'consumer_secret' => '',
+				),
+				$credentials
+			);
 		}
 
 		/**
@@ -170,6 +172,26 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 				$pluginInfo->upgrade_notice = $readme['upgrade_notice'][$pluginInfo->version];
 			}
 		}
+
+		public function getUpdate() {
+			$update = parent::getUpdate();
+
+			//Add authentication data to download URLs. Since OAuth signatures incorporate
+			//timestamps, we have to do this immediately before inserting the update. Otherwise
+			//authentication could fail due to a stale timestamp.
+			if ( isset($update, $update->download_url) && !empty($update->download_url) && !empty($this->credentials) ) {
+				if ( !empty($this->credentials['consumer_key']) ) {
+					$oauth = new Puc_v4_OAuthSignature(
+						$this->credentials['consumer_key'],
+						$this->credentials['consumer_secret']
+					);
+					$update->download_url = $oauth->sign($update->download_url);
+				}
+			}
+
+			return $update;
+		}
+
 	}
 
 endif;
