@@ -8,7 +8,7 @@
 Class PucReadmeParser {
 
 	function __construct() {
-		// This space intentially blank
+		// This space intentionally blank
 	}
 
 	function parse_readme( $file ) {
