@@ -62,36 +62,24 @@ class Puc_v4_GitHub_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker {
 		$this->setInfoFromHeader($this->getPluginHeader(), $info);
 
 		//Figure out which reference (tag or branch) we'll use to get the latest version of the plugin.
-		$ref = $this->branch;
-		if ( $this->branch === 'master' ) {
-			//Use the latest release.
-			$release = $api->getLatestRelease();
-			if ( $release !== null ) {
-				$ref = $release->tag_name;
-				$info->version = ltrim($release->tag_name, 'v'); //Remove the "v" prefix from "v1.2.3".
-				$info->last_updated = $release->created_at;
-				$info->download_url = $release->zipball_url;
+		$updateSource = $this->chooseReference();
+		if ( $updateSource ) {
+			$ref = $updateSource->name;
+			$info->version = $updateSource->version;
+			$info->last_updated = $updateSource->updated;
+			$info->download_url = $updateSource->downloadUrl;
 
-				if ( !empty($release->body) ) {
-					$info->sections['changelog'] = $this->parseMarkdown($release->body);
-				}
-				if ( isset($release->assets[0]) ) {
-					$info->downloaded = $release->assets[0]->download_count;
-				}
-			} else {
-				//Failing that, use the tag with the highest version number.
-				$tag = $api->getLatestTag();
-				if ( $tag !== null ) {
-					$ref = $tag->name;
-					$info->version = $tag->name;
-					$info->download_url = $tag->zipball_url;
-				}
+			if ( !empty($updateSource->changelog) ) {
+				$info->sections['changelog'] = $updateSource->changelog;
 			}
+			if ( isset($updateSource->downloadCount) ) {
+				$info->downloaded = $updateSource->downloadCount;
+			}
+		} else {
+			return null;
 		}
 
-		if ( empty($info->download_url) ) {
-			$info->download_url = $api->buildArchiveDownloadUrl($ref);
-		} else if ( !empty($this->accessToken) ) {
+		if ( !empty($info->download_url) && !empty($this->accessToken) ) {
 			$info->download_url = add_query_arg('access_token', $this->accessToken, $info->download_url);
 		}
 
@@ -112,64 +100,42 @@ class Puc_v4_GitHub_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker {
 
 		//The changelog might be in a separate file.
 		if ( empty($info->sections['changelog']) ) {
-			$info->sections['changelog'] = $this->getRemoteChangelog($ref);
+			$info->sections['changelog'] = $api->getRemoteChangelog($ref, dirname($this->getAbsolutePath()));
 			if ( empty($info->sections['changelog']) ) {
 				$info->sections['changelog'] = __('There is no changelog available.', 'plugin-update-checker');
 			}
 		}
 
 		if ( empty($info->last_updated) ) {
-			//Fetch the latest commit that changed the main plugin file and use it as the "last_updated" date.
-			//It's reasonable to assume that every update will change the version number in that file.
-			$latestCommit = $api->getLatestCommit($mainPluginFile, $ref);
-			if ( $latestCommit !== null ) {
-				$info->last_updated = $latestCommit->commit->author->date;
-			}
+			//Fetch the latest commit that changed the tag/branch and use it as the "last_updated" date.
+			$info->last_updated = $api->getLatestCommitTime($ref);
 		}
 
 		$info = apply_filters($this->getUniqueName('request_info_result'), $info, null);
 		return $info;
 	}
 
-	protected function getRemoteChangelog($ref = '') {
-		$filename = $this->getChangelogFilename();
-		if ( empty($filename) ) {
-			return null;
-		}
-
-		$changelog = $this->api->getRemoteFile($filename, $ref);
-		if ( $changelog === null ) {
-			return null;
-		}
-		return $this->parseMarkdown($changelog);
-	}
-
-	protected function getChangelogFilename() {
-		$pluginDirectory = dirname($this->pluginAbsolutePath);
-		if ( empty($this->pluginAbsolutePath) || !is_dir($pluginDirectory) || ($pluginDirectory === '.') ) {
-			return null;
-		}
-
-		$possibleNames = array('CHANGES.md', 'CHANGELOG.md', 'changes.md', 'changelog.md');
-		$files = scandir($pluginDirectory);
-		$foundNames = array_intersect($possibleNames, $files);
-
-		if ( !empty($foundNames) ) {
-			return reset($foundNames);
-		}
-		return null;
-	}
-
 	/**
-	 * Convert Markdown to HTML.
-	 *
-	 * @param string $markdown
-	 * @return string
+	 * @return Puc_v4_VcsReference|null
 	 */
-	protected function parseMarkdown($markdown) {
-		/** @noinspection PhpUndefinedClassInspection */
-		$instance = Parsedown::instance();
-		return $instance->text($markdown);
+	protected function chooseReference() {
+		$api = $this->api;
+		$updateSource = null;
+
+		if ( $this->branch === 'master' ) {
+			//Use the latest release.
+			$updateSource = $api->getLatestRelease();
+			if ( $updateSource === null ) {
+				//Failing that, use the tag with the highest version number.
+				$updateSource = $api->getLatestTag();
+			}
+		}
+		//Alternatively, just use the branch itself.
+		if ( empty($ref) ) {
+			$updateSource = $api->getBranch($this->branch);
+		}
+
+		return $updateSource;
 	}
 
 	/**
@@ -221,12 +187,10 @@ class Puc_v4_GitHub_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker {
 	 * @param Puc_v4_Plugin_Info $pluginInfo
 	 */
 	protected function setInfoFromRemoteReadme($ref, $pluginInfo) {
-		$readmeTxt = $this->api->getRemoteFile('readme.txt', $ref);
+		$readme = $this->api->getRemoteReadme($ref);
 		if ( empty($readmeTxt) ) {
 			return;
 		}
-
-		$readme = $this->parseReadme($readmeTxt);
 
 		if ( isset($readme['sections']) ) {
 			$pluginInfo->sections = array_merge($pluginInfo->sections, $readme['sections']);
@@ -241,11 +205,6 @@ class Puc_v4_GitHub_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker {
 		if ( isset($readme['upgrade_notice'], $readme['upgrade_notice'][$pluginInfo->version]) ) {
 			$pluginInfo->upgrade_notice = $readme['upgrade_notice'][$pluginInfo->version];
 		}
-	}
-
-	protected function parseReadme($content) {
-		$parser = new PucReadmeParser();
-		return $parser->parse_readme_contents($content);
 	}
 
 	/**

@@ -1,7 +1,7 @@
 <?php
 if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 
-	class Puc_v4_BitBucket_Api {
+	class Puc_v4_BitBucket_Api extends Puc_v4_VcsApi {
 		/**
 		 * @var Puc_v4_OAuthSignature
 		 */
@@ -15,9 +15,16 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		/**
 		 * @var string
 		 */
+		private $repositoryUrl;
+
+		/**
+		 * @var string
+		 */
 		private $repository;
 
 		public function __construct($repositoryUrl, $credentials = array()) {
+			$this->repositoryUrl = $repositoryUrl;
+
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->username = $matches['username'];
@@ -34,38 +41,43 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 			}
 		}
 
-		/**
-		 * @param string $ref
-		 * @return array
-		 */
-		public function getRemoteReadme($ref = 'master') {
-			$fileContents = $this->getRemoteFile('readme.txt', $ref);
-			if ( empty($fileContents) ) {
-				return array();
+		public function getBranch($branchName) {
+			$branch = $this->api('/refs/branches/' . $branchName);
+			if ( is_wp_error($branch) || empty($branch) ) {
+				return null;
 			}
 
-			$parser = new PucReadmeParser();
-			return $parser->parse_readme_contents($fileContents);
+			return new Puc_v4_VcsReference(array(
+				'name' => $branch->name,
+				'updated' => $branch->target->date,
+				'downloadUrl' => $this->getDownloadUrl($branch->name),
+			));
 		}
 
 		/**
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return stdClass|null
+		 * @return Puc_v4_VcsReference|null
 		 */
 		public function getTag($tagName) {
 			$tag = $this->api('/refs/tags/' . $tagName);
 			if ( is_wp_error($tag) || empty($tag) ) {
 				return null;
 			}
-			return $tag;
+
+			return new Puc_v4_VcsReference(array(
+				'name' => $tag->name,
+				'version' => ltrim($tag->name, 'v'),
+				'updated' => $tag->target->date,
+				'downloadUrl' => $this->getDownloadUrl($tag->name),
+			));
 		}
 
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return stdClass|null
+		 * @return Puc_v4_VcsReference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/refs/tags');
@@ -80,9 +92,23 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 
 			//Return the first result.
 			if ( !empty($versionTags) ) {
-				return $versionTags[0];
+				$tag = $versionTags[0];
+				return new Puc_v4_VcsReference(array(
+					'name' => $tag->name,
+					'version' => ltrim($tag->name, 'v'),
+					'updated' => $tag->target->date,
+					'downloadUrl' => $this->getDownloadUrl($tag->name),
+				));
 			}
 			return null;
+		}
+
+		/**
+		 * @param string $ref
+		 * @return string
+		 */
+		protected function getDownloadUrl($ref) {
+			return trailingslashit($this->repositoryUrl) . 'get/' . $ref . '.zip';
 		}
 
 		protected function isVersionTag($tag) {
@@ -90,29 +116,10 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		}
 
 		/**
-		 * Check if a tag name string looks like a version number.
-		 *
-		 * @param string $name
-		 * @return bool
-		 */
-		protected function looksLikeVersion($name) {
-			//Tag names may be prefixed with "v", e.g. "v1.2.3".
-			$name = ltrim($name, 'v');
-
-			//The version string must start with a number.
-			if ( !is_numeric($name) ) {
-				return false;
-			}
-
-			//The goal is to accept any SemVer-compatible or "PHP-standardized" version number.
-			return (preg_match('@^(\d{1,5}?)(\.\d{1,10}?){0,4}?($|[abrdp+_\-]|\s)@i', $name) === 1);
-		}
-
-		/**
 		 * Compare two BitBucket tags as if they were version number.
 		 *
-		 * @param string $tag1
-		 * @param string $tag2
+		 * @param stdClass $tag1
+		 * @param stdClass $tag2
 		 * @return int
 		 */
 		protected function compareTagNames($tag1, $tag2) {
@@ -150,37 +157,6 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 			$response = $this->api('commits/' . $ref);
 			if ( isset($response->values, $response->values[0], $response->values[0]->date) ) {
 				return $response->values[0]->date;
-			}
-			return null;
-		}
-
-		public function getRemoteChangelog($ref, $localDirectory) {
-			$filename = $this->findChangelogName($localDirectory);
-			if ( empty($filename) ) {
-				return null;
-			}
-
-			$changelog = $this->getRemoteFile($filename, $ref);
-			if ( $changelog === null ) {
-				return null;
-			}
-
-			/** @noinspection PhpUndefinedClassInspection */
-			$instance = Parsedown::instance();
-			return $instance->text($changelog);
-		}
-
-		protected function findChangelogName($directory) {
-			if ( empty($directory) || !is_dir($directory) || ($directory === '.') ) {
-				return null;
-			}
-
-			$possibleNames = array('CHANGES.md', 'CHANGELOG.md', 'changes.md', 'changelog.md');
-			$files = scandir($directory);
-			$foundNames = array_intersect($possibleNames, $files);
-
-			if ( !empty($foundNames) ) {
-				return reset($foundNames);
 			}
 			return null;
 		}

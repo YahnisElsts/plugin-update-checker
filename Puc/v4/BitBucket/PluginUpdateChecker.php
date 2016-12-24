@@ -15,6 +15,10 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 		protected $credentials = array();
 
 		public function requestInfo($queryArgs = array()) {
+			//We have to make several remote API requests to gather all the necessary info
+			//which can take a while on slow networks.
+			set_time_limit(60);
+
 			$api = $this->api = new Puc_v4_BitBucket_Api($this->metadataUrl, $this->credentials);
 
 			$info = new Puc_v4_Plugin_Info();
@@ -23,39 +27,17 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 
 			$this->setInfoFromHeader($this->getPluginHeader(), $info);
 
-			//Figure out which reference (tag or branch) we'll use to get the latest version of the plugin.
-			$ref = $this->branch;
-			$foundVersion = false;
-
-			//Check if there's a "Stable tag: v1.2.3" header that points to a valid tag.
-			$remoteReadme = $api->getRemoteReadme($this->branch);
-			if ( !empty($remoteReadme['stable_tag']) ) {
-				$tag = $api->getTag($remoteReadme['stable_tag']);
-				if ( ($tag !== null) && isset($tag->name) ) {
-					$ref = $tag->name;
-					$info->version = ltrim($tag->name, 'v');
-					$info->last_updated = $tag->target->date;
-					$foundVersion = true;
-				}
+			//Pick a branch or tag.
+			$updateSource = $this->chooseReference();
+			if ( $updateSource ) {
+				$ref = $updateSource->name;
+				$info->version = $updateSource->version;
+				$info->last_updated = $updateSource->updated;
+				$info->download_url = $updateSource->downloadUrl;
+			} else {
+				//There's probably a network problem or an authentication error.
+				return null;
 			}
-
-			//Look for version-like tags.
-			if ( ($this->branch === 'master') && !$foundVersion ) {
-				$tag = $api->getLatestTag();
-				if ( ($tag !== null) && isset($tag->name) ) {
-					$ref = $tag->name;
-					$info->version = ltrim($tag->name, 'v');
-					$info->last_updated = $tag->target->date;
-					$foundVersion = true;
-				}
-			}
-
-			//If all else fails, use the specified branch itself.
-			if ( !$foundVersion ) {
-				$ref = $this->branch;
-			}
-
-			$info->download_url = trailingslashit($this->metadataUrl) . 'get/' . $ref . '.zip';
 
 			//Get headers from the main plugin file in this branch/tag. Its "Version" header and other metadata
 			//are what the WordPress install will actually see after upgrading, so they take precedence over releases/tags.
@@ -68,7 +50,7 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 
 			//Try parsing readme.txt. If it's formatted according to WordPress.org standards, it will contain
 			//a lot of useful information like the required/tested WP version, changelog, and so on.
-			if ( $this->readmeTxtExistsLocally() || !empty($remoteReadme) ) {
+			if ( $this->readmeTxtExistsLocally() ) {
 				$this->setInfoFromRemoteReadme($ref, $info);
 			}
 
@@ -92,6 +74,40 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 			return $info;
 		}
 
+		/**
+		 * Figure out which reference (tag or branch) we'll use to get the latest version of the plugin.
+		 *
+		 * @return Puc_v4_VcsReference|null
+		 */
+		protected function chooseReference() {
+			$api = $this->api;
+			$updateSource = null;
+
+			//Check if there's a "Stable tag: v1.2.3" header that points to a valid tag.
+			$remoteReadme = $api->getRemoteReadme($this->branch);
+			if ( !empty($remoteReadme['stable_tag']) ) {
+				$tag = $remoteReadme['stable_tag'];
+
+				//You can explicitly opt out of using tags by setting "Stable tag" to
+				//"trunk" or the name of the current branch.
+				if ( ($tag === $this->branch) || ($tag === 'trunk') ) {
+					return $api->getBranch($this->branch);
+				}
+
+				$updateSource = $api->getTag($tag);
+			}
+			//Look for version-like tags.
+			if ( !$updateSource && ($this->branch === 'master') ) {
+				$updateSource = $api->getLatestTag();
+			}
+			//If all else fails, use the specified branch itself.
+			if ( !$updateSource ) {
+				$updateSource = $api->getBranch($this->branch);
+			}
+
+			return $updateSource;
+		}
+
 		public function setAuthentication($credentials) {
 			$this->credentials = array_merge(
 				array(
@@ -100,6 +116,12 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 				),
 				$credentials
 			);
+			return $this;
+		}
+
+		public function setBranch($branchName = 'master') {
+			$this->branch = $branchName;
+			return $this;
 		}
 
 		/**

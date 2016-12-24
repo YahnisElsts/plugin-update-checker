@@ -23,16 +23,16 @@ if ( !class_exists('Puc_v4_GitHub_ThemeUpdateChecker', false) ):
 				//Use the latest release.
 				$release = $api->getLatestRelease();
 				if ( $release !== null ) {
-					$ref = $release->tag_name;
-					$update->version = ltrim($release->tag_name, 'v'); //Remove the "v" prefix from "v1.2.3".
-					$update->download_url = $release->zipball_url;
+					$ref = $release->name;
+					$update->version = ltrim($release->name, 'v'); //Remove the "v" prefix from "v1.2.3".
+					$update->download_url = $release->downloadUrl;
 				} else {
 					//Failing that, use the tag with the highest version number.
 					$tag = $api->getLatestTag();
 					if ( $tag !== null ) {
 						$ref = $tag->name;
-						$update->version = $tag->name;
-						$update->download_url = $tag->zipball_url;
+						$update->version = $tag->version;
+						$update->download_url = $tag->downloadUrl;
 					}
 				}
 			}

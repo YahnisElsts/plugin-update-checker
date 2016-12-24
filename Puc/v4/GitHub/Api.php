@@ -2,7 +2,7 @@
 
 if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 
-	class Puc_v4_GitHub_Api {
+	class Puc_v4_GitHub_Api extends Puc_v4_VcsApi {
 		/**
 		 * @var string GitHub username.
 		 */
@@ -38,20 +38,36 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		/**
 		 * Get the latest release from GitHub.
 		 *
-		 * @return StdClass|null
+		 * @return Puc_v4_VcsReference|null
 		 */
 		public function getLatestRelease() {
 			$release = $this->api('/repos/:user/:repo/releases/latest');
 			if ( is_wp_error($release) || !is_object($release) || !isset($release->tag_name) ) {
 				return null;
 			}
-			return $release;
+
+			$reference = new Puc_v4_VcsReference(array(
+				'name' => $release->tag_name,
+				'version' => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
+				'downloadUrl' => $release->zipball_url,
+				'updated' => $release->created_at,
+			));
+
+			if ( !empty($release->body) ) {
+				/** @noinspection PhpUndefinedClassInspection */
+				$reference->changelog = Parsedown::instance()->text($release->body);
+			}
+			if ( isset($release->assets[0]) ) {
+				$reference->downloadCount = $release->assets[0]->download_count;
+			}
+
+			return $reference;
 		}
 
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return StdClass|null
+		 * @return Puc_v4_VcsReference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/repos/:user/:repo/tags');
@@ -61,7 +77,13 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 			}
 
 			usort($tags, array($this, 'compareTagNames')); //Sort from highest to lowest.
-			return $tags[0];
+
+			$tag = $tags[0];
+			return new Puc_v4_VcsReference(array(
+				'name' => $tag->name,
+				'version' => ltrim($tag->name, 'v'),
+				'downloadUrl' => $tag->zipball_url,
+			));
 		}
 
 		/**
@@ -82,6 +104,30 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		}
 
 		/**
+		 * Get a branch by name.
+		 *
+		 * @param string $branchName
+		 * @return null|Puc_v4_VcsReference
+		 */
+		public function getBranch($branchName) {
+			$branch = $this->api('/repos/:user/:repo/branches/' . $branchName);
+			if ( is_wp_error($branch) || empty($branch) ) {
+				return null;
+			}
+
+			$reference = new Puc_v4_VcsReference(array(
+				'name' => $branch->name,
+				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
+			));
+
+			if ( isset($branch->commit, $branch->commit->commit, $branch->commit->commit->author->date) ) {
+				$reference->updated = $branch->commit->commit->author->date;
+			}
+
+			return $reference;
+		}
+
+		/**
 		 * Get the latest commit that changed the specified file.
 		 *
 		 * @param string $filename
@@ -98,6 +144,20 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 			);
 			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
 				return $commits[0];
+			}
+			return null;
+		}
+
+		/**
+		 * Get the timestamp of the latest commit that changed the specified branch or tag.
+		 *
+		 * @param string $ref Reference name (e.g. branch or tag).
+		 * @return string|null
+		 */
+		public function getLatestCommitTime($ref) {
+			$commits = $this->api('/repos/:user/:repo/commits', array('sha' => $ref));
+			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
+				return $commits[0]->commit->author->date;
 			}
 			return null;
 		}
@@ -178,6 +238,17 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 				$url = add_query_arg('access_token', $this->accessToken, $url);
 			}
 			return $url;
+		}
+
+		/**
+		 * Get a specific tag.
+		 *
+		 * @param string $tagName
+		 * @return Puc_v4_VcsReference|null
+		 */
+		public function getTag($tagName) {
+			//The current GitHub update checker doesn't use getTag, so didn't bother to implement it.
+			throw new LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
 		}
 	}
 
