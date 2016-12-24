@@ -8,10 +8,8 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 	 * and 4.1), this factory will always use the latest available minor version. Register class
 	 * versions by calling {@link PucFactory::addVersion()}.
 	 *
-	 * At the moment it can only build instances of the PluginUpdateChecker class. Other classes
-	 * are intended mainly for internal use and refer directly to specific implementations. If you
-	 * want to instantiate one of them anyway, you can use {@link PucFactory::getLatestClassVersion()}
-	 * to get the class name and then create it with <code>new $class(...)</code>.
+	 * At the moment it can only build instances of the UpdateChecker class. Other classes are
+	 * intended mainly for internal use and refer directly to specific implementations.
 	 */
 	class Puc_v4_Factory {
 		protected static $classVersions = array();
