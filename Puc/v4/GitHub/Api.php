@@ -87,23 +87,6 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		}
 
 		/**
-		 * Compare two GitHub tags as if they were version number.
-		 *
-		 * @param string $tag1
-		 * @param string $tag2
-		 * @return int
-		 */
-		protected function compareTagNames($tag1, $tag2) {
-			if ( !isset($tag1->name) ) {
-				return 1;
-			}
-			if ( !isset($tag2->name) ) {
-				return -1;
-			}
-			return -version_compare($tag1->name, $tag2->name);
-		}
-
-		/**
 		 * Get a branch by name.
 		 *
 		 * @param string $branchName

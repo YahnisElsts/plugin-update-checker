@@ -116,23 +116,6 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		}
 
 		/**
-		 * Compare two BitBucket tags as if they were version number.
-		 *
-		 * @param stdClass $tag1
-		 * @param stdClass $tag2
-		 * @return int
-		 */
-		protected function compareTagNames($tag1, $tag2) {
-			if ( !isset($tag1->name) ) {
-				return 1;
-			}
-			if ( !isset($tag2->name) ) {
-				return -1;
-			}
-			return -version_compare(ltrim($tag1->name, 'v'), ltrim($tag2->name, 'v'));
-		}
-
-		/**
 		 * Get the contents of a file from a specific branch or tag.
 		 *
 		 * @param string $path File name.

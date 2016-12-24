@@ -2,6 +2,8 @@
 if ( !class_exists('Puc_v4_VcsApi') ):
 
 	abstract class Puc_v4_VcsApi {
+		protected $tagNameProperty = 'name';
+
 		/**
 		 * Get the readme.txt file from the remote repository and parse it
 		 * according to the plugin readme standard.
@@ -63,20 +65,21 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 		}
 
 		/**
-		 * Compare two tag names as if they were version number.
+		 * Compare two tags as if they were version number.
 		 *
-		 * @param string $tag1
-		 * @param string $tag2
+		 * @param stdClass $tag1 Tag object.
+		 * @param stdClass $tag2 Another tag object.
 		 * @return int
 		 */
 		protected function compareTagNames($tag1, $tag2) {
-			if ( !isset($tag1) ) {
+			$property = $this->tagNameProperty;
+			if ( !isset($tag1->$property) ) {
 				return 1;
 			}
-			if ( !isset($tag2) ) {
+			if ( !isset($tag2->$property) ) {
 				return -1;
 			}
-			return -version_compare(ltrim($tag1, 'v'), ltrim($tag2, 'v'));
+			return -version_compare(ltrim($tag1->$property, 'v'), ltrim($tag2->$property, 'v'));
 		}
 
 		/**
@@ -114,6 +117,7 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 				return null;
 			}
 
+			/** @noinspection PhpUndefinedClassInspection */
 			return Parsedown::instance()->text($changelog);
 		}
 
