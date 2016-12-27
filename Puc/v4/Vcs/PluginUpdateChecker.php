@@ -1,25 +1,38 @@
 <?php
-if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
+if ( !class_exists('Puc_v4_Vcs_PluginUpdateChecker') ):
 
-	class Puc_v4_BitBucket_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker {
+	class Puc_v4_Vcs_PluginUpdateChecker extends Puc_v4_Plugin_UpdateChecker implements Puc_v4_Vcs_BaseChecker {
 		/**
-		 * @var string
+		 * @var string The branch where to look for updates. Defaults to "master".
 		 */
 		protected $branch = 'master';
 
 		/**
-		 * @var Puc_v4_BitBucket_Api
+		 * @var Puc_v4_Vcs_Api Repository API client.
 		 */
-		protected $api;
+		protected $api = null;
 
-		protected $credentials = array();
+		/**
+		 * Puc_v4_Vcs_PluginUpdateChecker constructor.
+		 *
+		 * @param Puc_v4_Vcs_Api $api
+		 * @param string $pluginFile
+		 * @param string $slug
+		 * @param int $checkPeriod
+		 * @param string $optionName
+		 * @param string $muPluginFile
+		 */
+		public function __construct($api, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
+			$this->api = $api;
+			parent::__construct($api->getRepositoryUrl(), $pluginFile, $slug, $checkPeriod, $optionName, $muPluginFile);
+		}
 
 		public function requestInfo($queryArgs = array()) {
 			//We have to make several remote API requests to gather all the necessary info
 			//which can take a while on slow networks.
 			set_time_limit(60);
 
-			$api = $this->api = new Puc_v4_BitBucket_Api($this->metadataUrl, $this->credentials);
+			$api = $this->api;
 
 			$info = new Puc_v4_Plugin_Info();
 			$info->filename = $this->pluginFile;
@@ -28,12 +41,19 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 			$this->setInfoFromHeader($this->getPluginHeader(), $info);
 
 			//Pick a branch or tag.
-			$updateSource = $this->chooseReference();
+			$updateSource = $api->chooseReference($this->branch);
 			if ( $updateSource ) {
 				$ref = $updateSource->name;
 				$info->version = $updateSource->version;
 				$info->last_updated = $updateSource->updated;
 				$info->download_url = $updateSource->downloadUrl;
+
+				if ( !empty($updateSource->changelog) ) {
+					$info->sections['changelog'] = $updateSource->changelog;
+				}
+				if ( isset($updateSource->downloadCount) ) {
+					$info->downloaded = $updateSource->downloadCount;
+				}
 			} else {
 				//There's probably a network problem or an authentication error.
 				return null;
@@ -72,56 +92,6 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 
 			$info = apply_filters($this->getUniqueName('request_info_result'), $info, null);
 			return $info;
-		}
-
-		/**
-		 * Figure out which reference (tag or branch) we'll use to get the latest version of the plugin.
-		 *
-		 * @return Puc_v4_VcsReference|null
-		 */
-		protected function chooseReference() {
-			$api = $this->api;
-			$updateSource = null;
-
-			//Check if there's a "Stable tag: v1.2.3" header that points to a valid tag.
-			$remoteReadme = $api->getRemoteReadme($this->branch);
-			if ( !empty($remoteReadme['stable_tag']) ) {
-				$tag = $remoteReadme['stable_tag'];
-
-				//You can explicitly opt out of using tags by setting "Stable tag" to
-				//"trunk" or the name of the current branch.
-				if ( ($tag === $this->branch) || ($tag === 'trunk') ) {
-					return $api->getBranch($this->branch);
-				}
-
-				$updateSource = $api->getTag($tag);
-			}
-			//Look for version-like tags.
-			if ( !$updateSource && ($this->branch === 'master') ) {
-				$updateSource = $api->getLatestTag();
-			}
-			//If all else fails, use the specified branch itself.
-			if ( !$updateSource ) {
-				$updateSource = $api->getBranch($this->branch);
-			}
-
-			return $updateSource;
-		}
-
-		public function setAuthentication($credentials) {
-			$this->credentials = array_merge(
-				array(
-					'consumer_key' => '',
-					'consumer_secret' => '',
-				),
-				$credentials
-			);
-			return $this;
-		}
-
-		public function setBranch($branchName = 'master') {
-			$this->branch = $branchName;
-			return $this;
 		}
 
 		/**
@@ -195,20 +165,21 @@ if ( !class_exists('Puc_v4_BitBucket_PluginUpdateChecker') ):
 			}
 		}
 
+		public function setBranch($branch) {
+			$this->branch = $branch;
+			return $this;
+		}
+
+		public function setAuthentication($credentials) {
+			$this->api->setAuthentication($credentials);
+			return $this;
+		}
+
 		public function getUpdate() {
 			$update = parent::getUpdate();
 
-			//Add authentication data to download URLs. Since OAuth signatures incorporate
-			//timestamps, we have to do this immediately before inserting the update. Otherwise
-			//authentication could fail due to a stale timestamp.
-			if ( isset($update, $update->download_url) && !empty($update->download_url) && !empty($this->credentials) ) {
-				if ( !empty($this->credentials['consumer_key']) ) {
-					$oauth = new Puc_v4_OAuthSignature(
-						$this->credentials['consumer_key'],
-						$this->credentials['consumer_secret']
-					);
-					$update->download_url = $oauth->sign($update->download_url);
-				}
+			if ( isset($update) && !empty($update->download_url) ) {
+				$update->download_url = $this->api->signDownloadUrl($update->download_url);
 			}
 
 			return $update;

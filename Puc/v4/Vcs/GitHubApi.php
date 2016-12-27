@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4_GitHub_Api', false) ):
+if ( !class_exists('Puc_v4_Vcs_GitHubApi', false) ):
 
-	class Puc_v4_GitHub_Api extends Puc_v4_VcsApi {
+	class Puc_v4_Vcs_GitHubApi extends Puc_v4_Vcs_Api {
 		/**
 		 * @var string GitHub username.
 		 */
@@ -23,9 +23,6 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		protected $accessToken;
 
 		public function __construct($repositoryUrl, $accessToken = null) {
-			$this->repositoryUrl = $repositoryUrl;
-			$this->accessToken = $accessToken;
-
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
@@ -33,12 +30,14 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 			} else {
 				throw new InvalidArgumentException('Invalid GitHub repository URL: "' . $repositoryUrl . '"');
 			}
+
+			parent::__construct($repositoryUrl, $accessToken);
 		}
 
 		/**
 		 * Get the latest release from GitHub.
 		 *
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getLatestRelease() {
 			$release = $this->api('/repos/:user/:repo/releases/latest');
@@ -46,10 +45,10 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v4_VcsReference(array(
+			$reference = new Puc_v4_Vcs_Reference(array(
 				'name' => $release->tag_name,
 				'version' => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
-				'downloadUrl' => $release->zipball_url,
+				'downloadUrl' => $this->signDownloadUrl($release->zipball_url),
 				'updated' => $release->created_at,
 			));
 
@@ -67,7 +66,7 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/repos/:user/:repo/tags');
@@ -76,13 +75,16 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 				return null;
 			}
 
-			usort($tags, array($this, 'compareTagNames')); //Sort from highest to lowest.
+			$versionTags = $this->sortTagsByVersion($tags);
+			if ( empty($versionTags) ) {
+				return null;
+			}
 
-			$tag = $tags[0];
-			return new Puc_v4_VcsReference(array(
+			$tag = $versionTags[0];
+			return new Puc_v4_Vcs_Reference(array(
 				'name' => $tag->name,
 				'version' => ltrim($tag->name, 'v'),
-				'downloadUrl' => $tag->zipball_url,
+				'downloadUrl' => $this->signDownloadUrl($tag->zipball_url),
 			));
 		}
 
@@ -90,7 +92,7 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		 * Get a branch by name.
 		 *
 		 * @param string $branchName
-		 * @return null|Puc_v4_VcsReference
+		 * @return null|Puc_v4_Vcs_Reference
 		 */
 		public function getBranch($branchName) {
 			$branch = $this->api('/repos/:user/:repo/branches/' . $branchName);
@@ -98,7 +100,7 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v4_VcsReference(array(
+			$reference = new Puc_v4_Vcs_Reference(array(
 				'name' => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 			));
@@ -218,7 +220,7 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 				urlencode($ref)
 			);
 			if ( !empty($this->accessToken) ) {
-				$url = add_query_arg('access_token', $this->accessToken, $url);
+				$url = $this->signDownloadUrl($url);
 			}
 			return $url;
 		}
@@ -227,11 +229,42 @@ if ( !class_exists('Puc_v4_GitHub_Api', false) ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getTag($tagName) {
-			//The current GitHub update checker doesn't use getTag, so didn't bother to implement it.
+			//The current GitHub update checker doesn't use getTag, so I didn't bother to implement it.
 			throw new LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
+		}
+
+		public function setAuthentication($credentials) {
+			parent::setAuthentication($credentials);
+			$this->accessToken = is_string($credentials) ? $credentials : null;
+		}
+
+		/**
+		 * Figure out which reference (i.e tag or branch) contains the latest version.
+		 *
+		 * @param string $configBranch Start looking in this branch.
+		 * @param bool $useStableTag Ignored. The GitHub client doesn't use the "Stable tag" header.
+		 * @return null|Puc_v4_Vcs_Reference
+		 */
+		public function chooseReference($configBranch, $useStableTag = false) {
+			$updateSource = null;
+
+			if ( $configBranch === 'master' ) {
+				//Use the latest release.
+				$updateSource = $this->getLatestRelease();
+				if ( $updateSource === null ) {
+					//Failing that, use the tag with the highest version number.
+					$updateSource = $this->getLatestTag();
+				}
+			}
+			//Alternatively, just use the branch itself.
+			if ( empty($updateSource) ) {
+				$updateSource = $this->getBranch($configBranch);
+			}
+
+			return $updateSource;
 		}
 	}
 

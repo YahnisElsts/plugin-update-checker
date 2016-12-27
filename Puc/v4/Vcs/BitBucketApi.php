@@ -1,7 +1,7 @@
 <?php
-if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
+if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 
-	class Puc_v4_BitBucket_Api extends Puc_v4_VcsApi {
+	class Puc_v4_Vcs_BitBucketApi extends Puc_v4_Vcs_Api {
 		/**
 		 * @var Puc_v4_OAuthSignature
 		 */
@@ -15,16 +15,9 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		/**
 		 * @var string
 		 */
-		private $repositoryUrl;
-
-		/**
-		 * @var string
-		 */
 		private $repository;
 
 		public function __construct($repositoryUrl, $credentials = array()) {
-			$this->repositoryUrl = $repositoryUrl;
-
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->username = $matches['username'];
@@ -33,12 +26,45 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 				throw new InvalidArgumentException('Invalid BitBucket repository URL: "' . $repositoryUrl . '"');
 			}
 
-			if ( !empty($credentials) && !empty($credentials['consumer_key']) ) {
-				$this->oauth = new Puc_v4_OAuthSignature(
-					$credentials['consumer_key'],
-					$credentials['consumer_secret']
-				);
+			parent::__construct($repositoryUrl, $credentials);
+		}
+
+		/**
+		 * Figure out which reference (i.e tag or branch) contains the latest version.
+		 *
+		 * @param string $configBranch Start looking in this branch.
+		 * @param bool $useStableTag
+		 * @return null|Puc_v4_Vcs_Reference
+		 */
+		public function chooseReference($configBranch, $useStableTag = true) {
+			$updateSource = null;
+
+			//Check if there's a "Stable tag: 1.2.3" header that points to a valid tag.
+			if ( $useStableTag ) {
+				$remoteReadme = $this->getRemoteReadme($configBranch);
+				if ( !empty($remoteReadme['stable_tag']) ) {
+					$tag = $remoteReadme['stable_tag'];
+
+					//You can explicitly opt out of using tags by setting "Stable tag" to
+					//"trunk" or the name of the current branch.
+					if ( ($tag === $configBranch) || ($tag === 'trunk') ) {
+						return $this->getBranch($configBranch);
+					}
+
+					$updateSource = $this->getTag($tag);
+				}
 			}
+
+			//Look for version-like tags.
+			if ( !$updateSource && ($configBranch === 'master') ) {
+				$updateSource = $this->getLatestTag();
+			}
+			//If all else fails, use the specified branch itself.
+			if ( !$updateSource ) {
+				$updateSource = $this->getBranch($configBranch);
+			}
+
+			return $updateSource;
 		}
 
 		public function getBranch($branchName) {
@@ -47,7 +73,7 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 				return null;
 			}
 
-			return new Puc_v4_VcsReference(array(
+			return new Puc_v4_Vcs_Reference(array(
 				'name' => $branch->name,
 				'updated' => $branch->target->date,
 				'downloadUrl' => $this->getDownloadUrl($branch->name),
@@ -58,7 +84,7 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getTag($tagName) {
 			$tag = $this->api('/refs/tags/' . $tagName);
@@ -66,7 +92,7 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 				return null;
 			}
 
-			return new Puc_v4_VcsReference(array(
+			return new Puc_v4_Vcs_Reference(array(
 				'name' => $tag->name,
 				'version' => ltrim($tag->name, 'v'),
 				'updated' => $tag->target->date,
@@ -77,7 +103,7 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/refs/tags');
@@ -85,15 +111,13 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 				return null;
 			}
 
-			//Keep only those tags that look like version numbers.
-			$versionTags = array_filter($tags->values, array($this, 'isVersionTag'));
-			//Sort them in descending order.
-			usort($versionTags, array($this, 'compareTagNames'));
+			//Filter and sort the list of tags.
+			$versionTags = $this->sortTagsByVersion($tags->values);
 
 			//Return the first result.
 			if ( !empty($versionTags) ) {
 				$tag = $versionTags[0];
-				return new Puc_v4_VcsReference(array(
+				return new Puc_v4_Vcs_Reference(array(
 					'name' => $tag->name,
 					'version' => ltrim($tag->name, 'v'),
 					'updated' => $tag->target->date,
@@ -109,10 +133,6 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 		 */
 		protected function getDownloadUrl($ref) {
 			return trailingslashit($this->repositoryUrl) . 'get/' . $ref . '.zip';
-		}
-
-		protected function isVersionTag($tag) {
-			return isset($tag->name) && $this->looksLikeVersion($tag->name);
 		}
 
 		/**
@@ -184,6 +204,32 @@ if ( !class_exists('Puc_v4_BitBucket_Api', false) ):
 				'puc-bitbucket-http-error',
 				'BitBucket API error. HTTP status: ' . $code
 			);
+		}
+
+		/**
+		 * @param array $credentials
+		 */
+		public function setAuthentication($credentials) {
+			parent::setAuthentication($credentials);
+
+			if ( !empty($credentials) && !empty($credentials['consumer_key']) ) {
+				$this->oauth = new Puc_v4_OAuthSignature(
+					$credentials['consumer_key'],
+					$credentials['consumer_secret']
+				);
+			} else {
+				$this->oauth = null;
+			}
+		}
+
+		public function signDownloadUrl($url) {
+			//Add authentication data to download URLs. Since OAuth signatures incorporate
+			//timestamps, we have to do this immediately before inserting the update. Otherwise
+			//authentication could fail due to a stale timestamp.
+			if ( $this->oauth ) {
+				$url = $this->oauth->sign($url);
+			}
+			return $url;
 		}
 	}
 

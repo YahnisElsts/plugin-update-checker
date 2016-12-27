@@ -1,8 +1,45 @@
 <?php
-if ( !class_exists('Puc_v4_VcsApi') ):
+if ( !class_exists('Puc_v4_Vcs_Api') ):
 
-	abstract class Puc_v4_VcsApi {
+	abstract class Puc_v4_Vcs_Api {
 		protected $tagNameProperty = 'name';
+
+		/**
+		 * @var string
+		 */
+		protected $repositoryUrl = '';
+
+		/**
+		 * @var mixed Authentication details for private repositories. Format depends on service.
+		 */
+		protected $credentials = null;
+
+		/**
+		 * Puc_v4_Vcs_Api constructor.
+		 *
+		 * @param string $repositoryUrl
+		 * @param array|string|null $credentials
+		 */
+		public function __construct($repositoryUrl, $credentials = null) {
+			$this->repositoryUrl = $repositoryUrl;
+			$this->setAuthentication($credentials);
+		}
+
+		/**
+		 * @return string
+		 */
+		public function getRepositoryUrl() {
+			return $this->repositoryUrl;
+		}
+
+		/**
+		 * Figure out which reference (i.e tag or branch) contains the latest version.
+		 *
+		 * @param string $configBranch Start looking in this branch.
+		 * @param bool $useStableTag
+		 * @return null|Puc_v4_Vcs_Reference
+		 */
+		abstract public function chooseReference($configBranch, $useStableTag = true);
 
 		/**
 		 * Get the readme.txt file from the remote repository and parse it
@@ -25,7 +62,7 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 		 * Get a branch.
 		 *
 		 * @param string $branchName
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		abstract public function getBranch($branchName);
 
@@ -33,7 +70,7 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		abstract public function getTag($tagName);
 
@@ -41,7 +78,7 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 		 * Get the tag that looks like the highest version number.
 		 * (Implementations should skip pre-release versions if possible.)
 		 *
-		 * @return Puc_v4_VcsReference|null
+		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		abstract public function getLatestTag();
 
@@ -62,6 +99,33 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 
 			//The goal is to accept any SemVer-compatible or "PHP-standardized" version number.
 			return (preg_match('@^(\d{1,5}?)(\.\d{1,10}?){0,4}?($|[abrdp+_\-]|\s)@i', $name) === 1);
+		}
+
+		/**
+		 * Check if a tag appears to be named like a version number.
+		 *
+		 * @param stdClass $tag
+		 * @return bool
+		 */
+		protected function isVersionTag($tag) {
+			$property = $this->tagNameProperty;
+			return isset($tag->$property) && $this->looksLikeVersion($tag->$property);
+		}
+
+		/**
+		 * Sort a list of tags as if they were version numbers.
+		 * Tags that don't look like version number will be removed.
+		 *
+		 * @param stdClass[] $tags Array of tag objects.
+		 * @return stdClass[] Filtered array of tags sorted in descending order.
+		 */
+		protected function sortTagsByVersion($tags) {
+			//Keep only those tags that look like version numbers.
+			$versionTags = array_filter($tags, array($this, 'isVersionTag'));
+			//Sort them in descending order.
+			usort($versionTags, array($this, 'compareTagNames'));
+
+			return $versionTags;
 		}
 
 		/**
@@ -140,6 +204,23 @@ if ( !class_exists('Puc_v4_VcsApi') ):
 				return reset($foundNames);
 			}
 			return null;
+		}
+
+		/**
+		 * Set authentication credentials.
+		 *
+		 * @param $credentials
+		 */
+		public function setAuthentication($credentials) {
+			$this->credentials = $credentials;
+		}
+
+		/**
+		 * @param string $url
+		 * @return string
+		 */
+		public function signDownloadUrl($url) {
+			return $url;
 		}
 	}
 

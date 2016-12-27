@@ -23,13 +23,13 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 *
 		 * @see PluginUpdateChecker::__construct()
 		 *
-		 * @param string $metadataUrl The URL of the metadata file, or a GitHub repository, etc.
+		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
 		 * @param string $slug Custom slug. Defaults to the name of the main plugin file or the theme directory.
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param string $optionName Where to store book-keeping info about update checks.
 		 * @param string $muPluginFile The plugin filename relative to the mu-plugins directory.
-		 * @return Puc_v4_Plugin_UpdateChecker|Puc_v4_Theme_UpdateChecker
+		 * @return Puc_v4_Plugin_UpdateChecker|Puc_v4_Theme_UpdateChecker|Puc_v4_Vcs_BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = wp_normalize_path($fullPath);
@@ -68,37 +68,83 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				}
 			}
 
-			$class = null;
+			$checkerClass = null;
+			$apiClass = null;
 			if ( empty($service) ) {
 				//The default is to get update information from a remote JSON file.
-				$class = $type . '_UpdateChecker';
+				$checkerClass = $type . '_UpdateChecker';
 			} else {
-				$class = $service . '_' . $type . 'UpdateChecker';
+				//You can also use a VCS repository like GitHub.
+				$checkerClass = 'Vcs_' . $type . 'UpdateChecker';
+				$apiClass = $service . 'Api';
 			}
 
-			if ( !isset(self::$classVersions[$class][self::$greatestCompatVersion]) ) {
+			$checkerClass = self::getCompatibleClass($checkerClass);
+			if ( !$checkerClass ) {
 				trigger_error(
 					sprintf(
-						'PUC %s does not support updates for %ss hosted on %s',
+						'PUC %s does not support updates for %ss %s',
 						htmlentities(self::$greatestCompatVersion),
 						strtolower($type),
-						$service
+						$service ? ('hosted on ' . htmlentities($service)) : 'using JSON metadata'
 					),
 					E_USER_ERROR
 				);
 				return null;
 			}
 
-			$class = self::$classVersions[$class][self::$greatestCompatVersion];
-			return new $class($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
+			if ( !isset($apiClass) ) {
+				//Plain old update checker.
+				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
+			} else {
+				//VCS checker + an API client.
+				$apiClass = self::getCompatibleClass($apiClass);
+				if ( !$apiClass ) {
+					trigger_error(sprintf(
+						'PUC %s does not support %s',
+						htmlentities(self::$greatestCompatVersion),
+						htmlentities($service)
+					), E_USER_ERROR);
+					return null;
+				}
+
+				return new $checkerClass(
+					new $apiClass($metadataUrl),
+					$id,
+					$slug,
+					$checkPeriod,
+					$optionName,
+					$muPluginFile
+				);
+			}
 		}
 
+		/**
+		 * Check if the path points to something inside the "plugins" or "mu-plugins" directories.
+		 *
+		 * @param string $absolutePath
+		 * @return bool
+		 */
 		protected static function isPluginFile($absolutePath) {
 			$pluginDir = wp_normalize_path(WP_PLUGIN_DIR);
 			$muPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
 			$absolutePath = wp_normalize_path($absolutePath);
 
 			return (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0);
+		}
+
+		/**
+		 * Get the latest version of the specified class that has the same major version number
+		 * as this factory class.
+		 *
+		 * @param string $class Partial class name.
+		 * @return string|null Full class name.
+		 */
+		protected static function getCompatibleClass($class) {
+			if ( isset(self::$classVersions[$class][self::$greatestCompatVersion]) ) {
+				return self::$classVersions[$class][self::$greatestCompatVersion];
+			}
+			return null;
 		}
 
 		/**
