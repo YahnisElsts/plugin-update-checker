@@ -187,8 +187,11 @@ if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 				$url = $this->oauth->sign($url,'GET');
 			}
 
-			$response = wp_remote_get($url, array('timeout' => 10));
-			//var_dump($response);
+			$options = array('timeout' => 10);
+			if ( !empty($this->httpFilterName) ) {
+				$options = apply_filters($this->httpFilterName, $options);
+			}
+			$response = wp_remote_get($url, $options);
 			if ( is_wp_error($response) ) {
 				return $response;
 			}

@@ -102,7 +102,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 * @param array $queryArgs Additional query arguments to append to the request. Optional.
 		 * @return Puc_v4_Plugin_Info
 		 */
-		public function requestInfo($queryArgs = array()){
+		public function requestInfo($queryArgs = array()) {
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
 			$installedVersion = $this->getInstalledVersion();
 			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';

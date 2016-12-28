@@ -15,6 +15,12 @@ if ( !class_exists('Puc_v4_Vcs_Api') ):
 		protected $credentials = null;
 
 		/**
+		 * @var string The filter tag that's used to filter options passed to wp_remote_get.
+		 * For example, "puc_request_info_options-slug" or "puc_request_update_options_theme-slug".
+		 */
+		protected $httpFilterName = '';
+
+		/**
 		 * Puc_v4_Vcs_Api constructor.
 		 *
 		 * @param string $repositoryUrl
@@ -221,6 +227,13 @@ if ( !class_exists('Puc_v4_Vcs_Api') ):
 		 */
 		public function signDownloadUrl($url) {
 			return $url;
+		}
+
+		/**
+		 * @param string $filterName
+		 */
+		public function setHttpFilterName($filterName) {
+			$this->httpFilterName = $filterName;
 		}
 	}
 
