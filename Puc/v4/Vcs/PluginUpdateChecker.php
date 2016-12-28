@@ -27,6 +27,7 @@ if ( !class_exists('Puc_v4_Vcs_PluginUpdateChecker') ):
 			parent::__construct($api->getRepositoryUrl(), $pluginFile, $slug, $checkPeriod, $optionName, $muPluginFile);
 		}
 
+		//TODO: Do something about this unused parameter.
 		public function requestInfo($queryArgs = array()) {
 			//We have to make several remote API requests to gather all the necessary info
 			//which can take a while on slow networks.

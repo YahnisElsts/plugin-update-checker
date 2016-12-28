@@ -106,16 +106,16 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
 			$installedVersion = $this->getInstalledVersion();
 			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
-			$queryArgs = apply_filters('puc_request_info_query_args-'.$this->slug, $queryArgs);
+			$queryArgs = apply_filters($this->getUniqueName('request_info_query_args'), $queryArgs);
 
 			//Various options for the wp_remote_get() call. Plugins can filter these, too.
 			$options = array(
 				'timeout' => 10, //seconds
 				'headers' => array(
-					'Accept' => 'application/json'
+					'Accept' => 'application/json',
 				),
 			);
-			$options = apply_filters('puc_request_info_options-'.$this->slug, $options);
+			$options = apply_filters($this->getUniqueName('request_info_options'), $options);
 
 			//The plugin info should be at 'http://your-api.com/url/here/$slug/info.json'
 			$url = $this->metadataUrl;
@@ -145,7 +145,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 				);
 			}
 
-			$pluginInfo = apply_filters('puc_request_info_result-'.$this->slug, $pluginInfo, $result);
+			$pluginInfo = apply_filters($this->getUniqueName('request_info_result'), $pluginInfo, $result);
 			return $pluginInfo;
 		}
 
@@ -388,7 +388,10 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 					'puc_check_for_updates'
 				);
 
-				$linkText = apply_filters('puc_manual_check_link-' . $this->slug, __('Check for updates', 'plugin-update-checker'));
+				$linkText = apply_filters(
+					$this->getUniqueName('manual_check_link'),
+					__('Check for updates', 'plugin-update-checker')
+				);
 				if ( !empty($linkText) ) {
 					/** @noinspection HtmlUnknownTarget */
 					$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
@@ -441,7 +444,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 				}
 				printf(
 					'<div class="updated notice is-dismissible"><p>%s</p></div>',
-					apply_filters('puc_manual_check_message-' . $this->slug, $message, $status)
+					apply_filters($this->getUniqueName('manual_check_message'), $message, $status)
 				);
 			}
 		}
