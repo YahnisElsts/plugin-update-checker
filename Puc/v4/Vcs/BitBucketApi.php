@@ -132,7 +132,12 @@ if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 		 * @return string
 		 */
 		protected function getDownloadUrl($ref) {
-			return trailingslashit($this->repositoryUrl) . 'get/' . $ref . '.zip';
+			return sprintf(
+				'https://bitbucket.org/%s/%s/get/%s.zip',
+				$this->username,
+				$this->repository,
+				$ref
+			);
 		}
 
 		/**
