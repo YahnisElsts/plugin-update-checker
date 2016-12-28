@@ -2,7 +2,7 @@
 if ( !class_exists('Puc_v4_Factory', false) ):
 
 	/**
-	 * A factory that builds instances of other classes from this library.
+	 * A factory that builds update checker instances.
 	 *
 	 * When multiple versions of the same class have been loaded (e.g. PluginUpdateChecker 4.0
 	 * and 4.1), this factory will always use the latest available minor version. Register class
@@ -16,12 +16,15 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		protected static $sorted = false;
 
 		protected static $myMajorVersion = '';
-		protected static $greatestCompatVersion = '';
+		protected static $latestCompatibleVersion = '';
 
 		/**
 		 * Create a new instance of the update checker.
 		 *
-		 * @see PluginUpdateChecker::__construct()
+		 * This method automatically detects if you're using it for a plugin or a theme and chooses
+		 * the appropriate implementation for your update source (JSON file, GitHub, BitBucket, etc).
+		 *
+		 * @see Puc_v4_UpdateChecker::__construct
 		 *
 		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
@@ -79,12 +82,12 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				$apiClass = $service . 'Api';
 			}
 
-			$checkerClass = self::getCompatibleClass($checkerClass);
+			$checkerClass = self::getCompatibleClassVersion($checkerClass);
 			if ( !$checkerClass ) {
 				trigger_error(
 					sprintf(
 						'PUC %s does not support updates for %ss %s',
-						htmlentities(self::$greatestCompatVersion),
+						htmlentities(self::$latestCompatibleVersion),
 						strtolower($type),
 						$service ? ('hosted on ' . htmlentities($service)) : 'using JSON metadata'
 					),
@@ -98,11 +101,11 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
 			} else {
 				//VCS checker + an API client.
-				$apiClass = self::getCompatibleClass($apiClass);
+				$apiClass = self::getCompatibleClassVersion($apiClass);
 				if ( !$apiClass ) {
 					trigger_error(sprintf(
 						'PUC %s does not support %s',
-						htmlentities(self::$greatestCompatVersion),
+						htmlentities(self::$latestCompatibleVersion),
 						htmlentities($service)
 					), E_USER_ERROR);
 					return null;
@@ -140,9 +143,9 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 * @param string $class Partial class name.
 		 * @return string|null Full class name.
 		 */
-		protected static function getCompatibleClass($class) {
-			if ( isset(self::$classVersions[$class][self::$greatestCompatVersion]) ) {
-				return self::$classVersions[$class][self::$greatestCompatVersion];
+		protected static function getCompatibleClassVersion($class) {
+			if ( isset(self::$classVersions[$class][self::$latestCompatibleVersion]) ) {
+				return self::$classVersions[$class][self::$latestCompatibleVersion];
 			}
 			return null;
 		}
@@ -198,9 +201,14 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			//Store the greatest version number that matches our major version.
 			$components = explode('.', $version);
 			if ( $components[0] === self::$myMajorVersion ) {
-				if ( empty(self::$greatestCompatVersion) || version_compare($version, self::$greatestCompatVersion, '>') ) {
-					self::$greatestCompatVersion = $version;
+
+				if (
+					empty(self::$latestCompatibleVersion)
+					|| version_compare($version, self::$latestCompatibleVersion, '>')
+				) {
+					self::$latestCompatibleVersion = $version;
 				}
+
 			}
 
 			if ( !isset(self::$classVersions[$generalClass]) ) {
