@@ -32,6 +32,7 @@ Getting Started
 1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
 2. Go to the `examples` subdirectory and open the .json file that fits your project type. Replace the placeholder data with your plugin/theme details. 
 	- Plugin example:
+	
 		```json
 		{
 			"name" : "Plugin Name",
@@ -42,8 +43,10 @@ Getting Started
 			}
 		}
 		```
+		
         This is a minimal example that leaves out optional fields. See [this table](https://spreadsheets.google.com/pub?key=0AqP80E74YcUWdEdETXZLcXhjd2w0cHMwX2U1eDlWTHc&authkey=CK7h9toK&hl=en&single=true&gid=0&output=html) for a full list of supported fields and their descriptions.
 	- Theme example:
+	
 		```json
 		{
 			"version": "2.0",
@@ -51,6 +54,7 @@ Getting Started
 			"download_url": "http://example.com/example-theme-2.0.zip"
 		}
 		```
+		
 		This is a complete example that shows all theme-related fields. `version` and `download_url` should be self-explanatory. The `details_url` key specifies the page that the user will see if they click the "View version 1.2.3 details" link in an update notification.  
 3. Upload the JSON file to a publicly accessible location.
 4. Add the following code to the main plugin file or to the `functions.php` file:
