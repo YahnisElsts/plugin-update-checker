@@ -1,93 +1,133 @@
 Plugin Update Checker
 =====================
 
-This is a custom update checker library for WordPress plugins. It lets you add automatic update notifications and one-click upgrades to your commercial and private plugins. All you need to do is put your plugin details in a JSON file, place the file on your server, and pass the URL to the library. The library periodically checks the URL to see if there's a new version available and displays an update notification to the user if necessary.
+This is a custom update checker library for WordPress plugins and themes. It lets you add automatic update notifications and one-click upgrades to your commercial plugins, private themes, and so on. All you need to do is put your plugin/theme details in a JSON file, place the file on your server, and pass the URL to the library. The library periodically checks the URL to see if there's a new version available and displays an update notification to the user if necessary.
 
-From the users' perspective, it works just like with plugins hosted on WordPress.org. The update checker uses the default plugin upgrade UI that will already be familiar to most WordPress users.
+From the users' perspective, it works just like with plugins and themes hosted on WordPress.org. The update checker uses the default upgrade UI that is familiar to most WordPress users.
 
-[See this blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for  more information and usage instructions.
+[See this blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for  more information.
 
 Getting Started
 ---------------
 
-### Self-hosted Plugins
+### Self-hosted Plugins and Themes
 
-1. Make a JSON file that describes your plugin. Here's a minimal example:
+1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
+2. Go to the `examples` subdirectory and open the .json file that fits your project type. Replace the placeholder data with your plugin/theme details. 
+	- Plugin example:
+		```json
+		{
+			"name" : "Plugin Name",
+			"version" : "2.0",
+			"download_url" : "http://example.com/plugin-name-2.0.zip",
+			"sections" : {
+				"description" : "Plugin description here. You can use HTML."
+			}
+		}
+		```
+        This is a minimal example that leaves out optional fields. See [this table](https://spreadsheets.google.com/pub?key=0AqP80E74YcUWdEdETXZLcXhjd2w0cHMwX2U1eDlWTHc&authkey=CK7h9toK&hl=en&single=true&gid=0&output=html) for a full list of supported fields and their descriptions.
+	- Theme example:
+		```json
+		{
+			"version": "2.0",
+			"details_url": "http://example.com/version-2.0-details.html",
+			"download_url": "http://example.com/example-theme-2.0.zip"
+		}
+		```
+		This is a complete example that shows all theme-related fields. `version` and `download_url` should be self-explanatory. The `details_url` key specifies the page that the user will see if they click the "View version 1.2.3 details" link in an update notification.  
+3. Upload the JSON file to a publicly accessible location.
+4. Add the following code to the main plugin file or to the `functions.php` file:
 
-	```json
-    {
-    	"name" : "My Cool Plugin",
-    	"version" : "2.0",
-    	"author" : "John Smith",
-    	"download_url" : "http://example.com/plugins/my-cool-plugin.zip",
-    	"sections" : {
-    		"description" : "Plugin description here. You can use HTML."
-    	}
-    }
+	```php
+	require 'path/to/plugin-update-checker/plugin-update-checker.php';
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
+		'http://example.com/path/to/details.json',
+		__FILE__,
+		'unique-plugin-or-theme-slug'
+	);
 	```
-	See [this table](https://spreadsheets.google.com/pub?key=0AqP80E74YcUWdEdETXZLcXhjd2w0cHMwX2U1eDlWTHc&authkey=CK7h9toK&hl=en&single=true&gid=0&output=html) for a full list of supported fields.
-2. Upload this file to a publicly accessible location.
-3. Download [the update checker](https://github.com/YahnisElsts/plugin-update-checker/releases/latest), unzip the archive and copy the `plugin-update-checker` directory to your plugin.
-4. Add the following code to the main plugin file:
+
+#### How to Release an Update
+
+Change the `version` number in the JSON file and make sure that `download_url` points to the latest version. Update the other fields if necessary. Tip: You can use [wp-update-server](https://github.com/YahnisElsts/wp-update-server) to automate this process.
+
+By default, the library will check the specified URL for changes every 12 hours. You can force it to check immediately by clicking the "Check Now" link on the "Plugins" page (it's next to the "Visit plugin site" link). Themes don't get a "check now" link, but you can also trigger an update check like this:
+ 
+ 1. Install [Debug Bar](https://srd.wordpress.org/plugins/debug-bar/).
+ 2. Click the "Debug" menu in the Admin Bar (a.k.a Toolbar).
+ 3. Open the "PUC (your-slug)" panel. 
+ 4. Click the "Check Now" button.  
+
+#### Notes
+- The second argument passed to `buildUpdateChecker` must be the absolute path to the main plugin file or any file in the theme directory. If you followed the "getting started" instructions, you can just use the `__FILE__` constant.
+- The third argument - i.e. the slug - is optional but recommended. If it's omitted, the update checker will use the name of the main plugin file as the slug (e.g. `my-cool-plugin.php` &rarr; `my-cool-plugin`). This can lead to conflicts if your plugin has a generic file name like `plugin.php`. 
+	
+	This doesn't affect themes as much because PUC uses the theme directory name as the default slug. Still, if you're planning to use the slug in your own code - e.g. to filter updates or override update checker behaviour - it can be a good idea to set it explicitly. 
+
+### Plugins and Themes Hosted on GitHub
+
+1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
+2. Add the following code to the main plugin file or `functions.php`:
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
-		'http://example.com/path/to/metadata.json',
+		'https://github.com/user-name/repo-name/',
 		__FILE__,
-		'unique-plugin-slug'
+		'unique-plugin-or-theme-slug'
 	);
+
+	//Optional: If you're using a private repository, specify the access token like this:
+	$myUpdateChecker->setAuthentication('your-token-here');
+
+	//Optional: Set the branch that contains the stable release.
+	$myUpdateChecker->setBranch('stable-branch-name');
 	```
+3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+
+#### How to Release an Update
+
+This library supports a couple of different ways to release updates on GitHub. Pick the one that best fits your workflow.
+
+- **GitHub releases** 
+	
+	Create a new release using the "Releases" feature on GitHub. The tag name and release title don't matter. The description is optional, but if you do provide one, it will be displayed when the user clicks the "View version x.y.z details" link on the "Plugins" page. Note that PUC ignores releases marked as "This is a pre-release".
+	
+- **Tags** 
+	
+	To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
+	
+	PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitHub releases or branches instead.
+	
+- **Stable branch** 
+	
+	Point the update checker at a stable, production-ready branch: 
+	 ```php
+	 $updateChecker->setBranch('branch-name');
+	 ```
+	 PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version.
+	 
+	 Caveat: If you set the branch to `master` (the default), the update checker will look for recent releases and tags first. It'll only use the `master` branch if it doesn't find anything else suitable.
 
 #### Notes
-- You can use [wp-update-server](https://github.com/YahnisElsts/wp-update-server) to automatically generate JSON metadata from ZIP packages.
-- The second argument passed to `buildUpdateChecker` should be the full path to the main plugin file.
-- The `$slug` argument is optional but recommended. If it's omitted, the update checker will use the name of the main plugin file as the slug (e.g. `my-cool-plugin.php` &rarr; `my-cool-plugin`). This can lead to conflicts if your plugin has a generic file name like `plugin.php`.  
-- There are more options available - see the [blog](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for details.
 
-### Plugins Hosted on GitHub
+The library will pull update details from the following parts of a release/tag/branch:
 
-*(GitHub support is experimental.)*
-
-1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest), unzip it and copy the `plugin-update-checker` directory to your plugin.
-2. Add the following code to the main file of your plugin:
-
-	```php
-	require 'plugin-update-checker/plugin-update-checker.php';
-	$className = PucFactory::getLatestClassVersion('PucGitHubChecker');
-	$myUpdateChecker = new $className(
-		'https://github.com/user-name/plugin-repo-name/',
-		__FILE__,
-		'master'
-	);
-	```
-	The third argument specifies the branch to use for updating your plugin. The default is `master`. If the branch name is omitted or set to `master`, the update checker will use the latest release or tag (if available). Otherwise it will use the specified branch.
-3. Optional: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt). The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
-
-#### Notes
-
-If your GitHub repository requires an access token, you can specify it like this:
-```php
-$myUpdateChecker->setAccessToken('your-token-here');
-```
-
-The GitHub version of the library will pull update details from the following parts of a release/tag/branch:
-
+- Version number
+	- The "Version" plugin header.
+	- The latest GitHub release or tag name.
 - Changelog
 	- The "Changelog" section of `readme.txt`.
 	- One of the following files:
 		CHANGES.md, CHANGELOG.md, changes.md, changelog.md
-	- Release notes.
-- Version number
-	- The "Version" plugin header.
-	- The latest release or tag name.
+	- GitHub release notes.
 - Required and tested WordPress versions
 	- The "Requires at least" and "Tested up to" fields in `readme.txt`.
 	- The following plugin headers:
 		`Required WP`, `Tested WP`, `Requires at least`, `Tested up to`
 - "Last updated" timestamp
-	- The creation timestamp of the latest release.
-	- The latest commit of the selected tag or branch that changed the main plugin file.
+	- The creation timestamp of the latest GitHub release.
+	- The latest commit in the selected tag or branch.
 - Number of downloads
 	- The `download_count` statistic of the latest release.
 	- If you're not using GitHub releases, there will be no download stats.
@@ -97,11 +137,68 @@ The GitHub version of the library will pull update details from the following pa
 	- Local plugin headers (i.e. the currently installed version).
 - Ratings, banners, screenshots
 	- Not supported.
+	
+### Plugins and Themes Hosted on BitBucket
+
+1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
+2. Add the following code to the main plugin file or `functions.php`:
+
+	```php
+	require 'plugin-update-checker/plugin-update-checker.php';
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
+		'https://bitbucket.org/user-name/repo-name',
+		__FILE__,
+		'unique-plugin-or-theme-slug'
+	);
+
+	//Optional: If you're using a private repository, create an OAuth consumer
+	//and set the authentication credentials like this:
+	$myUpdateChecker->setAuthentication(array(
+		'consumer_key' => '...',
+		'consumer_secret' => '...',
+	));
+
+	//Optional: Set the branch that contains the stable release.
+	$myUpdateChecker->setBranch('stable-branch-name');
+	```
+3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+
+#### How to Release an Update
+
+BitBucket doesn't have an equivalent to GitHubs "releases" feature, so the process is slightly different. You can use any of the following approaches: 
+
+- **`Stable tag` header** 
+	
+	This is the recommended approach if you're using tags to mark each version. Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. Set the "stable tag" header to the tag that represents the latest release. Example:
+	```text
+	Stable tag: v1.2.3
+	```
+	The tag doesn't have to start with a "v" or follow any particular format. You can use any name you like as long as it's a valid Git tag.
+	
+	Tip: If you explicitly set a stable branch, the update checker will look for a `readme.txt` in that branch. Otherwise it will only look at the `master` branch.
+	
+- **Tags** 
+	
+	You can skip the "stable tag" bit and just create a new Git tag named `v1.2.3` or `1.2.3`. The update checker will look at the most recent tags and pick the one that looks like the highest version number.
+	
+	PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions.
+	
+- **Stable branch** 
+	
+	Point the update checker at a stable, production-ready branch: 
+	 ```php
+	 $updateChecker->setBranch('branch-name');
+	 ```
+	 PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version. Caveat: If you set the branch to `master`, the update checker will still look for tags first.
+	 
+#### Notes
+
+The "Stable tag" header also works for themes as long as you include a `readme.txt` formatted according to plugin standards.
 
 Resources
 ---------
 
-- [Theme Update Checker](http://w-shadow.com/blog/2011/06/02/automatic-updates-for-commercial-themes/)
 - [Debug Bar](https://wordpress.org/plugins/debug-bar/) - useful for testing and debugging the update checker.
 - [Securing download links](http://w-shadow.com/blog/2013/03/19/plugin-updates-securing-download-links/) - a general overview.
 - [A GUI for entering download credentials](http://open-tools.net/documentation/tutorial-automatic-updates.html#wordpress)
+- [Theme Update Checker](http://w-shadow.com/blog/2011/06/02/automatic-updates-for-commercial-themes/) - an older, theme-only variant of this update checker.
