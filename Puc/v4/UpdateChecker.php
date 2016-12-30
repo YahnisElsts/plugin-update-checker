@@ -203,11 +203,9 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 */
 		public function getUpdateState() {
 			$state = get_site_option($this->optionName, null);
-			if ( empty($state) || !is_object($state) ) {
+			if ( !is_object($state) ) {
 				$state = null;
-			}
-
-			if ( isset($state, $state->update) && is_object($state->update) ) {
+			} else if ( isset($state->update) && is_object($state->update) ) {
 				$state->update = call_user_func(array($this->updateClass, 'fromObject'), $state->update);
 			}
 			return $state;
