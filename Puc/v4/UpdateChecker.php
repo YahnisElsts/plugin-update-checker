@@ -535,17 +535,10 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 			//In case there's a name collision with a plugin or theme hosted on wordpress.org,
 			//remove any preexisting updates that match our thing.
-			$filteredTranslations = array();
-			foreach($updates->translations as $translation) {
-				if (
-					($translation['type'] === $this->translationType)
-					&& ($translation['slug'] === $this->directoryName)
-				) {
-					continue;
-				}
-				$filteredTranslations[] = $translation;
-			}
-			$updates->translations = $filteredTranslations;
+			$updates->translations = array_values(array_filter(
+				$updates->translations,
+				array($this, 'isNotMyTranslation')
+			));
 
 			//Add our updates to the list.
 			foreach($translationUpdates as $update) {
@@ -594,6 +587,20 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 				$state->update->translations = array();
 				$this->setUpdateState($state);
 			}
+		}
+
+		/**
+		 * Filter callback. Keeps only translations that *don't* match this plugin or theme.
+		 *
+		 * @param array $translation
+		 * @return bool
+		 */
+		protected function isNotMyTranslation($translation) {
+			$isMatch = isset($translation['type'], $translation['slug'])
+				&& ($translation['type'] === $this->translationType)
+				&& ($translation['slug'] === $this->directoryName);
+
+			return !$isMatch;
 		}
 
 		/* -------------------------------------------------------------------
