@@ -7,6 +7,23 @@ From the users' perspective, it works just like with plugins and themes hosted o
 
 [See this blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for  more information.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Getting Started](#getting-started)
+  - [Self-hosted Plugins and Themes](#self-hosted-plugins-and-themes)
+    - [How to Release an Update](#how-to-release-an-update)
+    - [Notes](#notes)
+  - [GitHub Integration](#github-integration)
+    - [How to Release an Update](#how-to-release-an-update-1)
+    - [Notes](#notes-1)
+  - [BitBucket Integration](#bitbucket-integration)
+    - [How to Release an Update](#how-to-release-an-update-2)
+- [Resources](#resources)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 Getting Started
 ---------------
 
@@ -64,7 +81,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 	
 	This doesn't affect themes as much because PUC uses the theme directory name as the default slug. Still, if you're planning to use the slug in your own code - e.g. to filter updates or override update checker behaviour - it can be a good idea to set it explicitly. 
 
-### Plugins and Themes Hosted on GitHub
+### GitHub Integration
 
 1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
 2. Add the following code to the main plugin file or `functions.php`:
@@ -138,7 +155,7 @@ The library will pull update details from the following parts of a release/tag/b
 - Ratings, banners, screenshots
 	- Not supported.
 	
-### Plugins and Themes Hosted on BitBucket
+### BitBucket Integration
 
 1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
 2. Add the following code to the main plugin file or `functions.php`:
@@ -165,7 +182,7 @@ The library will pull update details from the following parts of a release/tag/b
 
 #### How to Release an Update
 
-BitBucket doesn't have an equivalent to GitHubs "releases" feature, so the process is slightly different. You can use any of the following approaches: 
+BitBucket doesn't have an equivalent to GitHub's releases, so the process is slightly different. You can use any of the following approaches: 
 
 - **`Stable tag` header** 
 	
@@ -190,10 +207,6 @@ BitBucket doesn't have an equivalent to GitHubs "releases" feature, so the proce
 	 $updateChecker->setBranch('branch-name');
 	 ```
 	 PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version. Caveat: If you set the branch to `master`, the update checker will still look for tags first.
-	 
-#### Notes
-
-The "Stable tag" header also works for themes as long as you include a `readme.txt` formatted according to plugin standards.
 
 Resources
 ---------
