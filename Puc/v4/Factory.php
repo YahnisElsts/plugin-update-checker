@@ -36,7 +36,6 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = wp_normalize_path($fullPath);
-			$service = null;
 			$id = null;
 
 			//Plugin or theme?
@@ -53,23 +52,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			}
 
 			//Which hosting service does the URL point to?
-			$host = @parse_url($metadataUrl, PHP_URL_HOST);
-			$path = @parse_url($metadataUrl, PHP_URL_PATH);
-			//Check if the path looks like "/user-name/repository".
-			$usernameRepoRegex = '@^/?([^/]+?)/([^/#?&]+?)/?$@';
-			if ( preg_match($usernameRepoRegex, $path) ) {
-				switch($host) {
-					case 'github.com':
-						$service = 'GitHub';
-						break;
-					case 'bitbucket.org':
-						$service = 'BitBucket';
-						break;
-					case 'gitlab.com':
-						$service = 'GitLab';
-						break;
-				}
-			}
+			$service = self::getVcsService($metadataUrl);
 
 			$checkerClass = null;
 			$apiClass = null;
@@ -134,6 +117,34 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			$absolutePath = wp_normalize_path($absolutePath);
 
 			return (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0);
+		}
+
+		/**
+		 * Get the name of the hosting service that the URL points to.
+		 *
+		 * @param string $metadataUrl
+		 * @return string|null
+		 */
+		private static function getVcsService($metadataUrl) {
+			$service = null;
+
+			//Which hosting service does the URL point to?
+			$host = @parse_url($metadataUrl, PHP_URL_HOST);
+			$path = @parse_url($metadataUrl, PHP_URL_PATH);
+			//Check if the path looks like "/user-name/repository".
+			$usernameRepoRegex = '@^/?([^/]+?)/([^/#?&]+?)/?$@';
+			if ( preg_match($usernameRepoRegex, $path) ) {
+				$knownServices = array(
+					'github.com' => 'GitHub',
+					'bitbucket.org' => 'BitBucket',
+					'gitlab.com' => 'GitLab',
+				);
+				if ( isset($knownServices[$host]) ) {
+					$service = $knownServices[$host];
+				}
+			}
+
+			return $service;
 		}
 
 		/**
