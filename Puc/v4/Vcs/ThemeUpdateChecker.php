@@ -36,7 +36,7 @@ if ( !class_exists('Puc_v4_Vcs_ThemeUpdateChecker', false) ):
 			$update->slug = $this->slug;
 
 			//Figure out which reference (tag or branch) we'll use to get the latest version of the theme.
-			$updateSource = $api->chooseReference($this->branch, false);
+			$updateSource = $api->chooseReference($this->branch);
 			if ( $updateSource ) {
 				$ref = $updateSource->name;
 				$update->version = $updateSource->version;
