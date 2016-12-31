@@ -6,7 +6,7 @@ if ( !class_exists('Puc_v4_Utils', false) ):
 		/**
 		 * Get a value from a nested array or object based on a path.
 		 *
-		 * @param array|object $array Get an entry from this array.
+		 * @param array|object|null $array Get an entry from this array.
 		 * @param array|string $path A list of array keys in hierarchy order, or a string path like "foo.bar.baz".
 		 * @param mixed $default The value to return if the specified path is not found.
 		 * @param string $separator Path element separator. Only applies to string paths.
