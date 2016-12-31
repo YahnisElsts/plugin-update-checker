@@ -274,7 +274,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		/**
 		 * Filter the result of a requestUpdate() call.
 		 *
-		 * @param Puc_v4_Update $update
+		 * @param Puc_v4_Update|null $update
 		 * @param array|WP_Error|null $httpResult The value returned by wp_remote_get(), if any.
 		 * @return Puc_v4_Update
 		 */
