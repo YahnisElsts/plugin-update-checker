@@ -722,10 +722,12 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * This is basically a simplified version of the get_file_data() function from /wp-includes/functions.php.
 		 * It's intended as a utility for subclasses that detect updates by parsing files in a VCS.
 		 *
-		 * @param string $content File contents.
+		 * @param string|null $content File contents.
 		 * @return string[]
 		 */
 		public function getFileHeader($content) {
+			$content = (string) $content;
+
 			//WordPress only looks at the first 8 KiB of the file, so we do the same.
 			$content = substr($content, 0, 8192);
 			//Normalize line endings.
