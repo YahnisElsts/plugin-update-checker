@@ -249,10 +249,9 @@ if ( !class_exists('Puc_v4_Vcs_GitHubApi', false) ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @param bool $useStableTag Ignored. The GitHub client doesn't use the "Stable tag" header.
 		 * @return null|Puc_v4_Vcs_Reference
 		 */
-		public function chooseReference($configBranch, $useStableTag = false) {
+		public function chooseReference($configBranch) {
 			$updateSource = null;
 
 			if ( $configBranch === 'master' ) {

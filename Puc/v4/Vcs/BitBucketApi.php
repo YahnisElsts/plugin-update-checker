@@ -33,27 +33,13 @@ if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @param bool $useStableTag
 		 * @return null|Puc_v4_Vcs_Reference
 		 */
-		public function chooseReference($configBranch, $useStableTag = true) {
+		public function chooseReference($configBranch) {
 			$updateSource = null;
 
 			//Check if there's a "Stable tag: 1.2.3" header that points to a valid tag.
-			if ( $useStableTag ) {
-				$remoteReadme = $this->getRemoteReadme($configBranch);
-				if ( !empty($remoteReadme['stable_tag']) ) {
-					$tag = $remoteReadme['stable_tag'];
-
-					//You can explicitly opt out of using tags by setting "Stable tag" to
-					//"trunk" or the name of the current branch.
-					if ( ($tag === $configBranch) || ($tag === 'trunk') ) {
-						return $this->getBranch($configBranch);
-					}
-
-					$updateSource = $this->getTag($tag);
-				}
-			}
+			$updateSource = $this->getStableTag($configBranch);
 
 			//Look for version-like tags.
 			if ( !$updateSource && ($configBranch === 'master') ) {
@@ -124,6 +110,29 @@ if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 					'downloadUrl' => $this->getDownloadUrl($tag->name),
 				));
 			}
+			return null;
+		}
+
+		/**
+		 * Get the tag/ref specified by the "Stable tag" header in the readme.txt of a given branch.
+		 *
+		 * @param string $branch
+		 * @return null|Puc_v4_Vcs_Reference
+		 */
+		protected function getStableTag($branch) {
+			$remoteReadme = $this->getRemoteReadme($branch);
+			if ( !empty($remoteReadme['stable_tag']) ) {
+				$tag = $remoteReadme['stable_tag'];
+
+				//You can explicitly opt out of using tags by setting "Stable tag" to
+				//"trunk" or the name of the current branch.
+				if ( ($tag === $branch) || ($tag === 'trunk') ) {
+					return $this->getBranch($branch);
+				}
+
+				return $this->getTag($tag);
+			}
+
 			return null;
 		}
 

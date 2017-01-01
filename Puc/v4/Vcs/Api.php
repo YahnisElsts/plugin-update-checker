@@ -42,10 +42,9 @@ if ( !class_exists('Puc_v4_Vcs_Api') ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @param bool $useStableTag
 		 * @return null|Puc_v4_Vcs_Reference
 		 */
-		abstract public function chooseReference($configBranch, $useStableTag = true);
+		abstract public function chooseReference($configBranch);
 
 		/**
 		 * Get the readme.txt file from the remote repository and parse it

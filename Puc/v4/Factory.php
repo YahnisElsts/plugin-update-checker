@@ -54,7 +54,6 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			//Which hosting service does the URL point to?
 			$service = self::getVcsService($metadataUrl);
 
-			$checkerClass = null;
 			$apiClass = null;
 			if ( empty($service) ) {
 				//The default is to get update information from a remote JSON file.
@@ -66,7 +65,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			}
 
 			$checkerClass = self::getCompatibleClassVersion($checkerClass);
-			if ( !$checkerClass ) {
+			if ( $checkerClass === null ) {
 				trigger_error(
 					sprintf(
 						'PUC %s does not support updates for %ss %s',
@@ -85,7 +84,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			} else {
 				//VCS checker + an API client.
 				$apiClass = self::getCompatibleClassVersion($apiClass);
-				if ( !$apiClass ) {
+				if ( $apiClass === null ) {
 					trigger_error(sprintf(
 						'PUC %s does not support %s',
 						htmlentities(self::$latestCompatibleVersion),
