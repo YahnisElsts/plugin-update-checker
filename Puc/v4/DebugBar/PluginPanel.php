@@ -10,6 +10,7 @@ if ( !class_exists('Puc_v4_DebugBar_PluginPanel', false) ):
 
 		protected function displayConfigHeader() {
 			$this->row('Plugin file', htmlentities($this->updateChecker->pluginFile));
+			parent::displayConfigHeader();
 		}
 
 		protected function getMetadataButton() {

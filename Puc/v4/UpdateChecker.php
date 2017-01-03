@@ -775,6 +775,15 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			return new Puc_v4_DebugBar_Extension($this);
 		}
 
+		/**
+		 * Display additional configuration details in the Debug Bar panel.
+		 *
+		 * @param Puc_v4_DebugBar_Panel $panel
+		 */
+		public function onDisplayConfiguration($panel) {
+			//Do nothing. Subclasses can use this to add additional info to the panel.
+		}
+
 	}
 
 endif;

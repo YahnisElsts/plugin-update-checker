@@ -220,6 +220,10 @@ if ( !class_exists('Puc_v4_Vcs_Api') ):
 			$this->credentials = $credentials;
 		}
 
+		public function isAuthenticationEnabled() {
+			return !empty($this->credentials);
+		}
+
 		/**
 		 * @param string $url
 		 * @return string

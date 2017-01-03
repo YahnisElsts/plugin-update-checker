@@ -10,6 +10,7 @@ if ( !class_exists('Puc_v4_DebugBar_ThemePanel', false) ):
 
 		protected function displayConfigHeader() {
 			$this->row('Theme directory', htmlentities($this->updateChecker->directoryName));
+			parent::displayConfigHeader();
 		}
 
 		protected function getUpdateFields() {

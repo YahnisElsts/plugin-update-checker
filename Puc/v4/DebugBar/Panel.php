@@ -65,6 +65,9 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 					$this->row('Throttling', 'Disabled');
 				}
 			}
+
+			$this->updateChecker->onDisplayConfiguration($this);
+
 			echo '</table>';
 		}
 
@@ -149,7 +152,7 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 			return gmdate('Y-m-d H:i:s', $unixTime + (get_option('gmt_offset') * 3600));
 		}
 
-		protected function row($name, $value) {
+		public function row($name, $value) {
 			if ( is_object($value) || is_array($value) ) {
 				$value = '<pre>' . htmlentities(print_r($value, true)) . '</pre>';
 			} else if ($value === null) {

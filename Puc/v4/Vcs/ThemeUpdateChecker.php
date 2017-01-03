@@ -68,6 +68,8 @@ if ( !class_exists('Puc_v4_Vcs_ThemeUpdateChecker', false) ):
 			return $update;
 		}
 
+		//FIXME: This is duplicated code. Both theme and plugin subclasses that use VCS share these methods.
+
 		public function setBranch($branch) {
 			$this->branch = $branch;
 			return $this;
@@ -88,7 +90,11 @@ if ( !class_exists('Puc_v4_Vcs_ThemeUpdateChecker', false) ):
 			return $update;
 		}
 
-
+		public function onDisplayConfiguration($panel) {
+			parent::onDisplayConfiguration($panel);
+			$panel->row('Branch', $this->branch);
+			$panel->row('Authentication enabled', $this->api->isAuthenticationEnabled() ? 'Yes' : 'No');
+		}
 	}
 
 endif;
