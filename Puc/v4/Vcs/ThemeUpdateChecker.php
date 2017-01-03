@@ -94,6 +94,7 @@ if ( !class_exists('Puc_v4_Vcs_ThemeUpdateChecker', false) ):
 			parent::onDisplayConfiguration($panel);
 			$panel->row('Branch', $this->branch);
 			$panel->row('Authentication enabled', $this->api->isAuthenticationEnabled() ? 'Yes' : 'No');
+			$panel->row('API client', get_class($this->api));
 		}
 	}
 
