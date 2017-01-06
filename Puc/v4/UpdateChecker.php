@@ -291,38 +291,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		}
 
 		/**
-		 * Check if $result is a successful update API response.
-		 *
-		 * @param array|WP_Error $result
-		 * @return true|WP_Error
-		 */
-		protected function validateApiResponse($result) {
-			if ( is_wp_error($result) ) { /** @var WP_Error $result */
-				return new WP_Error($result->get_error_code(), 'WP HTTP Error: ' . $result->get_error_message());
-			}
-
-			if ( !isset($result['response']['code']) ) {
-				return new WP_Error(
-					'puc_no_response_code',
-					'wp_remote_get() returned an unexpected result.'
-				);
-			}
-
-			if ( $result['response']['code'] !== 200 ) {
-				return new WP_Error(
-					'puc_unexpected_response_code',
-					'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
-				);
-			}
-
-			if ( empty($result['body']) ) {
-				return new WP_Error('puc_empty_response', 'The metadata file appears to be empty.');
-			}
-
-			return true;
-		}
-
-		/**
 		 * Get the currently installed version of the plugin or theme.
 		 *
 		 * @return string Version number.
@@ -458,6 +426,90 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @return bool
 		 */
 		protected function shouldShowUpdates() {
+			return true;
+		}
+
+		/* -------------------------------------------------------------------
+		 * JSON-based update API
+		 * -------------------------------------------------------------------
+		 */
+
+		/**
+		 * Retrieve plugin or theme metadata from the JSON document at $this->metadataUrl.
+		 *
+		 * @param string $metaClass Parse the JSON as an instance of this class. It must have a static fromJson method.
+		 * @param string $filterRoot
+		 * @param array $queryArgs Additional query arguments.
+		 * @return array [Puc_v4_Metadata|null, array|WP_Error] A metadata instance and the value returned by wp_remote_get().
+		 */
+		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array()) {
+			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
+			$installedVersion = $this->getInstalledVersion();
+			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
+			$queryArgs = apply_filters($this->getUniqueName($filterRoot . '_query_args'), $queryArgs);
+
+			//Various options for the wp_remote_get() call. Plugins can filter these, too.
+			$options = array(
+				'timeout' => 10, //seconds
+				'headers' => array(
+					'Accept' => 'application/json',
+				),
+			);
+			$options = apply_filters($this->getUniqueName($filterRoot . '_options'), $options);
+
+			//The metadata file should be at 'http://your-api.com/url/here/$slug/info.json'
+			$url = $this->metadataUrl;
+			if ( !empty($queryArgs) ){
+				$url = add_query_arg($queryArgs, $url);
+			}
+
+			$result = wp_remote_get($url, $options);
+
+			//Try to parse the response
+			$status = $this->validateApiResponse($result);
+			$metadata = null;
+			if ( !is_wp_error($status) ){
+				$metadata = call_user_func(array($metaClass, 'fromJson'), $result['body']);
+			} else {
+				$this->triggerError(
+					sprintf('The URL %s does not point to a valid metadata file. ', $url)
+					. $status->get_error_message(),
+					E_USER_WARNING
+				);
+			}
+
+			return array($metadata, $result);
+		}
+
+		/**
+		 * Check if $result is a successful update API response.
+		 *
+		 * @param array|WP_Error $result
+		 * @return true|WP_Error
+		 */
+		protected function validateApiResponse($result) {
+			if ( is_wp_error($result) ) { /** @var WP_Error $result */
+				return new WP_Error($result->get_error_code(), 'WP HTTP Error: ' . $result->get_error_message());
+			}
+
+			if ( !isset($result['response']['code']) ) {
+				return new WP_Error(
+					'puc_no_response_code',
+					'wp_remote_get() returned an unexpected result.'
+				);
+			}
+
+			if ( $result['response']['code'] !== 200 ) {
+				return new WP_Error(
+					'puc_unexpected_response_code',
+					'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
+				);
+			}
+
+			if ( empty($result['body']) ) {
+				return new WP_Error('puc_empty_response', 'The metadata file appears to be empty.');
+			}
+
 			return true;
 		}
 

@@ -34,10 +34,6 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 			);
 		}
 
-		protected function installHooks() {
-			parent::installHooks();
-		}
-
 		/**
 		 * For themes, the update array is indexed by theme directory name.
 		 *
@@ -53,43 +49,11 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		 * @return Puc_v4_Update An instance of Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
-			//Query args to append to the URL. Themes can add their own by using a filter callback (see addQueryArgFilter()).
-			$queryArgs = array();
-			$installedVersion = $this->getInstalledVersion();
-			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
+			list($themeUpdate, $result) = $this->requestMetadata('Puc_v4_Theme_Update', 'request_update');
 
-			$queryArgs = apply_filters($this->getUniqueName('request_update_query_args'), $queryArgs);
-
-			//Various options for the wp_remote_get() call. Plugins can filter these, too.
-			$options = array(
-				'timeout' => 10, //seconds
-				'headers' => array(
-					'Accept' => 'application/json'
-				),
-			);
-			$options = apply_filters($this->getUniqueName('request_update_options'), $options);
-
-			$url = $this->metadataUrl;
-			if ( !empty($queryArgs) ){
-				$url = add_query_arg($queryArgs, $url);
-			}
-
-			$result = wp_remote_get($url, $options);
-
-			//Try to parse the response
-			$status = $this->validateApiResponse($result);
-			$themeUpdate = null;
-			if ( !is_wp_error($status) ){
-				$themeUpdate = Puc_v4_Theme_Update::fromJson($result['body']);
-				if ( $themeUpdate !== null ) {
-					$themeUpdate->slug = $this->slug;
-				}
-			} else {
-				$this->triggerError(
-					sprintf('The URL %s does not point to a valid theme metadata file. ', $url)
-					. $status->get_error_message(),
-					E_USER_WARNING
-				);
+			if ( $themeUpdate !== null ) {
+				/** @var Puc_v4_Theme_Update $themeUpdate */
+				$themeUpdate->slug = $this->slug;
 			}
 
 			$themeUpdate = $this->filterUpdateResult($themeUpdate, $result);
