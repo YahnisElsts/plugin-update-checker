@@ -24,9 +24,9 @@ if ( !class_exists('Puc_v4_Utils', false) ):
 			$currentValue = $array;
 			$pathExists = true;
 			foreach ($path as $node) {
-				if ( is_array($currentValue) && array_key_exists($node, $currentValue) ) {
+				if ( is_array($currentValue) && isset($currentValue[$node]) ) {
 					$currentValue = $currentValue[$node];
-				} else if ( is_object($currentValue) && property_exists($currentValue, $node) ) {
+				} else if ( is_object($currentValue) && isset($currentValue->$node) ) {
 					$currentValue = $currentValue->$node;
 				} else {
 					$pathExists = false;
@@ -59,6 +59,18 @@ if ( !class_exists('Puc_v4_Utils', false) ):
 			}
 
 			return $default;
+		}
+
+		/**
+		 * Check if the input string starts with the specified prefix.
+		 *
+		 * @param string $input
+		 * @param string $prefix
+		 * @return bool
+		 */
+		public static function startsWith($input, $prefix) {
+			$length = strlen($prefix);
+			return (substr($input, 0, $length) === $prefix);
 		}
 	}
 
