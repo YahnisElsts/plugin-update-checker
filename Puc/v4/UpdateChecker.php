@@ -105,7 +105,9 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			);
 
 			//Rename the update directory to be the same as the existing directory.
-			add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
+			if ( $this->directoryName !== '.' ) {
+				add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
+			}
 
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
@@ -659,16 +661,13 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			}
 
 			//Rename the source to match the existing directory.
-			if ( $this->directoryName === '.' ) {
-				return $source;
-			}
 			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
 			if ( $source !== $correctedSource ) {
 				//The update archive should contain a single directory that contains the rest of plugin/theme files.
 				//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
 				//We can't rename $remoteSource because that would break WordPress code that cleans up temporary files
 				//after update.
-				if ($this->isBadDirectoryStructure($remoteSource)) {
+				if ( $this->isBadDirectoryStructure($remoteSource) ) {
 					return new WP_Error(
 						'puc-incorrect-directory-structure',
 						sprintf(
@@ -686,7 +685,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 					'<span class="code">' . $this->directoryName . '</span>'
 				));
 
-				if ($wp_filesystem->move($source, $correctedSource, true)) {
+				if ( $wp_filesystem->move($source, $correctedSource, true) ) {
 					$upgrader->skin->feedback('Directory successfully renamed.');
 					return $correctedSource;
 				} else {
