@@ -3,7 +3,7 @@
  * Plugin Update Checker Library 4.0
  * http://w-shadow.com/
  * 
- * Copyright 2016 Janis Elsts
+ * Copyright 2017 Janis Elsts
  * Released under the MIT license. See license.txt for details.
  */
 

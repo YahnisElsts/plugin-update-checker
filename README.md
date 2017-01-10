@@ -55,13 +55,13 @@ Getting Started
 		}
 		```
 		
-		This is a complete example that shows all theme-related fields. `version` and `download_url` should be self-explanatory. The `details_url` key specifies the page that the user will see if they click the "View version 1.2.3 details" link in an update notification.  
+		This is actually a complete example that shows all theme-related fields. `version` and `download_url` should be self-explanatory. The `details_url` key specifies the page that the user will see if they click the "View version 1.2.3 details" link in an update notification.  
 3. Upload the JSON file to a publicly accessible location.
 4. Add the following code to the main plugin file or to the `functions.php` file:
 
 	```php
 	require 'path/to/plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = PucFactory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 		'http://example.com/path/to/details.json',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -83,7 +83,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 - The second argument passed to `buildUpdateChecker` must be the absolute path to the main plugin file or any file in the theme directory. If you followed the "getting started" instructions, you can just use the `__FILE__` constant.
 - The third argument - i.e. the slug - is optional but recommended. If it's omitted, the update checker will use the name of the main plugin file as the slug (e.g. `my-cool-plugin.php` &rarr; `my-cool-plugin`). This can lead to conflicts if your plugin has a generic file name like `plugin.php`. 
 	
-	This doesn't affect themes as much because PUC uses the theme directory name as the default slug. Still, if you're planning to use the slug in your own code - e.g. to filter updates or override update checker behaviour - it can be a good idea to set it explicitly. 
+	This doesn't affect themes because PUC uses the theme directory name as the default slug. Still, if you're planning to use the slug in your own code - e.g. to filter updates or override update checker behaviour - it can be a good idea to set it explicitly. 
 
 ### GitHub Integration
 
@@ -92,7 +92,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = PucFactory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 		'https://github.com/user-name/repo-name/',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -166,7 +166,7 @@ The library will pull update details from the following parts of a release/tag/b
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = PucFactory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 		'https://bitbucket.org/user-name/repo-name',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -182,7 +182,7 @@ The library will pull update details from the following parts of a release/tag/b
 	//Optional: Set the branch that contains the stable release.
 	$myUpdateChecker->setBranch('stable-branch-name');
 	```
-3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+3. Optional: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. For plugins, the contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
 
