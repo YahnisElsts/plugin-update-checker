@@ -4,7 +4,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 	abstract class Puc_v4_UpdateChecker {
 		protected $filterSuffix = '';
-		protected $updateClass = '';
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
 

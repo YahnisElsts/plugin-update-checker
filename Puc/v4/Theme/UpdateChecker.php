@@ -4,7 +4,6 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 
 	class Puc_v4_Theme_UpdateChecker extends Puc_v4_UpdateChecker {
 		protected $filterSuffix = 'theme';
-		protected $updateClass = 'Puc_v4_Theme_Update';
 		protected $updateTransient = 'update_themes';
 		protected $translationType = 'theme';
 

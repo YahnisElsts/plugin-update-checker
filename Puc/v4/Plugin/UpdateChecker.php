@@ -9,7 +9,6 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 	 * @access public
 	 */
 	class Puc_v4_Plugin_UpdateChecker extends Puc_v4_UpdateChecker {
-		protected $updateClass = 'Puc_v4_Plugin_Update';
 		protected $updateTransient = 'update_plugins';
 		protected $translationType = 'plugin';
 
