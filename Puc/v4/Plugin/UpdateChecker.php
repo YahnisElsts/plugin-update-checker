@@ -120,7 +120,7 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		 *
 		 * @uses PluginUpdateChecker::requestInfo()
 		 *
-		 * @return Puc_v4_Update An instance of Plugin_Update, or NULL when no updates are available.
+		 * @return Puc_v4_Update|null An instance of Plugin_Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
 			//For the sake of simplicity, this function just calls requestInfo()

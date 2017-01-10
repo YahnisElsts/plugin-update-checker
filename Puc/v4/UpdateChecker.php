@@ -42,14 +42,14 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		public $scheduler;
 
 		/**
-		 * @var string The host component of $metadataUrl.
-		 */
-		protected $metadataHost = '';
-
-		/**
 		 * @var Puc_v4_UpgraderStatus
 		 */
 		protected $upgraderStatus;
+
+		/**
+		 * @var Puc_v4_StateStore
+		 */
+		protected $updateState;
 
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
@@ -70,6 +70,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 
 			$this->scheduler = $this->createScheduler($checkPeriod);
 			$this->upgraderStatus = new Puc_v4_UpgraderStatus();
+			$this->updateState = new Puc_v4_StateStore($this->optionName);
 
 			$this->loadTextDomain();
 			$this->installHooks();
@@ -108,7 +109,6 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			add_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10, 3);
 
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
-			$this->metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
 			//DebugBar integration.
@@ -145,7 +145,12 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @return bool
 		 */
 		public function allowMetadataHost($allow, $host) {
-			if ( strtolower($host) === strtolower($this->metadataHost) ) {
+			static $metadataHost = 0; //Using 0 instead of NULL because parse_url can return NULL.
+			if ( $metadataHost === 0 ) {
+				$metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
+			}
+
+			if ( is_string($metadataHost) && (strtolower($host) === strtolower($metadataHost)) ) {
 				return true;
 			}
 			return $allow;
@@ -178,20 +183,13 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 				return null;
 			}
 
-			$state = $this->getUpdateState();
-			if ( empty($state) ) {
-				$state = new stdClass;
-				$state->lastCheck = 0;
-				$state->checkedVersion = '';
-				$state->update = null;
-			}
+			$state = $this->updateState;
+			$state->setLastCheckToNow()
+				->setCheckedVersion($installedVersion)
+				->save(); //Save before checking in case something goes wrong
 
-			$state->lastCheck = time();
-			$state->checkedVersion = $installedVersion;
-			$this->setUpdateState($state); //Save before checking in case something goes wrong
-
-			$state->update = $this->requestUpdate();
-			$this->setUpdateState($state);
+			$state->setUpdate($this->requestUpdate());
+			$state->save();
 
 			return $this->getUpdate();
 		}
@@ -199,31 +197,10 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		/**
 		 * Load the update checker state from the DB.
 		 *
-		 * @return stdClass|null
+		 * @return Puc_v4_StateStore
 		 */
 		public function getUpdateState() {
-			$state = get_site_option($this->optionName, null);
-			if ( !is_object($state) ) {
-				$state = null;
-			} else if ( isset($state->update) && is_object($state->update) ) {
-				$state->update = call_user_func(array($this->updateClass, 'fromObject'), $state->update);
-			}
-			return $state;
-		}
-
-		/**
-		 * Persist the update checker state to the DB.
-		 *
-		 * @param StdClass $state
-		 * @return void
-		 */
-		protected function setUpdateState($state) {
-			if (isset($state->update) && is_object($state->update) && method_exists($state->update, 'toStdClass')) {
-				$update = $state->update;
-				/** @var Puc_v4_Update $update */
-				$state->update = $update->toStdClass();
-			}
-			update_site_option($this->optionName, $state);
+			return $this->updateState->lazyLoad();
 		}
 
 		/**
@@ -233,7 +210,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * clear the update cache.
 		 */
 		public function resetUpdateState() {
-			delete_site_option($this->optionName);
+			$this->updateState->delete();
 		}
 
 		/**
@@ -248,11 +225,10 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @return Puc_v4_Update|null
 		 */
 		public function getUpdate() {
-			$state = $this->getUpdateState(); /** @var StdClass $state */
+			$update = $this->updateState->getUpdate();
 
 			//Is there an update available?
-			if ( isset($state, $state->update) ) {
-				$update = $state->update;
+			if ( isset($update) ) {
 				//Check if the update is actually newer than the currently installed version.
 				$installedVersion = $this->getInstalledVersion();
 				if ( ($installedVersion !== null) && version_compare($update->version, $installedVersion, '>') ){
@@ -619,11 +595,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @return array
 		 */
 		public function getTranslationUpdates() {
-			$state = $this->getUpdateState();
-			if ( isset($state, $state->update, $state->update->translations) ) {
-				return $state->update->translations;
-			}
-			return array();
+			return $this->updateState->getTranslations();
 		}
 
 		/**
@@ -632,11 +604,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 * @see wp_clean_update_cache
 		 */
 		public function clearCachedTranslationUpdates() {
-			$state = $this->getUpdateState();
-			if ( isset($state, $state->update, $state->update->translations) ) {
-				$state->update->translations = array();
-				$this->setUpdateState($state);
-			}
+			$this->updateState->setTranslations(array());
 		}
 
 		/**

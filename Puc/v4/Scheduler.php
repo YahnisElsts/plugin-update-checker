@@ -95,15 +95,13 @@ if ( !class_exists('Puc_v4_Scheduler', false) ):
 			}
 
 			$state = $this->updateChecker->getUpdateState();
-			$shouldCheck =
-				!isset($state, $state->lastCheck) ||
-				( (time() - $state->lastCheck) >= $this->getEffectiveCheckPeriod() );
+			$shouldCheck = ($state->timeSinceLastCheck() >= $this->getEffectiveCheckPeriod());
 
 			//Let plugin authors substitute their own algorithm.
 			$shouldCheck = apply_filters(
 				$this->updateChecker->getUniqueName('check_now'),
 				$shouldCheck,
-				Puc_v4_Utils::get($state, 'lastCheck', 0),
+				$state->getLastCheck(),
 				$this->checkPeriod
 			);
 

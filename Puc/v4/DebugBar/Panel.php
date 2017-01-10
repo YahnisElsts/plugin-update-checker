@@ -94,8 +94,8 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 				);
 			}
 
-			if ( isset($state, $state->lastCheck) ) {
-				$this->row('Last check', $this->formatTimeWithDelta($state->lastCheck) . ' ' . $checkNowButton . $this->responseBox);
+			if ( $state->getLastCheck() > 0 ) {
+				$this->row('Last check', $this->formatTimeWithDelta($state->getLastCheck()) . ' ' . $checkNowButton . $this->responseBox);
 			} else {
 				$this->row('Last check', 'Never');
 			}
@@ -103,9 +103,9 @@ if ( !class_exists('Puc_v4_DebugBar_Panel', false) && class_exists('Debug_Bar_Pa
 			$nextCheck = wp_next_scheduled($this->updateChecker->scheduler->getCronHookName());
 			$this->row('Next automatic check', $this->formatTimeWithDelta($nextCheck));
 
-			if ( isset($state, $state->checkedVersion) ) {
-				$this->row('Checked version', htmlentities($state->checkedVersion));
-				$this->row('Cached update', $state->update);
+			if ( $state->getCheckedVersion() !== '' ) {
+				$this->row('Checked version', htmlentities($state->getCheckedVersion()));
+				$this->row('Cached update', $state->getUpdate());
 			}
 			$this->row('Update checker class', htmlentities(get_class($this->updateChecker)));
 			echo '</table>';

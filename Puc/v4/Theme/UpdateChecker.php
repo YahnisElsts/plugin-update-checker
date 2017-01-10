@@ -46,7 +46,7 @@ if ( !class_exists('Puc_v4_Theme_UpdateChecker', false) ):
 		/**
 		 * Retrieve the latest update (if any) from the configured API endpoint.
 		 *
-		 * @return Puc_v4_Update An instance of Update, or NULL when no updates are available.
+		 * @return Puc_v4_Update|null An instance of Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
 			list($themeUpdate, $result) = $this->requestMetadata('Puc_v4_Theme_Update', 'request_update');
