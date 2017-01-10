@@ -6,13 +6,13 @@ if ( !class_exists('Puc_v4_Utils', false) ):
 		/**
 		 * Get a value from a nested array or object based on a path.
 		 *
-		 * @param array|object|null $array Get an entry from this array.
+		 * @param array|object|null $collection Get an entry from this array.
 		 * @param array|string $path A list of array keys in hierarchy order, or a string path like "foo.bar.baz".
 		 * @param mixed $default The value to return if the specified path is not found.
 		 * @param string $separator Path element separator. Only applies to string paths.
 		 * @return mixed
 		 */
-		public static function get($array, $path, $default = null, $separator = '.') {
+		public static function get($collection, $path, $default = null, $separator = '.') {
 			if ( is_string($path) ) {
 				$path = explode($separator, $path);
 			}
@@ -21,7 +21,7 @@ if ( !class_exists('Puc_v4_Utils', false) ):
 			}
 
 			//Follow the $path into $input as far as possible.
-			$currentValue = $array;
+			$currentValue = $collection;
 			$pathExists = true;
 			foreach ($path as $node) {
 				if ( is_array($currentValue) && isset($currentValue[$node]) ) {
