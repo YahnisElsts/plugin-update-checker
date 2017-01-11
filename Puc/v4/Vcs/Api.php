@@ -98,7 +98,7 @@ if ( !class_exists('Puc_v4_Vcs_Api') ):
 			$name = ltrim($name, 'v');
 
 			//The version string must start with a number.
-			if ( !is_numeric($name) ) {
+			if ( !is_numeric(substr($name, 0, 1)) ) {
 				return false;
 			}
 
