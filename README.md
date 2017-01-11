@@ -5,8 +5,6 @@ This is a custom update checker library for WordPress plugins and themes. It let
 
 From the users' perspective, it works just like with plugins and themes hosted on WordPress.org. The update checker uses the default upgrade UI that is familiar to most WordPress users.
 
-[See this blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) for  more information.
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -215,6 +213,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 Resources
 ---------
 
+- [This blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) has more information about the update checker API. *Slightly out of date.*
 - [Debug Bar](https://wordpress.org/plugins/debug-bar/) - useful for testing and debugging the update checker.
 - [Securing download links](http://w-shadow.com/blog/2013/03/19/plugin-updates-securing-download-links/) - a general overview.
 - [A GUI for entering download credentials](http://open-tools.net/documentation/tutorial-automatic-updates.html#wordpress)
