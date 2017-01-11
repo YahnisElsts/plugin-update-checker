@@ -1,14 +1,16 @@
 <?php
 
+if ( !class_exists('PucReadmeParser', false) ):
+
 /**
  * This is a slightly modified version of github.com/markjaquith/WordPress-Plugin-Readme-Parser
  * It uses Parsedown instead of the "Markdown Extra" parser.
  */
 
-Class PucReadmeParser {
+class PucReadmeParser {
 
 	function __construct() {
-		// This space intentially blank
+		// This space intentionally blank
 	}
 
 	function parse_readme( $file ) {
@@ -238,6 +240,7 @@ Class PucReadmeParser {
 
 		if ( $markdown ) { // Parse markdown.
 			if ( !class_exists('Parsedown', false) ) {
+				/** @noinspection PhpIncludeInspection */
 				require_once(dirname(__FILE__) . '/Parsedown' . (version_compare(PHP_VERSION, '5.3.0', '>=') ? '' : 'Legacy') . '.php');
 			}
 			$instance = Parsedown::instance();
@@ -328,4 +331,4 @@ Class PucReadmeParser {
 
 } // end class
 
-Class Automattic_Readme extends PucReadmeParser {}
+endif;
