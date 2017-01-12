@@ -85,7 +85,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			$path = realpath(dirname(__FILE__) . '/../../languages');
 
 			if ($path && file_exists($path)) {
-				load_textdomain($domain, $path . '/ ' . $moFile);
+				load_textdomain($domain, $path . '/' . $moFile);
 			}
 		}
 
