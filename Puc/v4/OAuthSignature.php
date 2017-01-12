@@ -45,6 +45,7 @@ if ( !class_exists('Puc_v4_OAuthSignature', false) ):
 					'oauth_version' => '1.0',
 				)
 			);
+			unset($parameters['oauth_signature']);
 
 			//Parameters must be sorted alphabetically before signing.
 			ksort($parameters);
