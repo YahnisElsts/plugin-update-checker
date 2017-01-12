@@ -71,15 +71,27 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 			$this->upgraderStatus = new Puc_v4_UpgraderStatus();
 			$this->updateState = new Puc_v4_StateStore($this->optionName);
 
-			$this->loadTextDomain();
+			if ( did_action('init') ) {
+				$this->loadTextDomain();
+			} else {
+				add_action('init', array($this, 'loadTextDomain'));
+			}
+
 			$this->installHooks();
 		}
 
-		protected function loadTextDomain() {
+		/**
+		 * @internal
+		 */
+		public function loadTextDomain() {
 			//We're not using load_plugin_textdomain() or its siblings because figuring out where
 			//the library is located (plugin, mu-plugin, theme, custom wp-content paths) is messy.
 			$domain = 'plugin-update-checker';
-			$locale = apply_filters('plugin_locale', is_admin() ? get_user_locale() : get_locale(), $domain);
+			$locale = apply_filters(
+				'plugin_locale',
+				(is_admin() && function_exists('get_user_locale')) ? get_user_locale() : get_locale(),
+				$domain
+			);
 
 			$moFile = $domain . '-' . $locale . '.mo';
 			$path = realpath(dirname(__FILE__) . '/../../languages');
