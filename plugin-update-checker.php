@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Update Checker Library 4.0
+ * Plugin Update Checker Library 4.0.2
  * http://w-shadow.com/
  * 
  * Copyright 2017 Janis Elsts
