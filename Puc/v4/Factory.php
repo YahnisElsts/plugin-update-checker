@@ -39,16 +39,19 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 			$id = null;
 
 			//Plugin or theme?
-			if ( self::isPluginFile($fullPath) ) {
+			$themeDirectory = self::getThemeDirectoryName($fullPath);
+			if ( $themeDirectory !== null ) {
+				$type = 'Theme';
+				$id = $themeDirectory;
+			} else if ( self::isPluginFile($fullPath) ) {
 				$type = 'Plugin';
 				$id = $fullPath;
 			} else {
-				$type = 'Theme';
-
-				//Get the name of the theme's directory. E.g. "wp-content/themes/foo/whatever.php" => "foo".
-				$themeRoot = wp_normalize_path(get_theme_root());
-				$pathComponents = explode('/', substr($fullPath, strlen($themeRoot) + 1));
-				$id = $pathComponents[0];
+				throw new RuntimeException(sprintf(
+					'The update checker cannot determine if "%s" is a plugin or a theme. ' .
+					'This is a bug. Please contact the PUC developer.',
+					htmlentities($fullPath)
+				));
 			}
 
 			//Which hosting service does the URL point to?
@@ -107,15 +110,34 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		/**
 		 * Check if the path points to something inside the "plugins" or "mu-plugins" directories.
 		 *
-		 * @param string $absolutePath
+		 * @param string $absolutePath Normalized path.
 		 * @return bool
 		 */
 		protected static function isPluginFile($absolutePath) {
 			$pluginDir = wp_normalize_path(WP_PLUGIN_DIR);
 			$muPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
-			$absolutePath = wp_normalize_path($absolutePath);
 
 			return (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0);
+		}
+
+		/**
+		 * Get the name of the theme's directory from a full path to any theme file.
+		 * E.g. "/abc/public_html/wp-content/themes/foo/whatever.php" => "foo".
+		 *
+		 * @param string $absolutePath Normalized path.
+		 * @return string|null Directory name, or NULL if the path doesn't point to a theme.
+		 */
+		protected static function getThemeDirectoryName($absolutePath) {
+			$themeRoot = wp_normalize_path(get_theme_root());
+			if ( strpos($absolutePath, $themeRoot) !== 0 ) {
+				return null;
+			}
+
+			$pathComponents = explode('/', substr($absolutePath, strlen($themeRoot) + 1));
+			if ( !is_array($pathComponents) || !isset($pathComponents[0]) ) {
+				return null;
+			}
+			return $pathComponents[0];
 		}
 
 		/**
