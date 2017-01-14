@@ -108,16 +108,27 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		}
 
 		/**
-		 * Check if the path points to something inside the "plugins" or "mu-plugins" directories.
+		 * Check if the path points to a plugin file.
 		 *
 		 * @param string $absolutePath Normalized path.
 		 * @return bool
 		 */
 		protected static function isPluginFile($absolutePath) {
+			//Is the file inside the "plugins" or "mu-plugins" directory?
 			$pluginDir = wp_normalize_path(WP_PLUGIN_DIR);
 			$muPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
+			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
+				return true;
+			}
 
-			return (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0);
+			//Does it have a valid plugin header?
+			//This is a last-ditch check for plugins symlinked from outside the WP root.
+			if ( function_exists('get_file_data') ) {
+				$headers = get_file_data($absolutePath, array('Name' => 'Plugin Name'), 'plugin');
+				return !empty($headers['Name']);
+			}
+
+			return false;
 		}
 
 		/**
