@@ -269,6 +269,18 @@ if ( !class_exists('Puc_v4_Vcs_GitHubApi', false) ):
 
 			return $updateSource;
 		}
+
+		/**
+		 * @param string $url
+		 * @return string
+		 */
+		public function signDownloadUrl($url) {
+			if ( empty($this->credentials) ) {
+				return $url;
+			}
+			return add_query_arg('access_token', $this->credentials, $url);
+		}
+
 	}
 
 endif;
