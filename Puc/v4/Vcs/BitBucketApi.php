@@ -92,7 +92,7 @@ if ( !class_exists('Puc_v4_Vcs_BitBucketApi', false) ):
 		 * @return Puc_v4_Vcs_Reference|null
 		 */
 		public function getLatestTag() {
-			$tags = $this->api('/refs/tags');
+			$tags = $this->api('/refs/tags?sort=-target.date');
 			if ( !isset($tags, $tags->values) || !is_array($tags->values) ) {
 				return null;
 			}
