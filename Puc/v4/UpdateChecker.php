@@ -282,7 +282,7 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		/**
 		 * Get the currently installed version of the plugin or theme.
 		 *
-		 * @return string Version number.
+		 * @return string|null Version number.
 		 */
 		abstract public function getInstalledVersion();
 
@@ -433,8 +433,14 @@ if ( !class_exists('Puc_v4_UpdateChecker', false) ):
 		 */
 		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array()) {
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
-			$installedVersion = $this->getInstalledVersion();
-			$queryArgs['installed_version'] = ($installedVersion !== null) ? $installedVersion : '';
+			$queryArgs = array_merge(
+				array(
+					'installed_version' => strval($this->getInstalledVersion()),
+					'php' => phpversion(),
+					'locale' => get_locale(),
+				),
+				$queryArgs
+			);
 			$queryArgs = apply_filters($this->getUniqueName($filterRoot . '_query_args'), $queryArgs);
 
 			//Various options for the wp_remote_get() call. Plugins can filter these, too.
