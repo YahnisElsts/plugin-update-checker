@@ -40,12 +40,12 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 
 			//Plugin or theme?
 			$themeDirectory = self::getThemeDirectoryName($fullPath);
-			if ( $themeDirectory !== null ) {
-				$type = 'Theme';
-				$id = $themeDirectory;
-			} else if ( self::isPluginFile($fullPath) ) {
+			if ( self::isPluginFile($fullPath) ) {
 				$type = 'Plugin';
 				$id = $fullPath;
+			} else if ( $themeDirectory !== null ) {
+				$type = 'Theme';
+				$id = $themeDirectory;
 			} else {
 				throw new RuntimeException(sprintf(
 					'The update checker cannot determine if "%s" is a plugin or a theme. ' .
@@ -121,6 +121,11 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				return true;
 			}
 
+			//Is it a file at all? Caution: is_file() can fail if the parent dir. doesn't have the +x permission set.
+			if ( !is_file($absolutePath) ) {
+				return false;
+			}
+
 			//Does it have a valid plugin header?
 			//This is a last-ditch check for plugins symlinked from outside the WP root.
 			if ( function_exists('get_file_data') ) {
@@ -132,27 +137,24 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		}
 
 		/**
-		 * Get the name of the theme's directory from a full path to any theme file.
+		 * Get the name of the theme's directory from a full path to a file inside that directory.
 		 * E.g. "/abc/public_html/wp-content/themes/foo/whatever.php" => "foo".
+		 *
+		 * Note that subdirectories are currently not supported. For example,
+		 * "/xyz/wp-content/themes/my-theme/includes/whatever.php" => NULL.
 		 *
 		 * @param string $absolutePath Normalized path.
 		 * @return string|null Directory name, or NULL if the path doesn't point to a theme.
 		 */
 		protected static function getThemeDirectoryName($absolutePath) {
-			//TODO: There can be multiple theme roots and a user reports that sometimes get_theme_root() can
-			//return an empty string. Instead of dealing with that mess, consider simply looking for a style.css
-			//file in the same directory as $absolutePath. Put it at lower priority than the plugin check
-			//since it's not reliable.
-			$themeRoot = wp_normalize_path(get_theme_root());
-			if ( strpos($absolutePath, $themeRoot) !== 0 ) {
-				return null;
+			if ( is_file($absolutePath) ) {
+				$absolutePath = dirname($absolutePath);
 			}
 
-			$pathComponents = explode('/', substr($absolutePath, strlen($themeRoot) + 1));
-			if ( !is_array($pathComponents) || !isset($pathComponents[0]) ) {
-				return null;
+			if ( file_exists($absolutePath . '/style.css') ) {
+				return basename($absolutePath);
 			}
-			return $pathComponents[0];
+			return null;
 		}
 
 		/**
