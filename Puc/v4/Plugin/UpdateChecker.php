@@ -402,9 +402,9 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 				$status = strval($_GET['puc_update_check_result']);
 				$title  = $this->getPluginTitle();
 				if ( $status == 'no_update' ) {
-					$message = sprintf( _x('The %s plugin is up to date.', 'the plugin title', 'plugin-update-checker'), $title );
+					$message = sprintf(_x('The %s plugin is up to date.', 'the plugin title', 'plugin-update-checker'), $title);
 				} else if ( $status == 'update_available' ) {
-					$message = sprintf( _x('A new version of the %s plugin is available.', 'the plugin title', 'plugin-update-checker'), $title );
+					$message = sprintf(_x('A new version of the %s plugin is available.', 'the plugin title', 'plugin-update-checker'), $title);
 				} else {
 					$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
 				}
@@ -423,8 +423,8 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		protected function getPluginTitle() {
 			$title  = '';
 			$header = $this->getPluginHeader();
-			if ( $header && ! empty( $header['Name'] ) && isset( $header['TextDomain'] ) ) {
-				$title = translate( $header['Name'], $header['TextDomain'] );
+			if ( $header && !empty($header['Name']) && isset($header['TextDomain']) ) {
+				$title = translate($header['Name'], $header['TextDomain']);
 			}
 			return $title;
 		}
