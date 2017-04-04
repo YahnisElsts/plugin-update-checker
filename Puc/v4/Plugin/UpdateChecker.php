@@ -400,10 +400,11 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 		public function displayManualCheckResult() {
 			if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->slug) ) {
 				$status = strval($_GET['puc_update_check_result']);
+				$title  = $this->getPluginTitle();
 				if ( $status == 'no_update' ) {
-					$message = __('This plugin is up to date.', 'plugin-update-checker');
+					$message = sprintf( _x('The %s plugin is up to date.', 'the plugin title', 'plugin-update-checker'), $title );
 				} else if ( $status == 'update_available' ) {
-					$message = __('A new version of this plugin is available.', 'plugin-update-checker');
+					$message = sprintf( _x('A new version of the %s plugin is available.', 'the plugin title', 'plugin-update-checker'), $title );
 				} else {
 					$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
 				}
@@ -412,6 +413,20 @@ if ( !class_exists('Puc_v4_Plugin_UpdateChecker', false) ):
 					apply_filters($this->getUniqueName('manual_check_message'), $message, $status)
 				);
 			}
+		}
+
+		/**
+		 * Get the translated plugin title.
+		 *
+		 * @return string
+		 */
+		protected function getPluginTitle() {
+			$title  = '';
+			$header = $this->getPluginHeader();
+			if ( $header && ! empty( $header['Name'] ) && isset( $header['TextDomain'] ) ) {
+				$title = translate( $header['Name'], $header['TextDomain'] );
+			}
+			return $title;
 		}
 
 		/**
