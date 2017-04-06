@@ -1,10 +1,10 @@
 <?php
-if ( !class_exists('Puc_v4_DebugBar_Extension', false) ):
+if ( !class_exists('Puc_v4p1_DebugBar_Extension', false) ):
 
-	class Puc_v4_DebugBar_Extension {
-		/** @var Puc_v4_UpdateChecker */
+	class Puc_v4p1_DebugBar_Extension {
+		/** @var Puc_v4p1_UpdateChecker */
 		protected $updateChecker;
-		protected $panelClass = 'Puc_v4_DebugBar_Panel';
+		protected $panelClass = 'Puc_v4p1_DebugBar_Panel';
 
 		public function __construct($updateChecker, $panelClass = null) {
 			$this->updateChecker = $updateChecker;
