@@ -50,6 +50,7 @@ if ( !class_exists('Puc_v4p1_Vcs_GitHubApi', false) ):
 				'version' => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
 				'downloadUrl' => $this->signDownloadUrl($release->zipball_url),
 				'updated' => $release->created_at,
+				'apiResponse' => $release,
 			));
 
 			if ( !empty($release->body) ) {
@@ -85,6 +86,7 @@ if ( !class_exists('Puc_v4p1_Vcs_GitHubApi', false) ):
 				'name' => $tag->name,
 				'version' => ltrim($tag->name, 'v'),
 				'downloadUrl' => $this->signDownloadUrl($tag->zipball_url),
+				'apiResponse' => $tag,
 			));
 		}
 
@@ -103,6 +105,7 @@ if ( !class_exists('Puc_v4p1_Vcs_GitHubApi', false) ):
 			$reference = new Puc_v4p1_Vcs_Reference(array(
 				'name' => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
+				'apiResponse' => $branch,
 			));
 
 			if ( isset($branch->commit, $branch->commit->commit, $branch->commit->commit->author->date) ) {
