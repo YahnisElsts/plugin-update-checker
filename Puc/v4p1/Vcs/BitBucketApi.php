@@ -186,8 +186,6 @@ if ( !class_exists('Puc_v4p1_Vcs_BitBucketApi', false) ):
 		 * @return mixed|WP_Error
 		 */
 		public function api($url, $version = '2.0') {
-			//printf('Requesting %s<br>' . "\n", $url);
-
 			$url = implode('/', array(
 				'https://api.bitbucket.org',
 				$version,
