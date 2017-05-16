@@ -11,7 +11,7 @@ if ( !class_exists('Puc_v4p1_DebugBar_Panel', false) && class_exists('Debug_Bar_
 		public function __construct($updateChecker) {
 			$this->updateChecker = $updateChecker;
 			$title = sprintf(
-				'<span id="puc-debug-menu-link-%s">PUC (%s)</span>',
+				'<span class="puc-debug-menu-link-%s">PUC (%s)</span>',
 				esc_attr($this->updateChecker->getUniqueName('uid')),
 				$this->updateChecker->slug
 			);
