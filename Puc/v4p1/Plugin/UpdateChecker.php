@@ -361,7 +361,7 @@ if ( !class_exists('Puc_v4p1_Plugin_UpdateChecker', false) ):
 
 				if ( !empty($linkText) && !$this->getUpdate() ) {
 					/** @noinspection HtmlUnknownTarget */
-					$pluginMeta[] = sprintf('<a href="%s" class="thickbox open-plugin-details-modal">%s</a>', esc_attr($linkUrl), $linkText);
+					$pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal">%s</a>', esc_attr($linkUrl), $linkText );
 				}
 			}
 			return $pluginMeta;

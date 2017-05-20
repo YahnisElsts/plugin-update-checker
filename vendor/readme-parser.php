@@ -127,12 +127,6 @@ class PucReadmeParser {
 			$title         = $this->sanitize_text( $_sections[$i-1] );
 			$sectionSlug   = str_replace(' ', '_', strtolower($title));
 
-			// Alias for section if search "[ALIAS]"
-			if( preg_match( "/([^]]+)\s*\[([^]]+)\]/i", $title, $titleNickname ) ) {
-				$title       = trim( $titleNickname[2] );
-				$sectionSlug = str_replace(' ', '_', strtolower( trim( $titleNickname[1] ) ) );
-			}
-
 			$sections[ $sectionSlug ] = array('title' => $title, 'content' => $_sections[$i]);
 		}
 
