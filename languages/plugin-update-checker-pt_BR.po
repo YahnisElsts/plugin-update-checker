@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: plugin-update-checker\n"
-"POT-Creation-Date: 2017-05-19 15:41-0300\n"
-"PO-Revision-Date: 2017-05-19 15:42-0300\n"
+"POT-Creation-Date: 2017-05-20 18:28-0300\n"
+"PO-Revision-Date: 2017-05-20 18:28-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pt_BR\n"
@@ -16,23 +16,28 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e;_x;_x:1,2c\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: Puc/v4p1/Plugin/UpdateChecker.php:358
+#: Puc/v4p1/Plugin/UpdateChecker.php:359
+msgctxt "the plugin row meta"
+msgid "Show details"
+msgstr "Ver detalhes"
+
+#: Puc/v4p1/Plugin/UpdateChecker.php:399
 msgid "Check for updates"
 msgstr "Verificar Atualizações"
 
-#: Puc/v4p1/Plugin/UpdateChecker.php:401 Puc/v4p1/Plugin/UpdateChecker.php:406
+#: Puc/v4p1/Plugin/UpdateChecker.php:446
 #, php-format
 msgctxt "the plugin title"
 msgid "The %s plugin is up to date."
 msgstr "O plugin %s já está na sua versão mais recente."
 
-#: Puc/v4p1/Plugin/UpdateChecker.php:408
+#: Puc/v4p1/Plugin/UpdateChecker.php:448
 #, php-format
 msgctxt "the plugin title"
 msgid "A new version of the %s plugin is available."
 msgstr "Há uma nova versão para o plugin %s disponível para download."
 
-#: Puc/v4p1/Plugin/UpdateChecker.php:410
+#: Puc/v4p1/Plugin/UpdateChecker.php:450
 #, php-format
 msgid "Unknown update checker status \"%s\""
 msgstr "Status \"%s\" desconhecido."

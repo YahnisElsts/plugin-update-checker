@@ -124,24 +124,31 @@ class PucReadmeParser {
 		for ( $i=1; $i <= count($_sections); $i +=2 ) {
 			$_sections[$i] = preg_replace('/(^[\s]*)=[\s]+(.+?)[\s]+=/m', '$1<h4>$2</h4>', $_sections[$i]);
 			$_sections[$i] = $this->filter_text( $_sections[$i], true );
-			$title = $this->sanitize_text( $_sections[$i-1] );
-			$sections[str_replace(' ', '_', strtolower($title))] = array('title' => $title, 'content' => $_sections[$i]);
-		}
+			$title         = $this->sanitize_text( $_sections[$i-1] );
+			$sectionSlug   = str_replace(' ', '_', strtolower($title));
 
+			// Alias for section if search "[ALIAS]"
+			if( preg_match( "/([^]]+)\s*\[([^]]+)\]/i", $title, $titleNickname ) ) {
+				$title       = trim( $titleNickname[2] );
+				$sectionSlug = str_replace(' ', '_', strtolower( trim( $title ) ) );
+			}
+
+			$sections[ $sectionSlug ] = array('title' => $title, 'content' => $_sections[$i]);
+		}
 
 		// Special sections
 		// This is where we nab our special sections, so we can enforce their order and treat them differently, if needed
 		// upgrade_notice is not a section, but parse it like it is for now
 		$final_sections = array();
-		foreach ( array('description', 'installation', 'frequently_asked_questions', 'screenshots', 'changelog', 'change_log', 'upgrade_notice') as $special_section ) {
+		foreach ( apply_filters('puc_readme_section_allowed', array('description', 'installation', 'frequently_asked_questions', 'faq', 'screenshots', 'changelog', 'change_log', 'upgrade_notice')) as $special_section ) {
 			if ( isset($sections[$special_section]) ) {
 				$final_sections[$special_section] = $sections[$special_section]['content'];
 				unset($sections[$special_section]);
 			}
 		}
+		
 		if ( isset($final_sections['change_log']) && empty($final_sections['changelog']) )
 			$final_sections['changelog'] = $final_sections['change_log'];
-
 
 		$final_screenshots = array();
 		if ( isset($final_sections['screenshots']) ) {
@@ -179,7 +186,6 @@ class PucReadmeParser {
 			$remaining_content .= "\n<h3>{$s_data['title']}</h3>\n{$s_data['content']}";
 		}
 		$remaining_content = trim($remaining_content);
-
 
 		// All done!
 		// $r['tags'] and $r['contributors'] are simple arrays

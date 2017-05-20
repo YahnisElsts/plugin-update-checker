@@ -82,6 +82,7 @@ if ( !class_exists('Puc_v4p1_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
+			add_filter('plugin_row_meta', array($this, 'addDetailsUpdatesLink'), 10, 2);
 			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 			add_action('admin_init', array($this, 'handleManualCheck'));
 			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -327,8 +328,48 @@ if ( !class_exists('Puc_v4p1_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
-		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
+		 * Add a "Show details" link to the plugin row in the "Plugins" page. By default,
 		 * the new link will appear after the "Visit plugin site" link.
+		 *
+		 * You can change the link text by using the "puc_manual_details_link-$slug" filter.
+		 * Returning an empty string from the filter will disable the link.
+		 *
+		 * @param array $pluginMeta Array of meta links.
+		 * @param string $pluginFile
+		 * @return array
+		 */
+		public function addDetailsUpdatesLink($pluginMeta, $pluginFile) {
+			$isRelevant = ($pluginFile == $this->pluginFile)
+				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
+
+			if ( $isRelevant && $this->userCanInstallUpdates() ) {
+				$linkUrl = add_query_arg(
+					array(
+						'tab'       => 'plugin-information',
+						'plugin'    => $this->slug,
+						'TB_iframe' => 'true',
+						'width'     => 850,
+						'height'    => 620
+					),
+					admin_url('plugin-install.php')
+				);
+
+				$linkText = apply_filters(
+					$this->getUniqueName('manual_details_link'),
+					_x( 'Show details', 'the plugin row meta', 'plugin-update-checker' )
+				);
+
+				if ( !empty($linkText) && !$this->getUpdate() ) {
+					/** @noinspection HtmlUnknownTarget */
+					$pluginMeta[] = sprintf('<a href="%s" class="thickbox open-plugin-details-modal">%s</a>', esc_attr($linkUrl), $linkText);
+				}
+			}
+			return $pluginMeta;
+		}
+
+		/**
+		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
+		 * the new link will appear after the "Show details" link.
 		 *
 		 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
