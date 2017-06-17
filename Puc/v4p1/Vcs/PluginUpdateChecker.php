@@ -32,7 +32,9 @@ if ( !class_exists('Puc_v4p1_Vcs_PluginUpdateChecker') ):
 		public function requestInfo($unusedParameter = null) {
 			//We have to make several remote API requests to gather all the necessary info
 			//which can take a while on slow networks.
-			set_time_limit(60);
+			if ( function_exists('set_time_limit') ) {
+				@set_time_limit(60);
+			}
 
 			$api = $this->api;
 
