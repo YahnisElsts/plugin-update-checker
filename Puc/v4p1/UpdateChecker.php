@@ -460,6 +460,8 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 
 			$result = wp_remote_get($url, $options);
 
+			$result = apply_filters($this->getUniqueName('http_result'), $result, $url, $options);
+			
 			//Try to parse the response
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
