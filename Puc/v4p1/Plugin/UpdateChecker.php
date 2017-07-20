@@ -125,7 +125,7 @@ if ( !class_exists('Puc_v4p1_Plugin_UpdateChecker', false) ):
 			//For the sake of simplicity, this function just calls requestInfo()
 			//and transforms the result accordingly.
 			$pluginInfo = $this->requestInfo(array('checking_for_updates' => '1'));
-			if ( $pluginInfo == null ){
+			if ( $pluginInfo === null ){
 				return null;
 			}
 			$update = Puc_v4p1_Plugin_Update::fromPluginInfo($pluginInfo);

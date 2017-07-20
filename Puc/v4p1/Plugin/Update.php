@@ -30,7 +30,7 @@ if ( !class_exists('Puc_v4p1_Plugin_Update', false) ):
 			//we can parse the update JSON as if it was a plugin info string, then copy over
 			//the parts that we care about.
 			$pluginInfo = Puc_v4p1_Plugin_Info::fromJson($json);
-			if ( $pluginInfo != null ) {
+			if ( $pluginInfo !== null ) {
 				return self::fromPluginInfo($pluginInfo);
 			} else {
 				return null;
