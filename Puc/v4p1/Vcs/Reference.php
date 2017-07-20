@@ -24,7 +24,7 @@ if ( !class_exists('Puc_v4p1_Vcs_Reference', false) ):
 		 * @param string $name
 		 * @return mixed|null
 		 */
-		function __get($name) {
+		public function __get($name) {
 			return array_key_exists($name, $this->properties) ? $this->properties[$name] : null;
 		}
 
@@ -32,7 +32,7 @@ if ( !class_exists('Puc_v4p1_Vcs_Reference', false) ):
 		 * @param string $name
 		 * @param mixed $value
 		 */
-		function __set($name, $value) {
+		public function __set($name, $value) {
 			$this->properties[$name] = $value;
 		}
 
@@ -40,7 +40,7 @@ if ( !class_exists('Puc_v4p1_Vcs_Reference', false) ):
 		 * @param string $name
 		 * @return bool
 		 */
-		function __isset($name) {
+		public function __isset($name) {
 			return isset($this->properties[$name]);
 		}
 
