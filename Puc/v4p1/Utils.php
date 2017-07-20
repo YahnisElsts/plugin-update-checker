@@ -16,28 +16,20 @@ if ( !class_exists('Puc_v4p1_Utils', false) ):
 			if ( is_string($path) ) {
 				$path = explode($separator, $path);
 			}
-			if ( empty($path) ) {
-				return $default;
-			}
 
 			//Follow the $path into $input as far as possible.
 			$currentValue = $collection;
-			$pathExists = true;
 			foreach ($path as $node) {
 				if ( is_array($currentValue) && isset($currentValue[$node]) ) {
 					$currentValue = $currentValue[$node];
 				} else if ( is_object($currentValue) && isset($currentValue->$node) ) {
 					$currentValue = $currentValue->$node;
 				} else {
-					$pathExists = false;
-					break;
+					return $default;
 				}
 			}
 
-			if ( $pathExists ) {
-				return $currentValue;
-			}
-			return $default;
+			return $currentValue;
 		}
 
 		/**
