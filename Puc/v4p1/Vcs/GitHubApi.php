@@ -158,21 +158,7 @@ if ( !class_exists('Puc_v4p1_Vcs_GitHubApi', false) ):
 		 * @return mixed|WP_Error
 		 */
 		protected function api($url, $queryParams = array()) {
-			$variables = array(
-				'user' => $this->userName,
-				'repo' => $this->repositoryName,
-			);
-			foreach ($variables as $name => $value) {
-				$url = str_replace('/:' . $name, '/' . urlencode($value), $url);
-			}
-			$url = 'https://api.github.com' . $url;
-
-			if ( !empty($this->accessToken) ) {
-				$queryParams['access_token'] = $this->accessToken;
-			}
-			if ( !empty($queryParams) ) {
-				$url = add_query_arg($queryParams, $url);
-			}
+			$url = $this->buildApiUrl($url, $queryParams);
 
 			$options = array('timeout' => 10);
 			if ( !empty($this->httpFilterName) ) {
@@ -194,6 +180,33 @@ if ( !class_exists('Puc_v4p1_Vcs_GitHubApi', false) ):
 				'puc-github-http-error',
 				'GitHub API error. HTTP status: ' . $code
 			);
+		}
+
+		/**
+		 * Build a fully qualified URL for an API request.
+		 *
+		 * @param string $url
+		 * @param array $queryParams
+		 * @return string
+		 */
+		protected function buildApiUrl($url, $queryParams) {
+			$variables = array(
+				'user' => $this->userName,
+				'repo' => $this->repositoryName,
+			);
+			foreach ($variables as $name => $value) {
+				$url = str_replace('/:' . $name, '/' . urlencode($value), $url);
+			}
+			$url = 'https://api.github.com' . $url;
+
+			if ( !empty($this->accessToken) ) {
+				$queryParams['access_token'] = $this->accessToken;
+			}
+			if ( !empty($queryParams) ) {
+				$url = add_query_arg($queryParams, $url);
+			}
+
+			return $url;
 		}
 
 		/**
