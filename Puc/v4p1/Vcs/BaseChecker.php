@@ -1,7 +1,7 @@
 <?php
-if ( !interface_exists('Puc_v4p1_Vcs_BaseChecker', false) ):
+if ( !interface_exists('Puc_v4p2_Vcs_BaseChecker', false) ):
 
-	interface Puc_v4p1_Vcs_BaseChecker {
+	interface Puc_v4p2_Vcs_BaseChecker {
 		/**
 		 * Set the repository branch to use for updates. Defaults to 'master'.
 		 *

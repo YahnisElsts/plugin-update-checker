@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
+if ( !class_exists('Puc_v4p2_UpdateChecker', false) ):
 
-	abstract class Puc_v4p1_UpdateChecker {
+	abstract class Puc_v4p2_UpdateChecker {
 		protected $filterSuffix = '';
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
@@ -36,17 +36,17 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		public $slug = '';
 
 		/**
-		 * @var Puc_v4p1_Scheduler
+		 * @var Puc_v4p2_Scheduler
 		 */
 		public $scheduler;
 
 		/**
-		 * @var Puc_v4p1_UpgraderStatus
+		 * @var Puc_v4p2_UpgraderStatus
 		 */
 		protected $upgraderStatus;
 
 		/**
-		 * @var Puc_v4p1_StateStore
+		 * @var Puc_v4p2_StateStore
 		 */
 		protected $updateState;
 
@@ -68,8 +68,8 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 			}
 
 			$this->scheduler = $this->createScheduler($checkPeriod);
-			$this->upgraderStatus = new Puc_v4p1_UpgraderStatus();
-			$this->updateState = new Puc_v4p1_StateStore($this->optionName);
+			$this->upgraderStatus = new Puc_v4p2_UpgraderStatus();
+			$this->updateState = new Puc_v4p2_StateStore($this->optionName);
 
 			if ( did_action('init') ) {
 				$this->loadTextDomain();
@@ -176,14 +176,14 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		 * and substitute their own scheduler.
 		 *
 		 * @param int $checkPeriod
-		 * @return Puc_v4p1_Scheduler
+		 * @return Puc_v4p2_Scheduler
 		 */
 		abstract protected function createScheduler($checkPeriod);
 
 		/**
 		 * Check for updates. The results are stored in the DB option specified in $optionName.
 		 *
-		 * @return Puc_v4p1_Update|null
+		 * @return Puc_v4p2_Update|null
 		 */
 		public function checkForUpdates() {
 			$installedVersion = $this->getInstalledVersion();
@@ -210,7 +210,7 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		/**
 		 * Load the update checker state from the DB.
 		 *
-		 * @return Puc_v4p1_StateStore
+		 * @return Puc_v4p2_StateStore
 		 */
 		public function getUpdateState() {
 			return $this->updateState->lazyLoad();
@@ -235,7 +235,7 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		 * Uses cached update data. To retrieve update information straight from
 		 * the metadata URL, call requestUpdate() instead.
 		 *
-		 * @return Puc_v4p1_Update|null
+		 * @return Puc_v4p2_Update|null
 		 */
 		public function getUpdate() {
 			$update = $this->updateState->getUpdate();
@@ -256,16 +256,16 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		 *
 		 * Subclasses should run the update through filterUpdateResult before returning it.
 		 *
-		 * @return Puc_v4p1_Update An instance of Update, or NULL when no updates are available.
+		 * @return Puc_v4p2_Update An instance of Update, or NULL when no updates are available.
 		 */
 		abstract public function requestUpdate();
 
 		/**
 		 * Filter the result of a requestUpdate() call.
 		 *
-		 * @param Puc_v4p1_Update|null $update
+		 * @param Puc_v4p2_Update|null $update
 		 * @param array|WP_Error|null $httpResult The value returned by wp_remote_get(), if any.
-		 * @return Puc_v4p1_Update
+		 * @return Puc_v4p2_Update
 		 */
 		protected function filterUpdateResult($update, $httpResult = null) {
 			//Let plugins/themes modify the update.
@@ -429,7 +429,7 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		 * @param string $metaClass Parse the JSON as an instance of this class. It must have a static fromJson method.
 		 * @param string $filterRoot
 		 * @param array $queryArgs Additional query arguments.
-		 * @return array [Puc_v4p1_Metadata|null, array|WP_Error] A metadata instance and the value returned by wp_remote_get().
+		 * @return array [Puc_v4p2_Metadata|null, array|WP_Error] A metadata instance and the value returned by wp_remote_get().
 		 */
 		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array()) {
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
@@ -810,13 +810,13 @@ if ( !class_exists('Puc_v4p1_UpdateChecker', false) ):
 		}
 
 		protected function createDebugBarExtension() {
-			return new Puc_v4p1_DebugBar_Extension($this);
+			return new Puc_v4p2_DebugBar_Extension($this);
 		}
 
 		/**
 		 * Display additional configuration details in the Debug Bar panel.
 		 *
-		 * @param Puc_v4p1_DebugBar_Panel $panel
+		 * @param Puc_v4p2_DebugBar_Panel $panel
 		 */
 		public function onDisplayConfiguration($panel) {
 			//Do nothing. Subclasses can use this to add additional info to the panel.

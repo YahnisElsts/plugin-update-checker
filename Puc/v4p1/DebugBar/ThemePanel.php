@@ -1,10 +1,10 @@
 <?php
 
-if ( !class_exists('Puc_v4p1_DebugBar_ThemePanel', false) ):
+if ( !class_exists('Puc_v4p2_DebugBar_ThemePanel', false) ):
 
-	class Puc_v4p1_DebugBar_ThemePanel extends Puc_v4p1_DebugBar_Panel {
+	class Puc_v4p2_DebugBar_ThemePanel extends Puc_v4p2_DebugBar_Panel {
 		/**
-		 * @var Puc_v4p1_Theme_UpdateChecker
+		 * @var Puc_v4p2_Theme_UpdateChecker
 		 */
 		protected $updateChecker;
 

@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4p1_UpgraderStatus', false) ):
+if ( !class_exists('Puc_v4p2_UpgraderStatus', false) ):
 
 	/**
 	 * A utility class that helps figure out which plugin or theme WordPress is upgrading.
@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4p1_UpgraderStatus', false) ):
 	 * Core classes like Plugin_Upgrader don't expose the plugin file name during an in-progress update (AFAICT).
 	 * This class uses a few workarounds and heuristics to get the file name.
 	 */
-	class Puc_v4p1_UpgraderStatus {
+	class Puc_v4p2_UpgraderStatus {
 		private $currentType = null; //"plugin" or "theme".
 		private $currentId = null;   //Plugin basename or theme directory name.
 
