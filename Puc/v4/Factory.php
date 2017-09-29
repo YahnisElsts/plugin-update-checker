@@ -179,11 +179,11 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				);
 				if ( isset($knownServices[$host]) ) {
 					$service = $knownServices[$host];
-        }
-        // support self-hosted gitlab
-        else if ( strpos( $host, 'gitlab' ) !== FALSE ) {
-          $service = 'GitLab';
-        }
+				}
+				// support self-hosted gitlab
+				else if ( strpos( $host, 'gitlab' ) !== FALSE ) {
+					$service = 'GitLab';
+				}
       }
       
 			return $service;
