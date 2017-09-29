@@ -79,8 +79,8 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 					E_USER_ERROR
 				);
 				return null;
-			}
-
+      }
+      
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
@@ -179,9 +179,13 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				);
 				if ( isset($knownServices[$host]) ) {
 					$service = $knownServices[$host];
-				}
-			}
-
+        }
+        // support self-hosted gitlab
+        else if ( strpos( $host, 'gitlab' ) !== FALSE ) {
+          $service = 'GitLab';
+        }
+      }
+      
 			return $service;
 		}
 
