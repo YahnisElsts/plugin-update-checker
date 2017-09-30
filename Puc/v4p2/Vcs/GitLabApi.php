@@ -179,7 +179,7 @@ if ( ! class_exists( 'Puc_v4p2_Vcs_GitLabApi', false ) ) :
 			}
 
 			$url = substr( $url, 3 );
-			$url = sprintf( 'https://%s/api/v4/projects/%s', $this->repositoryHost, $url );
+			$url = sprintf( 'https://%1$s/api/v4/projects/%2$s', $this->repositoryHost, $url );
 
 			if ( $this->accessToken ) {
 				$queryParams['private_token'] = $this->accessToken;
