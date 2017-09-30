@@ -37,8 +37,24 @@ if ( ! class_exists( 'Puc_v4p2_Vcs_GitLabApi', false ) ) :
 			if ( preg_match( '@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches ) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
-			} else {
-				throw new InvalidArgumentException( 'Invalid GitLab repository URL: "' . $repositoryUrl . '"' );
+			}
+			// this is not a traditional url, it could be gitlab is in a deeper subdirectory
+			else {
+				// get the path segments
+				$segments = explode( '/', untrailingslashit( ltrim( $path, '/' ) ) );
+
+				// we need atleast /user-name/repository-name/
+				if ( sizeof ( $segments ) < 2 ) {
+					throw new InvalidArgumentException( 'Invalid GitLab repository URL: "' . $repositoryUrl . '"' );
+				}
+
+				// get the username and repository name
+				$usernameRepo = array_splice( $segments, -2, 2 );
+				$this->userName = $usernameRepo[0];
+				$this->repositoryName = $usernameRepo[1];
+
+				// append the remaining segments to the host
+				$this->repositoryHost = trailingslashit( $this->repositoryHost ) . implode( '/', $segments );
 			}
 
 			parent::__construct( $repositoryUrl, $accessToken );
