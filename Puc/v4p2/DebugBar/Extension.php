@@ -94,7 +94,7 @@ if ( !class_exists('Puc_v4p2_DebugBar_Extension', false) ):
 
 			$pluginDir = Puc_v4_Factory::normalizePath(WP_PLUGIN_DIR);
 			$muPluginDir = Puc_v4_Factory::normalizePath(WPMU_PLUGIN_DIR);
-			$themeDir = Puc_v4_Factory(get_theme_root());
+			$themeDir = Puc_v4_Factory::normalizePath(get_theme_root());
 
 			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
 				//It's part of a plugin.
