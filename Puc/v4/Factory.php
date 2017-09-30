@@ -116,7 +116,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 * @param string $path Path to normalize.
 		 * @return string Normalized path.
 		 */
-		protected static function normalizePath($path) {
+		public static function normalizePath($path) {
 			if ( function_exists('wp_normalize_path') ) {
 				return wp_normalize_path($path);
 			}
