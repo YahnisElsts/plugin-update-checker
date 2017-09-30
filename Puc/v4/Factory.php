@@ -181,11 +181,6 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 					$service = $knownServices[$host];
 				}
 			}
-
-			// not self-hosted (.json) and the service host is still unknown, this looks like a custom GitLab server
-			if ( ! isset( $service ) && strpos( $path, '.json' ) === FALSE ) {
-				$service = 'GitLab';
-			}
       
 			return $service;
 		}

@@ -120,17 +120,6 @@ if ( ! class_exists( 'Puc_v4p2_Vcs_GitLabApi', false ) ) :
 		}
 
 		/**
-		 * Get the latest commit that changed the specified file.
-		 *
-		 * @param string $filename
-		 * @param string $ref Reference name (e.g. branch or tag).
-		 * @return StdClass|null
-		 */
-		public function getLatestCommit( $filename, $ref = 'master' ) {
-			throw new LogicException( 'The ' . __METHOD__ . ' method is not implemented and should not be used.' );
-		}
-
-		/**
 		 * Get the timestamp of the latest commit that changed the specified branch or tag.
 		 *
 		 * @param string $ref Reference name (e.g. branch or tag).
