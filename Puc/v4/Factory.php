@@ -79,7 +79,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 					E_USER_ERROR
 				);
 				return null;
-      }
+			}
       
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
@@ -180,11 +180,11 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				if ( isset($knownServices[$host]) ) {
 					$service = $knownServices[$host];
 				}
-				// support self-hosted gitlab
+				// support gitlab subdomain for self hosting (e.g. https://gitlab.x.tld)
 				else if ( strpos( $host, 'gitlab' ) !== FALSE ) {
 					$service = 'GitLab';
 				}
-      }
+			}
       
 			return $service;
 		}
