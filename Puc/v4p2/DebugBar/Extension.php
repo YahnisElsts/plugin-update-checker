@@ -90,11 +90,11 @@ if ( !class_exists('Puc_v4p2_DebugBar_Extension', false) ):
 			$absolutePath = realpath(dirname(__FILE__) . '/../../../' . ltrim($filePath, '/'));
 
 			//Where is the library located inside the WordPress directory structure?
-			$absolutePath = wp_normalize_path($absolutePath);
+			$absolutePath = Puc_v4_Factory::normalizePath($absolutePath);
 
-			$pluginDir = wp_normalize_path(WP_PLUGIN_DIR);
-			$muPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
-			$themeDir = wp_normalize_path(get_theme_root());
+			$pluginDir = Puc_v4_Factory::normalizePath(WP_PLUGIN_DIR);
+			$muPluginDir = Puc_v4_Factory::normalizePath(WPMU_PLUGIN_DIR);
+			$themeDir = Puc_v4_Factory::normalizePath(get_theme_root());
 
 			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
 				//It's part of a plugin.

@@ -35,7 +35,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 * @return Puc_v4p2_Plugin_UpdateChecker|Puc_v4p2_Theme_UpdateChecker|Puc_v4p2_Vcs_BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
-			$fullPath = wp_normalize_path($fullPath);
+			$fullPath = self::normalizePath($fullPath);
 			$id = null;
 
 			//Plugin or theme?
@@ -108,6 +108,27 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		}
 
 		/**
+		 *
+		 * Normalize a filesystem path. Introduced in WP 3.9.
+		 * Copying here allows use of the class on earlier versions.
+		 * This version adapted from WP 4.8.2 (unchanged since 4.5.0)
+		 *
+		 * @param string $path Path to normalize.
+		 * @return string Normalized path.
+		 */
+		public static function normalizePath($path) {
+			if ( function_exists('wp_normalize_path') ) {
+				return wp_normalize_path($path);
+			}
+			$path = str_replace('\\', '/', $path);
+			$path = preg_replace('|(?<=.)/+|', '/', $path);
+			if ( substr($path, 1, 1) === ':' ) {
+				$path = ucfirst($path);
+			}
+			return $path;
+		}
+		
+		/**
 		 * Check if the path points to a plugin file.
 		 *
 		 * @param string $absolutePath Normalized path.
@@ -115,8 +136,8 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 */
 		protected static function isPluginFile($absolutePath) {
 			//Is the file inside the "plugins" or "mu-plugins" directory?
-			$pluginDir = wp_normalize_path(WP_PLUGIN_DIR);
-			$muPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
+			$pluginDir = self::normalizePath(WP_PLUGIN_DIR);
+			$muPluginDir = self::normalizePath(WPMU_PLUGIN_DIR);
 			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
 				return true;
 			}
