@@ -80,7 +80,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 				);
 				return null;
 			}
-
+      
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
@@ -202,7 +202,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 					$service = $knownServices[$host];
 				}
 			}
-
+      
 			return $service;
 		}
 
