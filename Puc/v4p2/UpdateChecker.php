@@ -133,6 +133,24 @@ if ( !class_exists('Puc_v4p2_UpdateChecker', false) ):
 		}
 
 		/**
+		 * Remove hooks that were added by this update checker instance.
+		 */
+		protected function removeHooks() {
+			remove_filter('site_transient_' . $this->updateTransient, array($this,'injectUpdate'));
+			remove_filter('site_transient_' . $this->updateTransient, array($this, 'injectTranslationUpdates'));
+			remove_action(
+				'delete_site_transient_' . $this->updateTransient,
+				array($this, 'clearCachedTranslationUpdates')
+			);
+
+			remove_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10);
+			remove_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10);
+			remove_action('plugins_loaded', array($this, 'maybeInitDebugBar'));
+
+			remove_action('init', array($this, 'loadTextDomain'));
+		}
+
+		/**
 		 * Check if the current user has the required permissions to install updates.
 		 *
 		 * @return bool

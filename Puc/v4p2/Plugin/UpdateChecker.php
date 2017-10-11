@@ -57,6 +57,10 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 				$this->muPluginFile = $this->pluginFile;
 			}
 
+			//To prevent a crash during plugin uninstallation, remove updater hooks when the user removes the plugin.
+			//Details: https://github.com/YahnisElsts/plugin-update-checker/issues/138#issuecomment-335590964
+			add_action('uninstall_' . $this->pluginFile, array($this, 'removeHooks'));
+
 			parent::__construct($metadataUrl, dirname($this->pluginFile), $slug, $checkPeriod, $optionName);
 		}
 
@@ -91,6 +95,35 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
 
 			parent::installHooks();
+		}
+
+		/**
+		 * Remove update checker hooks.
+		 *
+		 * The intent is to prevent a fatal error that can happen if the plugin has an uninstall
+		 * hook. During uninstallation, WP includes the main plugin file (which creates a PUC instance),
+		 * the uninstall hook runs, WP deletes the plugin files and then updates some transients.
+		 * If PUC hooks are still around at this time, they could throw an error while trying to
+		 * autoload classes from files that no longer exist.
+		 *
+		 * The "site_transient_{$transient}" filter is the main problem here, but let's also remove
+		 * most other PUC hooks to be safe.
+		 *
+		 * @internal
+		 */
+		public function removeHooks() {
+			error_log(__METHOD__ . ' was called');
+
+			parent::removeHooks();
+
+			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
+
+			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
+			remove_action('admin_init', array($this, 'handleManualCheck'));
+			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
+
+			remove_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
+			remove_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
 		}
 
 		/**
