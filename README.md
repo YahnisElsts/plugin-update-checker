@@ -175,6 +175,9 @@ The library will pull update details from the following parts of a release/tag/b
 
 	//Optional: If you're using a private repository, create an OAuth consumer
 	//and set the authentication credentials like this:
+	//Note: For now you need to check "This is a private consumer" when
+	//creating the consumer to work around #134:
+	// https://github.com/YahnisElsts/plugin-update-checker/issues/134
 	$myUpdateChecker->setAuthentication(array(
 		'consumer_key' => '...',
 		'consumer_secret' => '...',
