@@ -569,6 +569,9 @@ if ( !class_exists('Puc_v4p2_UpdateChecker', false) ):
 		 * @return array
 		 */
 		protected function getInstalledTranslations() {
+			if ( !function_exists('wp_get_installed_translations') ) {
+				return array();
+			}
 			$installedTranslations = wp_get_installed_translations($this->translationType . 's');
 			if ( isset($installedTranslations[$this->directoryName]) ) {
 				$installedTranslations = $installedTranslations[$this->directoryName];
