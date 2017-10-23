@@ -86,6 +86,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
+			add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 2);
 			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 			add_action('admin_init', array($this, 'handleManualCheck'));
 			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -361,7 +362,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 		/**
 		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
-		 * the new link will appear after the "Visit plugin site" link.
+		 * the new link will appear after the "View details" link.
 		 *
 		 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
@@ -397,6 +398,49 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			}
 			return $pluginMeta;
 		}
+                
+                /**
+		 * Add a "View Details" link to the plugin row in the "Plugins" page. By default,
+		 * the new link will appear after the "Visit plugin site" link.
+		 *
+		 * You can change the link text by using the "puc_view_details_link-$slug" filter.
+		 * Returning an empty string from the filter will disable the link.
+		 *
+		 * @param array $pluginMeta Array of meta links.
+		 * @param string $pluginFile
+		 * @return array
+		 */
+		public function addViewDetailsLink($pluginMeta, $pluginFile) {
+			$isRelevant = ($pluginFile == $this->pluginFile)
+				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
+
+			if ( $isRelevant && $this->userCanInstallUpdates() ) {
+                                //Check view-details is already among the links (because there is an update)
+                                $viewDetailsExists = false;
+                                foreach ($pluginMeta as $existingMeta) {
+                                    if (strpos($existingMeta, 'tab=plugin-information') !== false) {
+                                        $viewDetailsExists = true;
+                                    }
+                                }
+				$linkText = apply_filters(
+					$this->getUniqueName('manual_check_link'),
+					__( 'View details' )
+				);
+                                if ($linkText && !$viewDetailsExists) {
+                                    $pluginTitle = $this->getPluginTitle();
+                                    //Show the link using the same method WP does
+                                    $pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+                                            esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $this->slug .
+                                                    '&TB_iframe=true&width=600&height=550' ) ),
+                                            esc_attr( sprintf( __( 'More information about %s' ), $pluginTitle ) ),
+                                            esc_attr( $pluginTitle ),
+                                            $linkText
+                                    );
+                                }
+			}
+			return $pluginMeta;
+		}
+
 
 		/**
 		 * Check for updates when the user clicks the "Check for updates" link.
