@@ -423,7 +423,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
                                     }
                                 }
 				$linkText = apply_filters(
-					$this->getUniqueName('manual_check_link'),
+					$this->getUniqueName('view_details_link'),
 					__( 'View details' )
 				);
                                 if ($linkText && !$viewDetailsExists) {
