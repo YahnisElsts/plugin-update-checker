@@ -398,8 +398,8 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			}
 			return $pluginMeta;
 		}
-                
-                /**
+
+		/**
 		 * Add a "View Details" link to the plugin row in the "Plugins" page. By default,
 		 * the new link will appear after the "Visit plugin site" link.
 		 *
@@ -415,28 +415,28 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
 
 			if ( $isRelevant && $this->userCanInstallUpdates() ) {
-                                //Check view-details is already among the links (because there is an update)
-                                $viewDetailsExists = false;
-                                foreach ($pluginMeta as $existingMeta) {
-                                    if (strpos($existingMeta, 'tab=plugin-information') !== false) {
-                                        $viewDetailsExists = true;
-                                    }
-                                }
+				//Check if view-details is already among the links (because there is an update)
+				$viewDetailsExists = false;
+				foreach ($pluginMeta as $existingMeta) {
+					if (strpos($existingMeta, 'tab=plugin-information') !== false) {
+						$viewDetailsExists = true;
+					}
+				}
 				$linkText = apply_filters(
 					$this->getUniqueName('view_details_link'),
 					__( 'View details' )
 				);
-                                if ($linkText && !$viewDetailsExists) {
-                                    $pluginTitle = $this->getPluginTitle();
-                                    //Show the link using the same method WP does
-                                    $pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
-                                            esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $this->slug .
-                                                    '&TB_iframe=true&width=600&height=550' ) ),
-                                            esc_attr( sprintf( __( 'More information about %s' ), $pluginTitle ) ),
-                                            esc_attr( $pluginTitle ),
-                                            $linkText
-                                    );
-                                }
+				if ($linkText && !$viewDetailsExists) {
+					$pluginTitle = $this->getPluginTitle();
+					//Show the link using the same method WP does
+					$pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $this->slug .
+							'&TB_iframe=true&width=600&height=550' ) ),
+						esc_attr( sprintf( __( 'More information about %s' ), $pluginTitle ) ),
+						esc_attr( $pluginTitle ),
+						$linkText
+					);
+				}
 			}
 			return $pluginMeta;
 		}
