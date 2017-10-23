@@ -426,7 +426,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 					$this->getUniqueName('view_details_link'),
 					__( 'View details' )
 				);
-				if ($linkText && !$viewDetailsExists) {
+				if ( !empty($linkText) && !$viewDetailsExists ) {
 					$pluginTitle = $this->getPluginTitle();
 					//Show the link using the same method WP does
 					$pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
