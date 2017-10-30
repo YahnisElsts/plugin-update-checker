@@ -86,7 +86,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
-			add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 2);
+			add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 3);
 			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 			add_action('admin_init', array($this, 'handleManualCheck'));
 			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -410,7 +410,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		 * @param string $pluginFile
 		 * @return array
 		 */
-		public function addViewDetailsLink($pluginMeta, $pluginFile) {
+		public function addViewDetailsLink($pluginMeta, $pluginFile, $pluginData = array()) {
 			$isRelevant = ($pluginFile == $this->pluginFile)
 				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
 
@@ -418,7 +418,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 				//Check if view-details is already among the links (because there is an update)
 				$viewDetailsExists = false;
 				foreach ($pluginMeta as $existingMeta) {
-					if (strpos($existingMeta, 'tab=plugin-information') !== false) {
+					if ( strpos($existingMeta, 'tab=plugin-information') !== false ) {
 						$viewDetailsExists = true;
 					}
 				}
@@ -427,13 +427,12 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 					__( 'View details' )
 				);
 				if ( !empty($linkText) && !$viewDetailsExists ) {
-					$pluginTitle = $this->getPluginTitle();
 					//Show the link using the same method WP does
 					$pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
 						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $this->slug .
 							'&TB_iframe=true&width=600&height=550' ) ),
-						esc_attr( sprintf( __( 'More information about %s' ), $pluginTitle ) ),
-						esc_attr( $pluginTitle ),
+						esc_attr( sprintf( __( 'More information about %s' ), $pluginData['Name'] ) ),
+						esc_attr( $pluginData['Name'] ),
 						$linkText
 					);
 				}
