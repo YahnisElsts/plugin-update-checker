@@ -437,9 +437,9 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 							esc_url( $pluginData['PluginURI'] ),
 							__( 'Visit plugin site' )
 						);
-						$visitPluginSiteLinkIndex = array_search($visitPluginSiteLink, $pluginMeta);
+						$visitPluginSiteLinkIndex = array_search( $visitPluginSiteLink, $pluginMeta );
 					}
-					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false) {
+					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false ) {
 						$viewDetailsLinkPosition = apply_filters(
 							$this->getUniqueName('view_details_link_position'),
 							'replace'
@@ -448,7 +448,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 						$viewDetailsLinkPosition = 'append';
 					}
 					$viewDetailsLink = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
-						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode($this->slug) .
+						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode( $this->slug ) .
 							'&TB_iframe=true&width=600&height=550' ) ),
 						esc_attr( sprintf( __( 'More information about %s' ), $pluginData['Name'] ) ),
 						esc_attr( $pluginData['Name'] ),
@@ -456,10 +456,10 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 					);
 					switch ( $viewDetailsLinkPosition ) {
 						case 'first':
-							array_splice($pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink);
+							array_splice( $pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink );
 							break;
 						case 'last':
-							array_splice($pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink);
+							array_splice( $pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink );
 							break;
 						case 'replace':
 							$pluginMeta[$visitPluginSiteLinkIndex] = $viewDetailsLink;
