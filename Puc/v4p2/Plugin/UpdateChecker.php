@@ -119,6 +119,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
 
+			remove_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10);
 			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
 			remove_action('admin_init', array($this, 'handleManualCheck'));
 			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -401,10 +402,20 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 		/**
 		 * Add a "View Details" link to the plugin row in the "Plugins" page. By default,
-		 * the new link will appear after the "Visit plugin site" link.
+		 * the new link will appear instead of the "Visit plugin site" link (if present).
 		 *
 		 * You can change the link text by using the "puc_view_details_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
+		 *
+		 * You can change the position of the link using the
+		 * "puc_view_details_link_position-$slug" filter.
+		 * Returning 'first' or 'last' will place the link immediately before/after the
+                 * "Visit plugin site" link
+                 * Returning 'append' places the link after any existing links at the time of the hook.
+                 * Returning 'replace' replaces the "Visit plugin site" link
+                 * Returning anything else disables the link when there is a "Visit plugin site" link.
+                 * 
+                 * If there is no "Visit plugin site" link 'append' is always used!
 		 *
 		 * @param array $pluginMeta Array of meta links.
 		 * @param string $pluginFile
@@ -415,26 +426,48 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
 
 			if ( $isRelevant && $this->userCanInstallUpdates() ) {
-				//Check if view-details is already among the links (because there is an update)
-				$viewDetailsExists = false;
-				foreach ($pluginMeta as $existingMeta) {
-					if ( strpos($existingMeta, 'tab=plugin-information') !== false ) {
-						$viewDetailsExists = true;
-					}
-				}
 				$linkText = apply_filters(
 					$this->getUniqueName('view_details_link'),
 					__( 'View details' )
 				);
-				if ( !empty($linkText) && !$viewDetailsExists ) {
-					//Show the link using the same method WP does
-					$pluginMeta[] = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
-						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $this->slug .
+				if ( !empty($linkText) && !isset($pluginData['slug']) ) {
+					//Find "Visit plugin site" link (if there)
+					if ($pluginData['PluginURI']) {
+						$visitPluginSiteLink = sprintf( '<a href="%s">%s</a>',
+							esc_url( $pluginData['PluginURI'] ),
+							__( 'Visit plugin site' )
+						);
+						$visitPluginSiteLinkIndex = array_search($visitPluginSiteLink, $pluginMeta);
+					}
+					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false) {
+						$viewDetailsLinkPosition = apply_filters(
+							$this->getUniqueName('view_details_link_position'),
+							'replace'
+						);
+					} else {
+						$viewDetailsLinkPosition = 'append';
+					}
+					$viewDetailsLink = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode($this->slug) .
 							'&TB_iframe=true&width=600&height=550' ) ),
 						esc_attr( sprintf( __( 'More information about %s' ), $pluginData['Name'] ) ),
 						esc_attr( $pluginData['Name'] ),
 						$linkText
 					);
+					switch ( $viewDetailsLinkPosition ) {
+						case 'first':
+							array_splice($pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink);
+							break;
+						case 'last':
+							array_splice($pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink);
+							break;
+						case 'replace':
+							$pluginMeta[$visitPluginSiteLinkIndex] = $viewDetailsLink;
+							break;
+						case 'append':
+							$pluginMeta[] = $viewDetailsLink;
+							break;
+					}
 				}
 			}
 			return $pluginMeta;
