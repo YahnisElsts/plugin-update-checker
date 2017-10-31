@@ -419,6 +419,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		 *
 		 * @param array $pluginMeta Array of meta links.
 		 * @param string $pluginFile
+		 * @param array $pluginData Array of plugin header data
 		 * @return array
 		 */
 		public function addViewDetailsLink($pluginMeta, $pluginFile, $pluginData = array()) {
