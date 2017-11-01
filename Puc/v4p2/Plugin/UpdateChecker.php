@@ -364,7 +364,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		/**
 		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
 		 * the new link will appear after the "Visit plugin site" link if present, otherwise
-                 * after the "View plugin details" link.
+		 * after the "View plugin details" link.
 		 *
 		 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
@@ -411,12 +411,12 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		 * You can change the position of the link using the
 		 * "puc_view_details_link_position-$slug" filter.
 		 * Returning 'before' or 'after' will place the link immediately before/after the
-                 * "Visit plugin site" link
-                 * Returning 'append' places the link after any existing links at the time of the hook.
-                 * Returning 'replace' replaces the "Visit plugin site" link
-                 * Returning anything else disables the link when there is a "Visit plugin site" link.
-                 * 
-                 * If there is no "Visit plugin site" link 'append' is always used!
+		 * "Visit plugin site" link
+		 * Returning 'append' places the link after any existing links at the time of the hook.
+		 * Returning 'replace' replaces the "Visit plugin site" link
+		 * Returning anything else disables the link when there is a "Visit plugin site" link.
+		 * 
+		 * If there is no "Visit plugin site" link 'append' is always used!
 		 *
 		 * @param array $pluginMeta Array of meta links.
 		 * @param string $pluginFile
