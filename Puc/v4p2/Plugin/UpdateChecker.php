@@ -402,14 +402,14 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 		/**
 		 * Add a "View Details" link to the plugin row in the "Plugins" page. By default,
-		 * the new link will appear instead of the "Visit plugin site" link (if present).
+		 * the new link will appear before the "Visit plugin site" link (if present).
 		 *
 		 * You can change the link text by using the "puc_view_details_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
 		 *
 		 * You can change the position of the link using the
 		 * "puc_view_details_link_position-$slug" filter.
-		 * Returning 'first' or 'last' will place the link immediately before/after the
+		 * Returning 'before' or 'after' will place the link immediately before/after the
                  * "Visit plugin site" link
                  * Returning 'append' places the link after any existing links at the time of the hook.
                  * Returning 'replace' replaces the "Visit plugin site" link
@@ -443,7 +443,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false ) {
 						$viewDetailsLinkPosition = apply_filters(
 							$this->getUniqueName('view_details_link_position'),
-							'replace'
+							'before'
 						);
 					} else {
 						$viewDetailsLinkPosition = 'append';
@@ -456,10 +456,10 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 						$linkText
 					);
 					switch ( $viewDetailsLinkPosition ) {
-						case 'first':
+						case 'before':
 							array_splice( $pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink );
 							break;
-						case 'last':
+						case 'after':
 							array_splice( $pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink );
 							break;
 						case 'replace':
