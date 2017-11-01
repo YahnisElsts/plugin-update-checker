@@ -363,7 +363,8 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 		/**
 		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
-		 * the new link will appear after the "View details" link.
+		 * the new link will appear after the "Visit plugin site" link if present, otherwise
+                 * after the "View plugin details" link.
 		 *
 		 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
@@ -432,13 +433,14 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 					__( 'View details' )
 				);
 				if ( !empty($linkText) && !isset($pluginData['slug']) ) {
-					//Find "Visit plugin site" link (if there)
+					//Find "Visit plugin site" link (if present)
 					if ($pluginData['PluginURI']) {
-						$visitPluginSiteLink = sprintf( '<a href="%s">%s</a>',
-							esc_url( $pluginData['PluginURI'] ),
-							__( 'Visit plugin site' )
-						);
-						$visitPluginSiteLinkIndex = array_search( $visitPluginSiteLink, $pluginMeta );
+						foreach ( $pluginMeta as $linkIndex => $existingLink ) {
+							if ( preg_match('#<a[^>]*\shref="' . $pluginData['PluginURI'] . '"#', $existingLink) ) {
+								$visitPluginSiteLinkIndex = $linkIndex;
+								break;
+							}
+						}
 					}
 					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false ) {
 						$viewDetailsLinkPosition = apply_filters(
