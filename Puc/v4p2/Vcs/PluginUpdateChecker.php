@@ -37,6 +37,7 @@ if ( !class_exists('Puc_v4p2_Vcs_PluginUpdateChecker') ):
 			}
 
 			$api = $this->api;
+			$api->setLocalDirectory($this->getAbsoluteDirectoryPath());
 
 			$info = new Puc_v4p2_Plugin_Info();
 			$info->filename = $this->pluginFile;
@@ -104,11 +105,11 @@ if ( !class_exists('Puc_v4p2_Vcs_PluginUpdateChecker') ):
 		 * @return bool
 		 */
 		protected function readmeTxtExistsLocally() {
-			$pluginDirectory = dirname($this->pluginAbsolutePath);
-			if ( empty($this->pluginAbsolutePath) || !is_dir($pluginDirectory) || ($pluginDirectory === '.') ) {
+			$pluginDirectory = $this->getAbsoluteDirectoryPath();
+			if ( empty($pluginDirectory) || !is_dir($pluginDirectory) || ($pluginDirectory === '.') ) {
 				return false;
 			}
-			return is_file($pluginDirectory . '/readme.txt');
+			return is_file($pluginDirectory . '/' . $this->api->getLocalReadmeName());
 		}
 
 		/**

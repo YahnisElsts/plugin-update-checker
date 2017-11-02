@@ -21,6 +21,11 @@ if ( !class_exists('Puc_v4p2_Vcs_Api') ):
 		protected $httpFilterName = '';
 
 		/**
+		 * @var string|null
+		 */
+		protected $localDirectory = null;
+
+		/**
 		 * Puc_v4p2_Vcs_Api constructor.
 		 *
 		 * @param string $repositoryUrl
@@ -54,13 +59,45 @@ if ( !class_exists('Puc_v4p2_Vcs_Api') ):
 		 * @return array Parsed readme.
 		 */
 		public function getRemoteReadme($ref = 'master') {
-			$fileContents = $this->getRemoteFile('readme.txt', $ref);
+			$fileContents = $this->getRemoteFile($this->getLocalReadmeName(), $ref);
 			if ( empty($fileContents) ) {
 				return array();
 			}
 
 			$parser = new PucReadmeParser();
 			return $parser->parse_readme_contents($fileContents);
+		}
+
+		/**
+		 * Get the case-sensitive name of the local readme.txt file.
+		 *
+		 * In most cases it should just be called "readme.txt", but some plugins call it "README.txt",
+		 * "README.TXT", or even "Readme.txt". Most VCS are case-sensitive so we need to know the correct
+		 * capitalization.
+		 *
+		 * Defaults to "readme.txt" (all lowercase).
+		 *
+		 * @return string
+		 */
+		public function getLocalReadmeName() {
+			static $fileName = null;
+			if ( $fileName !== null ) {
+				return $fileName;
+			}
+
+			$fileName = 'readme.txt';
+			if ( isset($this->localDirectory) ) {
+				$files = scandir($this->localDirectory);
+				if ( !empty($files) ) {
+					foreach ($files as $possibleFileName) {
+						if ( strcasecmp($possibleFileName, 'readme.txt') === 0 ) {
+							$fileName = $possibleFileName;
+							break;
+						}
+					}
+				}
+			}
+			return $fileName;
 		}
 
 		/**
@@ -196,7 +233,10 @@ if ( !class_exists('Puc_v4p2_Vcs_Api') ):
 		 * @param string $directory
 		 * @return string|null
 		 */
-		protected function findChangelogName($directory) {
+		protected function findChangelogName($directory = null) {
+			if ( !isset($directory) ) {
+				$directory = $this->localDirectory;
+			}
 			if ( empty($directory) || !is_dir($directory) || ($directory === '.') ) {
 				return null;
 			}
@@ -237,6 +277,17 @@ if ( !class_exists('Puc_v4p2_Vcs_Api') ):
 		 */
 		public function setHttpFilterName($filterName) {
 			$this->httpFilterName = $filterName;
+		}
+
+		/**
+		 * @param string $directory
+		 */
+		public function setLocalDirectory($directory) {
+			if ( empty($directory) || !is_dir($directory) || ($directory === '.') ) {
+				$this->localDirectory = null;
+			} else {
+				$this->localDirectory = $directory;
+			}
 		}
 	}
 

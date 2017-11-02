@@ -600,6 +600,13 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
+		 * @return string
+		 */
+		public function getAbsoluteDirectoryPath() {
+			return dirname($this->pluginAbsolutePath);
+		}
+
+		/**
 		 * Register a callback for filtering query arguments.
 		 *
 		 * The callback function should take one argument - an associative array of query arguments.

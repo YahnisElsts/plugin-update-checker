@@ -305,6 +305,13 @@ if ( !class_exists('Puc_v4p2_UpdateChecker', false) ):
 		abstract public function getInstalledVersion();
 
 		/**
+		 * Get the full path of the plugin or theme directory.
+		 *
+		 * @return string
+		 */
+		abstract public function getAbsoluteDirectoryPath();
+
+		/**
 		 * Trigger a PHP error, but only when $debugMode is enabled.
 		 *
 		 * @param string $message

@@ -31,6 +31,7 @@ if ( !class_exists('Puc_v4p2_Vcs_ThemeUpdateChecker', false) ):
 
 		public function requestUpdate() {
 			$api = $this->api;
+			$api->setLocalDirectory($this->getAbsoluteDirectoryPath());
 
 			$update = new Puc_v4p2_Theme_Update();
 			$update->slug = $this->slug;
