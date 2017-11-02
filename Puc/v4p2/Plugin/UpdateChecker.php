@@ -420,54 +420,53 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 		 *
 		 * @param array $pluginMeta Array of meta links.
 		 * @param string $pluginFile
-		 * @param array $pluginData Array of plugin header data
+		 * @param array $pluginData Array of plugin header data.
 		 * @return array
 		 */
 		public function addViewDetailsLink($pluginMeta, $pluginFile, $pluginData = array()) {
 			$isRelevant = ($pluginFile == $this->pluginFile)
 				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
 
-			if ( $isRelevant && $this->userCanInstallUpdates() ) {
-				$linkText = apply_filters(
-					$this->getUniqueName('view_details_link'),
-					__( 'View details' )
-				);
-				if ( !empty($linkText) && !isset($pluginData['slug']) ) {
-					//Find "Visit plugin site" link (if present)
-					if ($pluginData['PluginURI']) {
-						foreach ( $pluginMeta as $linkIndex => $existingLink ) {
-							if ( preg_match('#<a[^>]*\shref="' . $pluginData['PluginURI'] . '"#', $existingLink) ) {
+			if ( $isRelevant && $this->userCanInstallUpdates() && !isset($pluginData['slug']) ) {
+				$linkText = apply_filters($this->getUniqueName('view_details_link'), __('View details'));
+				if ( !empty($linkText) ) {
+					$viewDetailsLinkPosition = 'append';
+
+					//Find the "Visit plugin site" link (if present).
+					$visitPluginSiteLinkIndex = count($pluginMeta) - 1;
+					if ( $pluginData['PluginURI'] ) {
+						$escapedPluginUri = esc_url($pluginData['PluginURI']);
+						foreach ($pluginMeta as $linkIndex => $existingLink) {
+							if ( strpos($existingLink, $escapedPluginUri) !== false ) {
 								$visitPluginSiteLinkIndex = $linkIndex;
+								$viewDetailsLinkPosition = apply_filters(
+									$this->getUniqueName('view_details_link_position'),
+									'before'
+								);
 								break;
 							}
 						}
 					}
-					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false ) {
-						$viewDetailsLinkPosition = apply_filters(
-							$this->getUniqueName('view_details_link_position'),
-							'before'
-						);
-					} else {
-						$viewDetailsLinkPosition = 'append';
-					}
-					$viewDetailsLink = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
-						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode( $this->slug ) .
-							'&TB_iframe=true&width=600&height=550' ) ),
-						esc_attr( sprintf( __( 'More information about %s' ), $pluginData['Name'] ) ),
-						esc_attr( $pluginData['Name'] ),
+
+					$viewDetailsLink = sprintf('<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+						esc_url(network_admin_url('plugin-install.php?tab=plugin-information&plugin=' . urlencode($this->slug) .
+							'&TB_iframe=true&width=600&height=550')),
+						esc_attr(sprintf(__('More information about %s'), $pluginData['Name'])),
+						esc_attr($pluginData['Name']),
 						$linkText
 					);
-					switch ( $viewDetailsLinkPosition ) {
+					switch ($viewDetailsLinkPosition) {
 						case 'before':
-							array_splice( $pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink );
+							array_splice($pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink);
 							break;
 						case 'after':
-							array_splice( $pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink );
+							array_splice($pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink);
 							break;
 						case 'replace':
 							$pluginMeta[$visitPluginSiteLinkIndex] = $viewDetailsLink;
 							break;
 						case 'append':
+						default:
 							$pluginMeta[] = $viewDetailsLink;
 							break;
 					}
