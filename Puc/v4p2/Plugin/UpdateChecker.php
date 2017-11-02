@@ -86,6 +86,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
+			add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 3);
 			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
 			add_action('admin_init', array($this, 'handleManualCheck'));
 			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -118,6 +119,7 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
 
+			remove_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10);
 			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
 			remove_action('admin_init', array($this, 'handleManualCheck'));
 			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
@@ -361,7 +363,8 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 
 		/**
 		 * Add a "Check for updates" link to the plugin row in the "Plugins" page. By default,
-		 * the new link will appear after the "Visit plugin site" link.
+		 * the new link will appear after the "Visit plugin site" link if present, otherwise
+		 * after the "View plugin details" link.
 		 *
 		 * You can change the link text by using the "puc_manual_check_link-$slug" filter.
 		 * Returning an empty string from the filter will disable the link.
@@ -397,6 +400,82 @@ if ( !class_exists('Puc_v4p2_Plugin_UpdateChecker', false) ):
 			}
 			return $pluginMeta;
 		}
+
+		/**
+		 * Add a "View Details" link to the plugin row in the "Plugins" page. By default,
+		 * the new link will appear before the "Visit plugin site" link (if present).
+		 *
+		 * You can change the link text by using the "puc_view_details_link-$slug" filter.
+		 * Returning an empty string from the filter will disable the link.
+		 *
+		 * You can change the position of the link using the
+		 * "puc_view_details_link_position-$slug" filter.
+		 * Returning 'before' or 'after' will place the link immediately before/after the
+		 * "Visit plugin site" link
+		 * Returning 'append' places the link after any existing links at the time of the hook.
+		 * Returning 'replace' replaces the "Visit plugin site" link
+		 * Returning anything else disables the link when there is a "Visit plugin site" link.
+		 * 
+		 * If there is no "Visit plugin site" link 'append' is always used!
+		 *
+		 * @param array $pluginMeta Array of meta links.
+		 * @param string $pluginFile
+		 * @param array $pluginData Array of plugin header data
+		 * @return array
+		 */
+		public function addViewDetailsLink($pluginMeta, $pluginFile, $pluginData = array()) {
+			$isRelevant = ($pluginFile == $this->pluginFile)
+				|| (!empty($this->muPluginFile) && $pluginFile == $this->muPluginFile);
+
+			if ( $isRelevant && $this->userCanInstallUpdates() ) {
+				$linkText = apply_filters(
+					$this->getUniqueName('view_details_link'),
+					__( 'View details' )
+				);
+				if ( !empty($linkText) && !isset($pluginData['slug']) ) {
+					//Find "Visit plugin site" link (if present)
+					if ($pluginData['PluginURI']) {
+						foreach ( $pluginMeta as $linkIndex => $existingLink ) {
+							if ( preg_match('#<a[^>]*\shref="' . $pluginData['PluginURI'] . '"#', $existingLink) ) {
+								$visitPluginSiteLinkIndex = $linkIndex;
+								break;
+							}
+						}
+					}
+					if ( isset($visitPluginSiteLinkIndex) && $visitPluginSiteLinkIndex !== false ) {
+						$viewDetailsLinkPosition = apply_filters(
+							$this->getUniqueName('view_details_link_position'),
+							'before'
+						);
+					} else {
+						$viewDetailsLinkPosition = 'append';
+					}
+					$viewDetailsLink = sprintf( '<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
+						esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . urlencode( $this->slug ) .
+							'&TB_iframe=true&width=600&height=550' ) ),
+						esc_attr( sprintf( __( 'More information about %s' ), $pluginData['Name'] ) ),
+						esc_attr( $pluginData['Name'] ),
+						$linkText
+					);
+					switch ( $viewDetailsLinkPosition ) {
+						case 'before':
+							array_splice( $pluginMeta, $visitPluginSiteLinkIndex, 0, $viewDetailsLink );
+							break;
+						case 'after':
+							array_splice( $pluginMeta, $visitPluginSiteLinkIndex + 1, 0, $viewDetailsLink );
+							break;
+						case 'replace':
+							$pluginMeta[$visitPluginSiteLinkIndex] = $viewDetailsLink;
+							break;
+						case 'append':
+							$pluginMeta[] = $viewDetailsLink;
+							break;
+					}
+				}
+			}
+			return $pluginMeta;
+		}
+
 
 		/**
 		 * Check for updates when the user clicks the "Check for updates" link.
