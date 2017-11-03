@@ -58,7 +58,7 @@ if ( !class_exists('Puc_v4p3_DebugBar_Extension', false) ):
 			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
 				return;
 			}
-			$this->preAjaxReqest();
+			$this->preAjaxRequest();
 			$update = $this->updateChecker->checkForUpdates();
 			if ( $update !== null ) {
 				echo "An update is available:";
@@ -72,7 +72,7 @@ if ( !class_exists('Puc_v4p3_DebugBar_Extension', false) ):
 		/**
 		 * Check access permissions and enable error display (for debugging).
 		 */
-		protected function preAjaxReqest() {
+		protected function preAjaxRequest() {
 			if ( !$this->updateChecker->userCanInstallUpdates() ) {
 				die('Access denied');
 			}

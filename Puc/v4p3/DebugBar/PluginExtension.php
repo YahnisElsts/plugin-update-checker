@@ -18,7 +18,7 @@ if ( !class_exists('Puc_v4p3_DebugBar_PluginExtension', false) ):
 			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
 				return;
 			}
-			$this->preAjaxReqest();
+			$this->preAjaxRequest();
 			$info = $this->updateChecker->requestInfo();
 			if ( $info !== null ) {
 				echo 'Successfully retrieved plugin info from the metadata URL:';
