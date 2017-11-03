@@ -73,7 +73,7 @@ Getting Started
 
 Change the `version` number in the JSON file and make sure that `download_url` points to the latest version. Update the other fields if necessary. Tip: You can use [wp-update-server](https://github.com/YahnisElsts/wp-update-server) to automate this process.
 
-By default, the library will check the specified URL for changes every 12 hours. You can force it to check immediately by clicking the "Check Now" link on the "Plugins" page (it's next to the "Visit plugin site" link). Themes don't get a "check now" link, but you can also trigger an update check like this:
+By default, the library will check the specified URL for changes every 12 hours. You can force it to check immediately by clicking the "Check for updates" link on the "Plugins" page (it's next to the "Visit plugin site" link). Themes don't have that link, but you can also trigger an update check like this:
  
  1. Install [Debug Bar](https://srd.wordpress.org/plugins/debug-bar/).
  2. Click the "Debug" menu in the Admin Bar (a.k.a Toolbar).
