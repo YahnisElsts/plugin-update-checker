@@ -113,8 +113,6 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 		 * @internal
 		 */
 		public function removeHooks() {
-			error_log(__METHOD__ . ' was called');
-
 			parent::removeHooks();
 
 			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
