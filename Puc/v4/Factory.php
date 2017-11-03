@@ -24,7 +24,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 * This method automatically detects if you're using it for a plugin or a theme and chooses
 		 * the appropriate implementation for your update source (JSON file, GitHub, BitBucket, etc).
 		 *
-		 * @see Puc_v4p2_UpdateChecker::__construct
+		 * @see Puc_v4p3_UpdateChecker::__construct
 		 *
 		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
@@ -32,7 +32,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param string $optionName Where to store book-keeping info about update checks.
 		 * @param string $muPluginFile The plugin filename relative to the mu-plugins directory.
-		 * @return Puc_v4p2_Plugin_UpdateChecker|Puc_v4p2_Theme_UpdateChecker|Puc_v4p2_Vcs_BaseChecker
+		 * @return Puc_v4p3_Plugin_UpdateChecker|Puc_v4p3_Theme_UpdateChecker|Puc_v4p3_Vcs_BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = self::normalizePath($fullPath);
