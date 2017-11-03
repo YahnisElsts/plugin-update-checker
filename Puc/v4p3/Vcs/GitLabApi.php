@@ -24,31 +24,30 @@ if ( !class_exists('Puc_v4p3_Vcs_GitLabApi', false) ):
 		protected $accessToken;
 
 		public function __construct($repositoryUrl, $accessToken = null) {
-			// parse the repository host to support custom hosts
+			//Parse the repository host to support custom hosts.
 			$this->repositoryHost = @parse_url($repositoryUrl, PHP_URL_HOST);
 
-			// find the repository information
+			//Find the repository information
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
-			}
-			// this is not a traditional url, it could be gitlab is in a deeper subdirectory
-			else {
-				// get the path segments
+			} else {
+				//This is not a traditional url, it could be gitlab is in a deeper subdirectory.
+				//Get the path segments.
 				$segments = explode('/', untrailingslashit(ltrim($path, '/')));
 
-				// we need atleast /user-name/repository-name/
-				if ( sizeof($segments) < 2 ) {
+				//We need at least /user-name/repository-name/
+				if ( count($segments) < 2 ) {
 					throw new InvalidArgumentException('Invalid GitLab repository URL: "' . $repositoryUrl . '"');
 				}
 
-				// get the username and repository name
+				//Get the username and repository name.
 				$usernameRepo = array_splice($segments, -2, 2);
 				$this->userName = $usernameRepo[0];
 				$this->repositoryName = $usernameRepo[1];
 
-				// append the remaining segments to the host
+				//Append the remaining segments to the host.
 				$this->repositoryHost = trailingslashit($this->repositoryHost) . implode('/', $segments);
 			}
 
