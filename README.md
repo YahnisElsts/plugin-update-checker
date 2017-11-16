@@ -61,7 +61,7 @@ Getting Started
 
 	```php
 	require 'path/to/plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4p3_Factory::buildUpdateChecker(
 		'http://example.com/path/to/details.json',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -93,7 +93,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4p3_Factory::buildUpdateChecker(
 		'https://github.com/user-name/repo-name/',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -167,7 +167,7 @@ The library will pull update details from the following parts of a release/tag/b
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4p3_Factory::buildUpdateChecker(
 		'https://bitbucket.org/user-name/repo-name',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -223,7 +223,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	$myUpdateChecker = Puc_v4p3_Factory::buildUpdateChecker(
 		'https://gitlab.com/user-name/repo-name/',
 		__FILE__,
 		'unique-plugin-or-theme-slug'

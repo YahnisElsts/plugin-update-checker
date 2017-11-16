@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4_Factory', false) ):
+if ( !class_exists('Puc_v4p3_Factory', false) ):
 
 	/**
 	 * A factory that builds update checker instances.
@@ -11,7 +11,7 @@ if ( !class_exists('Puc_v4_Factory', false) ):
 	 * At the moment it can only build instances of the UpdateChecker class. Other classes are
 	 * intended mainly for internal use and refer directly to specific implementations.
 	 */
-	class Puc_v4_Factory {
+	class Puc_v4p3_Factory {
 		protected static $classVersions = array();
 		protected static $sorted = false;
 
