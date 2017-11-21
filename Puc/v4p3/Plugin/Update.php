@@ -13,10 +13,11 @@ if ( !class_exists('Puc_v4p3_Plugin_Update', false) ):
 		public $homepage;
 		public $upgrade_notice;
 		public $tested;
+		public $icons = array();
 		public $filename; //Plugin filename relative to the plugins directory.
 
 		protected static $extraFields = array(
-			'id', 'homepage', 'tested', 'upgrade_notice', 'filename',
+			'id', 'homepage', 'tested', 'upgrade_notice', 'icons', 'filename',
 		);
 
 		/**
@@ -72,7 +73,7 @@ if ( !class_exists('Puc_v4p3_Plugin_Update', false) ):
 		 *
 		 * @return object
 		 */
-		public function toWpFormat(){
+		public function toWpFormat() {
 			$update = parent::toWpFormat();
 
 			$update->id = $this->id;
@@ -80,8 +81,26 @@ if ( !class_exists('Puc_v4p3_Plugin_Update', false) ):
 			$update->tested = $this->tested;
 			$update->plugin = $this->filename;
 
-			if ( !empty($this->upgrade_notice) ){
+			if ( !empty($this->upgrade_notice) ) {
 				$update->upgrade_notice = $this->upgrade_notice;
+			}
+
+			if ( !empty($this->icons) && is_array($this->icons) ) {
+				//This should be an array with up to 4 keys: 'svg', '1x', '2x' and 'default'.
+				//Docs: https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/#plugin-icons
+				$icons = array_intersect_key(
+					$this->icons,
+					array('svg' => true, '1x' => true, '2x' => true, 'default' => true)
+				);
+				if ( !empty($icons) ) {
+					$update->icons = $icons;
+
+					//It appears that the 'default' icon isn't used anywhere in WordPress 4.9,
+					//but lets set it just in case a future release needs it.
+					if ( !isset($update->icons['default']) ) {
+						$update->icons['default'] = current($update->icons);
+					}
+				}
 			}
 
 			return $update;

@@ -16,9 +16,11 @@ if ( !class_exists('Puc_v4p3_Plugin_Info', false) ):
 		public $version;
 		public $homepage;
 		public $sections = array();
-		public $banners;
-		public $translations = array();
 		public $download_url;
+
+		public $banners;
+		public $icons = array();
+		public $translations = array();
 
 		public $author;
 		public $author_homepage;
@@ -51,8 +53,9 @@ if ( !class_exists('Puc_v4p3_Plugin_Info', false) ):
 				return null;
 			}
 
-			//json_decode decodes assoc. arrays as objects. We want it as an array.
+			//json_decode decodes assoc. arrays as objects. We want them as arrays.
 			$instance->sections = (array)$instance->sections;
+			$instance->icons = (array)$instance->icons;
 
 			return $instance;
 		}
