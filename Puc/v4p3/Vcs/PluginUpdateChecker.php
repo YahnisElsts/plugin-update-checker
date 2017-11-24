@@ -27,6 +27,8 @@ if ( !class_exists('Puc_v4p3_Vcs_PluginUpdateChecker') ):
 			$this->api->setHttpFilterName($this->getUniqueName('request_info_options'));
 
 			parent::__construct($api->getRepositoryUrl(), $pluginFile, $slug, $checkPeriod, $optionName, $muPluginFile);
+
+			$this->api->setSlug($this->slug);
 		}
 
 		public function requestInfo($unusedParameter = null) {
@@ -61,6 +63,16 @@ if ( !class_exists('Puc_v4p3_Vcs_PluginUpdateChecker') ):
 				}
 			} else {
 				//There's probably a network problem or an authentication error.
+				do_action(
+					'puc_api_error',
+					new WP_Error(
+						'puc-no-update-source',
+						'Could not retrieve version information from the repository. '
+						. 'This usually means that the update checker either can\'t connect '
+						. 'to the repository or it\'s configured incorrectly.'
+					),
+					null, null, $this->slug
+				);
 				return null;
 			}
 

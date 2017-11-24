@@ -50,6 +50,11 @@ if ( !class_exists('Puc_v4p3_UpdateChecker', false) ):
 		 */
 		protected $updateState;
 
+		/**
+		 * @var array List of API errors triggered during the last checkForUpdates() call.
+		 */
+		protected $lastRequestApiErrors = array();
+
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
@@ -214,6 +219,10 @@ if ( !class_exists('Puc_v4p3_UpdateChecker', false) ):
 				return null;
 			}
 
+			//Start collecting API errors.
+			$this->lastRequestApiErrors = array();
+			add_action('puc_api_error', array($this, 'collectApiErrors'), 10, 4);
+
 			$state = $this->updateState;
 			$state->setLastCheckToNow()
 				->setCheckedVersion($installedVersion)
@@ -221,6 +230,9 @@ if ( !class_exists('Puc_v4p3_UpdateChecker', false) ):
 
 			$state->setUpdate($this->requestUpdate());
 			$state->save();
+
+			//Stop collecting API errors.
+			remove_action('puc_api_error', array($this, 'collectApiErrors'), 10);
 
 			return $this->getUpdate();
 		}
@@ -338,6 +350,34 @@ if ( !class_exists('Puc_v4p3_UpdateChecker', false) ):
 				$name .= '_' . $this->filterSuffix;
 			}
 			return $name . '-' . $this->slug;
+		}
+
+		/**
+		 * Store API errors that are generated when checking for updates.
+		 *
+		 * @internal
+		 * @param WP_Error $error
+		 * @param array|null $httpResponse
+		 * @param string|null $url
+		 * @param string|null $slug
+		 */
+		public function collectApiErrors($error, $httpResponse = null, $url = null, $slug = null) {
+			if ( isset($slug) && ($slug !== $this->slug) ) {
+				return;
+			}
+
+			$this->lastRequestApiErrors[] = array(
+				'error'        => $error,
+				'httpResponse' => $httpResponse,
+				'url'          => $url,
+			);
+		}
+
+		/**
+		 * @return array
+		 */
+		public function getLastRequestApiErrors() {
+			return $this->lastRequestApiErrors;
 		}
 
 		/* -------------------------------------------------------------------
@@ -493,6 +533,7 @@ if ( !class_exists('Puc_v4p3_UpdateChecker', false) ):
 			if ( !is_wp_error($status) ){
 				$metadata = call_user_func(array($metaClass, 'fromJson'), $result['body']);
 			} else {
+				do_action('puc_api_error', $status, $result, $url, $this->slug);
 				$this->triggerError(
 					sprintf('The URL %s does not point to a valid metadata file. ', $url)
 					. $status->get_error_message(),

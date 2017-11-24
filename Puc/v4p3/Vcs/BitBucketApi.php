@@ -194,6 +194,7 @@ if ( !class_exists('Puc_v4p3_Vcs_BitBucketApi', false) ):
 				$this->repository,
 				ltrim($url, '/')
 			));
+			$baseUrl = $url;
 
 			if ( $this->oauth ) {
 				$url = $this->oauth->sign($url,'GET');
@@ -205,6 +206,7 @@ if ( !class_exists('Puc_v4p3_Vcs_BitBucketApi', false) ):
 			}
 			$response = wp_remote_get($url, $options);
 			if ( is_wp_error($response) ) {
+				do_action('puc_api_error', $response, null, $url, $this->slug);
 				return $response;
 			}
 
@@ -215,10 +217,13 @@ if ( !class_exists('Puc_v4p3_Vcs_BitBucketApi', false) ):
 				return $document;
 			}
 
-			return new WP_Error(
+			$error = new WP_Error(
 				'puc-bitbucket-http-error',
-				'BitBucket API error. HTTP status: ' . $code
+				sprintf('BitBucket API error. Base URL: "%s",  HTTP status code: %d.', $baseUrl, $code)
 			);
+			do_action('puc_api_error', $error, $response, $url, $this->slug);
+
+			return $error;
 		}
 
 		/**

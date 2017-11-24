@@ -27,6 +27,8 @@ if ( !class_exists('Puc_v4p3_Vcs_ThemeUpdateChecker', false) ):
 			$this->api->setHttpFilterName($this->getUniqueName('request_update_options'));
 
 			parent::__construct($api->getRepositoryUrl(), $stylesheet, $customSlug, $checkPeriod, $optionName);
+
+			$this->api->setSlug($this->slug);
 		}
 
 		public function requestUpdate() {
@@ -42,6 +44,16 @@ if ( !class_exists('Puc_v4p3_Vcs_ThemeUpdateChecker', false) ):
 				$ref = $updateSource->name;
 				$update->download_url = $updateSource->downloadUrl;
 			} else {
+				do_action(
+					'puc_api_error',
+					new WP_Error(
+						'puc-no-update-source',
+						'Could not retrieve version information from the repository. '
+						. 'This usually means that the update checker either can\'t connect '
+						. 'to the repository or it\'s configured incorrectly.'
+					),
+					null, null, $this->slug
+				);
 				$ref = $this->branch;
 			}
 

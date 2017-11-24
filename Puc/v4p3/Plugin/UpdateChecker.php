@@ -17,6 +17,7 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
 		private $cachedInstalledVersion = null;
+		private $manualCheckErrorTransient = '';
 
 		/**
 		 * Class constructor.
@@ -60,6 +61,8 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 			//To prevent a crash during plugin uninstallation, remove updater hooks when the user removes the plugin.
 			//Details: https://github.com/YahnisElsts/plugin-update-checker/issues/138#issuecomment-335590964
 			add_action('uninstall_' . $this->pluginFile, array($this, 'removeHooks'));
+
+			$this->manualCheckErrorTransient = $this->getUniqueName('manual_check_errors');
 
 			parent::__construct($metadataUrl, dirname($this->pluginFile), $slug, $checkPeriod, $optionName);
 		}
@@ -413,7 +416,7 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 		 * Returning 'append' places the link after any existing links at the time of the hook.
 		 * Returning 'replace' replaces the "Visit plugin site" link
 		 * Returning anything else disables the link when there is a "Visit plugin site" link.
-		 * 
+		 *
 		 * If there is no "Visit plugin site" link 'append' is always used!
 		 *
 		 * @param array $pluginMeta Array of meta links.
@@ -490,6 +493,34 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 			if ( $shouldCheck ) {
 				$update = $this->checkForUpdates();
 				$status = ($update === null) ? 'no_update' : 'update_available';
+
+				if ( ($update === null) && !empty($this->lastRequestApiErrors) ) {
+					//Some errors are not critical. For example, if PUC tries to retrieve the readme.txt
+					//file from GitHub and gets a 404, that's an API error, but it doesn't prevent updates
+					//from working. Maybe the plugin simply doesn't have a readme.
+					//Let's only show important errors.
+					$foundCriticalErrors = false;
+					$questionableErrorCodes = array(
+						'puc-github-http-error',
+						'puc-gitlab-http-error',
+						'puc-bitbucket-http-error',
+					);
+
+					foreach ($this->lastRequestApiErrors as $item) {
+						$wpError = $item['error'];
+						/** @var WP_Error $wpError */
+						if ( !in_array($wpError->get_error_code(), $questionableErrorCodes) ) {
+							$foundCriticalErrors = true;
+							break;
+						}
+					}
+
+					if ( $foundCriticalErrors ) {
+						$status = 'error';
+						set_site_transient($this->manualCheckErrorTransient, $this->lastRequestApiErrors, 60);
+					}
+				}
+
 				wp_redirect(add_query_arg(
 					array(
 						'puc_update_check_result' => $status,
@@ -508,20 +539,67 @@ if ( !class_exists('Puc_v4p3_Plugin_UpdateChecker', false) ):
 		 */
 		public function displayManualCheckResult() {
 			if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->slug) ) {
-				$status = strval($_GET['puc_update_check_result']);
-				$title  = $this->getPluginTitle();
+				$status      = strval($_GET['puc_update_check_result']);
+				$title       = $this->getPluginTitle();
+				$noticeClass = 'updated notice-success';
+				$details     = '';
+
 				if ( $status == 'no_update' ) {
 					$message = sprintf(_x('The %s plugin is up to date.', 'the plugin title', 'plugin-update-checker'), $title);
 				} else if ( $status == 'update_available' ) {
 					$message = sprintf(_x('A new version of the %s plugin is available.', 'the plugin title', 'plugin-update-checker'), $title);
+				} else if ( $status === 'error' ) {
+					$message = sprintf(_x('Could not determine if updates are available for %s.', 'the plugin title', 'plugin-update-checker'), $title);
+					$noticeClass = 'error notice-error';
+
+					$details = $this->formatManualCheckErrors(get_site_transient($this->manualCheckErrorTransient));
+					delete_site_transient($this->manualCheckErrorTransient);
 				} else {
 					$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
+					$noticeClass = 'error notice-error';
 				}
 				printf(
-					'<div class="updated notice is-dismissible"><p>%s</p></div>',
-					apply_filters($this->getUniqueName('manual_check_message'), $message, $status)
+					'<div class="notice %s is-dismissible"><p>%s</p>%s</div>',
+					$noticeClass,
+					apply_filters($this->getUniqueName('manual_check_message'), $message, $status),
+					$details
 				);
 			}
+		}
+
+		/**
+		 * Format the list of errors that were thrown during an update check.
+		 *
+		 * @param array $errors
+		 * @return string
+		 */
+		protected function formatManualCheckErrors($errors) {
+			if ( empty($errors) ) {
+				return '';
+			}
+			$output = '';
+
+			$showAsList = count($errors) > 1;
+			if ( $showAsList ) {
+				$output .= '<ol>';
+				$formatString = '<li>%1$s <code>%2$s</code></li>';
+			} else {
+				$formatString = '<p>%1$s <code>%2$s</code></p>';
+			}
+			foreach ($errors as $item) {
+				$wpError = $item['error'];
+				/** @var WP_Error $wpError */
+				$output .= sprintf(
+					$formatString,
+					$wpError->get_error_message(),
+					$wpError->get_error_code()
+				);
+			}
+			if ( $showAsList ) {
+				$output .= '</ol>';
+			}
+
+			return $output;
 		}
 
 		/**

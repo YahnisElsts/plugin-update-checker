@@ -136,6 +136,7 @@ if ( !class_exists('Puc_v4p3_Vcs_GitLabApi', false) ):
 		 * @return mixed|WP_Error
 		 */
 		protected function api($url, $queryParams = array()) {
+			$baseUrl = $url;
 			$url = $this->buildApiUrl($url, $queryParams);
 
 			$options = array('timeout' => 10);
@@ -145,6 +146,7 @@ if ( !class_exists('Puc_v4p3_Vcs_GitLabApi', false) ):
 			
 			$response = wp_remote_get($url, $options);
 			if ( is_wp_error($response) ) {
+				do_action('puc_api_error', $response, null, $url, $this->slug);
 				return $response;
 			}
 
@@ -154,10 +156,13 @@ if ( !class_exists('Puc_v4p3_Vcs_GitLabApi', false) ):
 				return json_decode($body);
 			}
 
-			return new WP_Error(
+			$error = new WP_Error(
 				'puc-gitlab-http-error',
-				'GitLab API Error. HTTP status: ' . $code
+				sprintf('GitLab API error. URL: "%s",  HTTP status code: %d.', $baseUrl, $code)
 			);
+			do_action('puc_api_error', $error, $response, $url, $this->slug);
+
+			return $error;
 		}
 
 		/**

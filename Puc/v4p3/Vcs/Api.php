@@ -3,6 +3,7 @@ if ( !class_exists('Puc_v4p3_Vcs_Api') ):
 
 	abstract class Puc_v4p3_Vcs_Api {
 		protected $tagNameProperty = 'name';
+		protected $slug = '';
 
 		/**
 		 * @var string
@@ -288,6 +289,13 @@ if ( !class_exists('Puc_v4p3_Vcs_Api') ):
 			} else {
 				$this->localDirectory = $directory;
 			}
+		}
+
+		/**
+		 * @param string $slug
+		 */
+		public function setSlug($slug) {
+			$this->slug = $slug;
 		}
 	}
 
