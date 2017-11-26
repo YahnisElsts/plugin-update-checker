@@ -8,6 +8,7 @@
  */
 
 require dirname(__FILE__) . '/Puc/v4p3/Factory.php';
+require dirname(__FILE__) . '/Puc/v4/Factory.php';
 require dirname(__FILE__) . '/Puc/v4p3/Autoloader.php';
 new Puc_v4p3_Autoloader();
 
