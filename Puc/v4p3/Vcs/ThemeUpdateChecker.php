@@ -93,6 +93,10 @@ if ( !class_exists('Puc_v4p3_Vcs_ThemeUpdateChecker', false) ):
 			return $this;
 		}
 
+		public function getVcsApi() {
+			return $this->api;
+		}
+
 		public function getUpdate() {
 			$update = parent::getUpdate();
 

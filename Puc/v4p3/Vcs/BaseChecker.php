@@ -17,6 +17,11 @@ if ( !interface_exists('Puc_v4p3_Vcs_BaseChecker', false) ):
 		 * @return $this
 		 */
 		public function setAuthentication($credentials);
+
+		/**
+		 * @return Puc_v4p3_Vcs_Api
+		 */
+		public function getVcsApi();
 	}
 
 endif;

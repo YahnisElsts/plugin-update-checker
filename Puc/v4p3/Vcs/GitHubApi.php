@@ -22,6 +22,21 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 		 */
 		protected $accessToken;
 
+		/**
+		 * @var bool Whether to download release assets instead of the auto-generated source code archives.
+		 */
+		protected $releaseAssetsEnabled = false;
+
+		/**
+		 * @var string|null Regular expression that's used to filter release assets by name. Optional.
+		 */
+		protected $assetFilterRegex = null;
+
+		/**
+		 * @var string|null The unchanging part of a release asset URL. Used to identify download attempts.
+		 */
+		protected $assetApiBaseUrl = null;
+
 		public function __construct($repositoryUrl, $accessToken = null) {
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
@@ -46,19 +61,40 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 			}
 
 			$reference = new Puc_v4p3_Vcs_Reference(array(
-				'name' => $release->tag_name,
-				'version' => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
+				'name'        => $release->tag_name,
+				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
 				'downloadUrl' => $this->signDownloadUrl($release->zipball_url),
-				'updated' => $release->created_at,
+				'updated'     => $release->created_at,
 				'apiResponse' => $release,
 			));
+
+			if ( isset($release->assets[0]) ) {
+				$reference->downloadCount = $release->assets[0]->download_count;
+			}
+
+			if ( $this->releaseAssetsEnabled && isset($release->assets, $release->assets[0]) ) {
+				//Use the first release asset that matches the specified regular expression.
+				$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
+				if ( !empty($matchingAssets) ) {
+					if ( $this->isAuthenticationEnabled() ) {
+						/**
+						 * Keep in mind that we'll need to add an "Accept" header to download this asset.
+						 * @see setReleaseDownloadHeader()
+						 */
+						$reference->downloadUrl = $this->signDownloadUrl($matchingAssets[0]->url);
+					} else {
+						//It seems that browser_download_url only works for public repositories.
+						//Using an access_token doesn't help. Maybe OAuth would work?
+						$reference->downloadUrl = $matchingAssets[0]->browser_download_url;
+					}
+
+					$reference->downloadCount = $matchingAssets[0]->download_count;
+				}
+			}
 
 			if ( !empty($release->body) ) {
 				/** @noinspection PhpUndefinedClassInspection */
 				$reference->changelog = Parsedown::instance()->text($release->body);
-			}
-			if ( isset($release->assets[0]) ) {
-				$reference->downloadCount = $release->assets[0]->download_count;
 			}
 
 			return $reference;
@@ -83,8 +119,8 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 
 			$tag = $versionTags[0];
 			return new Puc_v4p3_Vcs_Reference(array(
-				'name' => $tag->name,
-				'version' => ltrim($tag->name, 'v'),
+				'name'        => $tag->name,
+				'version'     => ltrim($tag->name, 'v'),
 				'downloadUrl' => $this->signDownloadUrl($tag->zipball_url),
 				'apiResponse' => $tag,
 			));
@@ -103,7 +139,7 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 			}
 
 			$reference = new Puc_v4p3_Vcs_Reference(array(
-				'name' => $branch->name,
+				'name'        => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 				'apiResponse' => $branch,
 			));
@@ -127,7 +163,7 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 				'/repos/:user/:repo/commits',
 				array(
 					'path' => $filename,
-					'sha' => $ref,
+					'sha'  => $ref,
 				)
 			);
 			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
@@ -302,6 +338,76 @@ if ( !class_exists('Puc_v4p3_Vcs_GitHubApi', false) ):
 			return add_query_arg('access_token', $this->credentials, $url);
 		}
 
+		/**
+		 * Enable updating via release assets.
+		 *
+		 * If the latest release contains no usable assets, the update checker
+		 * will fall back to using the automatically generated ZIP archive.
+		 *
+		 * Private repositories will only work with WordPress 3.7 or later.
+		 *
+		 * @param string|null $fileNameRegex Optional. Use only those assets where the file name matches this regex.
+		 */
+		public function enableReleaseAssets($fileNameRegex = null) {
+			$this->releaseAssetsEnabled = true;
+			$this->assetFilterRegex = $fileNameRegex;
+			$this->assetApiBaseUrl = sprintf(
+				'//api.github.com/repos/%1$s/%2$s/releases/assets/',
+				$this->userName,
+				$this->repositoryName
+			);
+
+			//Optimization: Instead of filtering all HTTP requests, let's do it only when
+			//WordPress is about to download an update.
+			add_filter('upgrader_pre_download', array($this, 'addHttpRequestFilter'), 10, 1); //WP 3.7+
+		}
+
+		/**
+		 * Does this asset match the file name regex?
+		 *
+		 * @param stdClass $releaseAsset
+		 * @return bool
+		 */
+		protected function matchesAssetFilter($releaseAsset) {
+			if ( $this->assetFilterRegex === null ) {
+				//The default is to accept all assets.
+				return true;
+			}
+			return isset($releaseAsset->name) && preg_match($this->assetFilterRegex, $releaseAsset->name);
+		}
+
+		/**
+		 * @internal
+		 * @param bool $result
+		 * @return bool
+		 */
+		public function addHttpRequestFilter($result) {
+			static $filterAdded = false;
+			if ( $this->releaseAssetsEnabled && !$filterAdded && $this->isAuthenticationEnabled() ) {
+				add_filter('http_request_args', array($this, 'setReleaseDownloadHeader'), 10, 2);
+				$filterAdded = true;
+			}
+			return $result;
+		}
+
+		/**
+		 * Set the HTTP header that's necessary to download private release assets.
+		 *
+		 * See GitHub docs:
+		 * @link https://developer.github.com/v3/repos/releases/#get-a-single-release-asset
+		 *
+		 * @internal
+		 * @param array $requestArgs
+		 * @param string $url
+		 * @return array
+		 */
+		public function setReleaseDownloadHeader($requestArgs, $url = '') {
+			//Is WordPress trying to download one of our assets?
+			if ( strpos($url, $this->assetApiBaseUrl) !== false ) {
+				$requestArgs['headers']['accept'] = 'application/octet-stream';
+			}
+			return $requestArgs;
+		}
 	}
 
 endif;
