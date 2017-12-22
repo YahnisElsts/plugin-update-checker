@@ -1,6 +1,6 @@
 <?php
 if ( !class_exists('Puc_v4_Factory', false) ):
 
-	class Puc_v4_Factory extends Puc_v4p3_Factory { }
+	class Puc_v4_Factory extends Puc_v4p4_Factory { }
 
 endif;
