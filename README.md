@@ -230,7 +230,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	);
 
 	//Note: Self-hosted instances of GitLab must be initialized like this:
-	$myUpdateChecker = new Puc_v4_Vcs_PluginUpdateChecker(
+	$myUpdateChecker = new Puc_v4p4_Vcs_PluginUpdateChecker(
 		new Puc_v4p4_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
 		__FILE__,
 		'unique-plugin-or-theme-slug'
