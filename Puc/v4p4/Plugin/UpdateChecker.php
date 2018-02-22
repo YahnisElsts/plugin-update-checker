@@ -41,12 +41,12 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 			}
 
 			//Plugin slugs must be unique.
-			$slugCheckFilter = 'puc_is_slug_in_use-' . $this->slug;
+			$slugCheckFilter = 'puc_is_slug_in_use-' . $slug;
 			$slugUsedBy = apply_filters($slugCheckFilter, false);
 			if ( $slugUsedBy ) {
 				$this->triggerError(sprintf(
 					'Plugin slug "%s" is already in use by %s. Slugs must be unique.',
-					htmlentities($this->slug),
+					htmlentities($slug),
 					htmlentities($slugUsedBy)
 				), E_USER_ERROR);
 			}

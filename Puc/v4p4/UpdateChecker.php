@@ -12,7 +12,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * and should be logged to the standard PHP error log.
 		 * @var bool
 		 */
-		public $debugMode = false;
+		public $debugMode = null;
 
 		/**
 		 * @var string Where to store the update info.
@@ -330,9 +330,19 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @param int $errorType
 		 */
 		protected function triggerError($message, $errorType) {
-			if ($this->debugMode) {
+			if ($this->isDebugModeEnabled()) {
 				trigger_error($message, $errorType);
 			}
+		}
+
+		/**
+		 * @return bool
+		 */
+		protected function isDebugModeEnabled() {
+			if ($this->debugMode === null) {
+				$this->debugMode = (bool)(constant('WP_DEBUG'));
+			}
+			return $this->debugMode;
 		}
 
 		/**
