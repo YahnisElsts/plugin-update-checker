@@ -27,9 +27,9 @@ if ( !class_exists('Puc_v4p4_Vcs_GitLabApi', false) ):
 			//Parse the repository host to support custom hosts.
 			$port = @parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ){
-				$port = ':'.$port;
+				$port = ':' . $port;
 			}
-			$this->repositoryHost = @parse_url($repositoryUrl, PHP_URL_HOST).$port;
+			$this->repositoryHost = @parse_url($repositoryUrl, PHP_URL_HOST) . $port;
 
 			//Find the repository information
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
