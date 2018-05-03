@@ -115,6 +115,11 @@ This library supports a couple of different ways to release updates on GitHub. P
 	
 	Create a new release using the "Releases" feature on GitHub. The tag name and release title don't matter. The description is optional, but if you do provide one, it will be displayed when the user clicks the "View version x.y.z details" link on the "Plugins" page. Note that PUC ignores releases marked as "This is a pre-release".
 	
+	If you want to use release assets, call the `enableReleaseAssets()` method after creating the update checker instance:
+	```php
+	$myUpdateChecker->getVcsApi()->enableReleaseAssets();
+	```
+	
 - **Tags** 
 	
 	To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
