@@ -883,7 +883,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * Initialize the update checker Debug Bar plugin/add-on thingy.
 		 */
 		public function maybeInitDebugBar() {
-			if ( class_exists('Debug_Bar', false) && file_exists(dirname(__FILE__ . '/DebugBar')) ) {
+			if ( class_exists('Debug_Bar', false) && file_exists(dirname(__FILE__) . '/DebugBar') ) {
 				$this->createDebugBarExtension();
 			}
 		}
