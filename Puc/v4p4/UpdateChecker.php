@@ -301,13 +301,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 			//Let plugins/themes modify the update.
 			$update = apply_filters($this->getUniqueName('request_update_result'), $update, $httpResult);
 
-			// "Tested up to" field in the plugin metadata is supposed to be in form of "major.minor",
-			// while WordPress core's list_plugin_updates() expects the $update->tested field to be
-			// the exact version, e.g. "major.minor.patch", to say it's compatible. In other case it would
-			// show "Compatibility: Unknown". That kinda mimics how wordpress.org API handles the "tested" field.
-			if (isset($update->tested) && preg_match('/^\d+\.\d+$/', $update->tested)) {
-				$update->tested .= ".999";
-			}
+			$this->fixSupportedWordpressVersion($update);
 
 			if ( isset($update, $update->translations) ) {
 				//Keep only those translation updates that apply to this site.
@@ -315,6 +309,48 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 			}
 
 			return $update;
+		}
+
+		/**
+		 * The "Tested up to" field in the plugin metadata is supposed to be in the form of "major.minor",
+		 * while WordPress core's list_plugin_updates() expects the $update->tested field to be an exact
+		 * version, e.g. "major.minor.patch", to say it's compatible. In other case it shows
+		 * "Compatibility: Unknown".
+		 * The function mimics how wordpress.org API crafts the "tested" field out of "Tested up to".
+		 *
+		 * @param Puc_v4p4_Update|null $update
+		 */
+		private function fixSupportedWordpressVersion(Puc_v4p4_Update $update = null) {
+
+			if (!isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested)) {
+				return;
+			}
+
+			$actualWpVersions = array(); {
+
+				$wpVersion = $GLOBALS['wp_version'];
+
+				if ( function_exists('get_preferred_from_update_core') ) {
+					$coreUpdate = get_preferred_from_update_core();
+					if ( isset($coreUpdate->current) && version_compare($coreUpdate->current, $wpVersion, '>') ) {
+						$actualWpVersions[] = $coreUpdate->current;
+					}
+				}
+
+				$actualWpVersions[] = $wpVersion;
+			}
+
+			$actualWpPatchNumber = "999";
+			foreach ( $actualWpVersions as $version ) {
+				if ( preg_match('/^(?P<majorMinor>\d++\.\d++)\.(?P<patch>\d++)/', $version, $versionParts) ) {
+					if ( $versionParts['majorMinor'] === $update->tested ) {
+						$actualWpPatchNumber = $versionParts['patch'];
+						break;
+					}
+				}
+			}
+
+			$update->tested .= '.' . $actualWpPatchNumber;
 		}
 
 		/**
