@@ -326,19 +326,20 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 				return;
 			}
 
-			$actualWpVersions = array(); {
 
-				$wpVersion = $GLOBALS['wp_version'];
+			$actualWpVersions = array();
 
-				if ( function_exists('get_preferred_from_update_core') ) {
-					$coreUpdate = get_preferred_from_update_core();
-					if ( isset($coreUpdate->current) && version_compare($coreUpdate->current, $wpVersion, '>') ) {
-						$actualWpVersions[] = $coreUpdate->current;
-					}
+			$wpVersion = $GLOBALS['wp_version'];
+
+			if ( function_exists('get_preferred_from_update_core') ) {
+				$coreUpdate = get_preferred_from_update_core();
+				if ( isset($coreUpdate->current) && version_compare($coreUpdate->current, $wpVersion, '>') ) {
+					$actualWpVersions[] = $coreUpdate->current;
 				}
-
-				$actualWpVersions[] = $wpVersion;
 			}
+
+			$actualWpVersions[] = $wpVersion;
+
 
 			$actualWpPatchNumber = "999";
 			foreach ( $actualWpVersions as $version ) {
