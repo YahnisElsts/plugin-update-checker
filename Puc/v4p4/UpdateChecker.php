@@ -321,11 +321,9 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @param Puc_v4p4_Update|null $update
 		 */
 		protected function fixSupportedWordpressVersion(Puc_v4p4_Update $update = null) {
-
-			if (!isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested)) {
+			if ( !isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested) ) {
 				return;
 			}
-
 
 			$actualWpVersions = array();
 
@@ -340,9 +338,8 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 
 			$actualWpVersions[] = $wpVersion;
 
-
 			$actualWpPatchNumber = "999";
-			foreach ( $actualWpVersions as $version ) {
+			foreach ($actualWpVersions as $version) {
 				if ( preg_match('/^(?P<majorMinor>\d++\.\d++)\.(?P<patch>\d++)/', $version, $versionParts) ) {
 					if ( $versionParts['majorMinor'] === $update->tested ) {
 						$actualWpPatchNumber = $versionParts['patch'];
@@ -375,7 +372,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @param int $errorType
 		 */
 		protected function triggerError($message, $errorType) {
-			if ($this->isDebugModeEnabled()) {
+			if ( $this->isDebugModeEnabled() ) {
 				trigger_error($message, $errorType);
 			}
 		}
@@ -384,7 +381,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @return bool
 		 */
 		protected function isDebugModeEnabled() {
-			if ($this->debugMode === null) {
+			if ( $this->debugMode === null ) {
 				$this->debugMode = (bool)(constant('WP_DEBUG'));
 			}
 			return $this->debugMode;
@@ -401,7 +398,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 */
 		public function getUniqueName($baseTag) {
 			$name = 'puc_' . $baseTag;
-			if ($this->filterSuffix !== '') {
+			if ( $this->filterSuffix !== '' ) {
 				$name .= '_' . $this->filterSuffix;
 			}
 			return $name . '-' . $this->slug;
@@ -648,7 +645,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 			$installedTranslations = $this->getInstalledTranslations();
 
 			$applicableTranslations = array();
-			foreach($translations as $translation) {
+			foreach ($translations as $translation) {
 				//Does it match one of the available core languages?
 				$isApplicable = array_key_exists($translation->language, $languages);
 				//Is it more recent than an already-installed translation?
@@ -888,7 +885,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @return string[]
 		 */
 		public function getFileHeader($content) {
-			$content = (string) $content;
+			$content = (string)$content;
 
 			//WordPress only looks at the first 8 KiB of the file, so we do the same.
 			$content = substr($content, 0, 8192);
