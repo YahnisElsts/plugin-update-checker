@@ -259,5 +259,12 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 
 			return $output;
 		}
+
+		public function removeHooks() {
+			remove_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10);
+			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
+			remove_action('admin_init', array($this, 'handleManualCheck'));
+			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
+		}
 	}
 endif;

@@ -112,14 +112,10 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		 */
 		public function removeHooks() {
 			parent::removeHooks();
+			$this->extraUi->removeHooks();
 
 			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
-
-			remove_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10);
-			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
-			remove_action('admin_init', array($this, 'handleManualCheck'));
-			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
-
+			
 			remove_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
 			remove_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
 		}
