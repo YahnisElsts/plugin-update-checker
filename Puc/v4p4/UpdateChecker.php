@@ -36,6 +36,11 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		public $slug = '';
 
 		/**
+		 * @var Puc_v4p4_InstalledPackage
+		 */
+		protected $package;
+
+		/**
 		 * @var Puc_v4p4_Scheduler
 		 */
 		public $scheduler;
@@ -72,6 +77,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 				}
 			}
 
+			$this->package = $this->createInstalledPackage();
 			$this->scheduler = $this->createScheduler($checkPeriod);
 			$this->upgraderStatus = new Puc_v4p4_UpgraderStatus();
 			$this->updateState = new Puc_v4p4_StateStore($this->optionName);
@@ -190,6 +196,20 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 				return true;
 			}
 			return $allow;
+		}
+
+		/**
+		 * Create a package instance that represents this plugin or theme.
+		 *
+		 * @return Puc_v4p4_InstalledPackage
+		 */
+		abstract protected function createInstalledPackage();
+
+		/**
+		 * @return Puc_v4p4_InstalledPackage
+		 */
+		public function getInstalledPackage() {
+			return $this->package;
 		}
 
 		/**
@@ -356,14 +376,18 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 *
 		 * @return string|null Version number.
 		 */
-		abstract public function getInstalledVersion();
+		public function getInstalledVersion() {
+			return $this->package->getInstalledVersion();
+		}
 
 		/**
 		 * Get the full path of the plugin or theme directory.
 		 *
 		 * @return string
 		 */
-		abstract public function getAbsoluteDirectoryPath();
+		public function getAbsoluteDirectoryPath() {
+			return $this->package->getAbsoluteDirectoryPath();
+		}
 
 		/**
 		 * Trigger a PHP error, but only when $debugMode is enabled.
@@ -371,7 +395,7 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 		 * @param string $message
 		 * @param int $errorType
 		 */
-		protected function triggerError($message, $errorType) {
+		public function triggerError($message, $errorType) {
 			if ( $this->isDebugModeEnabled() ) {
 				trigger_error($message, $errorType);
 			}
@@ -869,52 +893,6 @@ if ( !class_exists('Puc_v4p4_UpdateChecker', false) ):
 			//Assume it's fine.
 			return false;
 		}
-
-		/* -------------------------------------------------------------------
-		 * File header parsing
-		 * -------------------------------------------------------------------
-		 */
-
-		/**
-		 * Parse plugin or theme metadata from the header comment.
-		 *
-		 * This is basically a simplified version of the get_file_data() function from /wp-includes/functions.php.
-		 * It's intended as a utility for subclasses that detect updates by parsing files in a VCS.
-		 *
-		 * @param string|null $content File contents.
-		 * @return string[]
-		 */
-		public function getFileHeader($content) {
-			$content = (string)$content;
-
-			//WordPress only looks at the first 8 KiB of the file, so we do the same.
-			$content = substr($content, 0, 8192);
-			//Normalize line endings.
-			$content = str_replace("\r", "\n", $content);
-
-			$headers = $this->getHeaderNames();
-			$results = array();
-			foreach ($headers as $field => $name) {
-				$success = preg_match('/^[ \t\/*#@]*' . preg_quote($name, '/') . ':(.*)$/mi', $content, $matches);
-
-				if ( ($success === 1) && $matches[1] ) {
-					$value = $matches[1];
-					if ( function_exists('_cleanup_header_comment') ) {
-						$value = _cleanup_header_comment($value);
-					}
-					$results[$field] = $value;
-				} else {
-					$results[$field] = '';
-				}
-			}
-
-			return $results;
-		}
-
-		/**
-		 * @return array Format: ['HeaderKey' => 'Header Name']
-		 */
-		abstract protected function getHeaderNames();
 
 		/* -------------------------------------------------------------------
 		 * DebugBar integration

@@ -12,17 +12,11 @@ if ( !class_exists('Puc_v4p4_Theme_UpdateChecker', false) ):
 		 */
 		protected $stylesheet;
 
-		/**
-		 * @var WP_Theme Theme object.
-		 */
-		protected $theme;
-
 		public function __construct($metadataUrl, $stylesheet = null, $customSlug = null, $checkPeriod = 12, $optionName = '') {
 			if ( $stylesheet === null ) {
 				$stylesheet = get_stylesheet();
 			}
 			$this->stylesheet = $stylesheet;
-			$this->theme = wp_get_theme($this->stylesheet);
 
 			parent::__construct(
 				$metadataUrl,
@@ -61,25 +55,6 @@ if ( !class_exists('Puc_v4p4_Theme_UpdateChecker', false) ):
 
 		public function userCanInstallUpdates() {
 			return current_user_can('update_themes');
-		}
-
-		/**
-		 * Get the currently installed version of the plugin or theme.
-		 *
-		 * @return string Version number.
-		 */
-		public function getInstalledVersion() {
-			return $this->theme->get('Version');
-		}
-
-		/**
-		 * @return string
-		 */
-		public function getAbsoluteDirectoryPath() {
-			if ( method_exists($this->theme, 'get_stylesheet_directory') ) {
-				return $this->theme->get_stylesheet_directory(); //Available since WP 3.4.
-			}
-			return get_theme_root($this->stylesheet) . '/' . $this->stylesheet;
 		}
 
 		/**
@@ -155,22 +130,12 @@ if ( !class_exists('Puc_v4p4_Theme_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @return array
+		 * Create a package instance that represents this plugin or theme.
+		 *
+		 * @return Puc_v4p4_InstalledPackage
 		 */
-		protected function getHeaderNames() {
-			return array(
-				'Name'        => 'Theme Name',
-				'ThemeURI'    => 'Theme URI',
-				'Description' => 'Description',
-				'Author'      => 'Author',
-				'AuthorURI'   => 'Author URI',
-				'Version'     => 'Version',
-				'Template'    => 'Template',
-				'Status'      => 'Status',
-				'Tags'        => 'Tags',
-				'TextDomain'  => 'Text Domain',
-				'DomainPath'  => 'Domain Path',
-			);
+		protected function createInstalledPackage() {
+			return new Puc_v4p4_Theme_Package($this->stylesheet, $this);
 		}
 	}
 

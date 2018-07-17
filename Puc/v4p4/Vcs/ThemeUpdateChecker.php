@@ -33,7 +33,7 @@ if ( !class_exists('Puc_v4p4_Vcs_ThemeUpdateChecker', false) ):
 
 		public function requestUpdate() {
 			$api = $this->api;
-			$api->setLocalDirectory($this->getAbsoluteDirectoryPath());
+			$api->setLocalDirectory($this->package->getAbsoluteDirectoryPath());
 
 			$update = new Puc_v4p4_Theme_Update();
 			$update->slug = $this->slug;
@@ -59,7 +59,7 @@ if ( !class_exists('Puc_v4p4_Vcs_ThemeUpdateChecker', false) ):
 
 			//Get headers from the main stylesheet in this branch/tag. Its "Version" header and other metadata
 			//are what the WordPress install will actually see after upgrading, so they take precedence over releases/tags.
-			$remoteHeader = $this->getFileHeader($api->getRemoteFile('style.css', $ref));
+			$remoteHeader = $this->package->getFileHeader($api->getRemoteFile('style.css', $ref));
 			$update->version = Puc_v4p4_Utils::findNotEmpty(array(
 				$remoteHeader['Version'],
 				Puc_v4p4_Utils::get($updateSource, 'version'),
@@ -68,7 +68,7 @@ if ( !class_exists('Puc_v4p4_Vcs_ThemeUpdateChecker', false) ):
 			//The details URL defaults to the Theme URI header or the repository URL.
 			$update->details_url = Puc_v4p4_Utils::findNotEmpty(array(
 				$remoteHeader['ThemeURI'],
-				$this->theme->get('ThemeURI'),
+				$this->package->getHeaderValue('ThemeURI'),
 				$this->metadataUrl,
 			));
 

@@ -39,13 +39,13 @@ if ( !class_exists('Puc_v4p4_Vcs_PluginUpdateChecker') ):
 			}
 
 			$api = $this->api;
-			$api->setLocalDirectory($this->getAbsoluteDirectoryPath());
+			$api->setLocalDirectory($this->package->getAbsoluteDirectoryPath());
 
 			$info = new Puc_v4p4_Plugin_Info();
 			$info->filename = $this->pluginFile;
 			$info->slug = $this->slug;
 
-			$this->setInfoFromHeader($this->getPluginHeader(), $info);
+			$this->setInfoFromHeader($this->package->getPluginHeader(), $info);
 
 			//Pick a branch or tag.
 			$updateSource = $api->chooseReference($this->branch);
@@ -81,7 +81,7 @@ if ( !class_exists('Puc_v4p4_Vcs_PluginUpdateChecker') ):
 			$mainPluginFile = basename($this->pluginFile);
 			$remotePlugin = $api->getRemoteFile($mainPluginFile, $ref);
 			if ( !empty($remotePlugin) ) {
-				$remoteHeader = $this->getFileHeader($remotePlugin);
+				$remoteHeader = $this->package->getFileHeader($remotePlugin);
 				$this->setInfoFromHeader($remoteHeader, $info);
 			}
 
@@ -93,7 +93,7 @@ if ( !class_exists('Puc_v4p4_Vcs_PluginUpdateChecker') ):
 
 			//The changelog might be in a separate file.
 			if ( empty($info->sections['changelog']) ) {
-				$info->sections['changelog'] = $api->getRemoteChangelog($ref, dirname($this->getAbsolutePath()));
+				$info->sections['changelog'] = $api->getRemoteChangelog($ref, $this->package->getAbsoluteDirectoryPath());
 				if ( empty($info->sections['changelog']) ) {
 					$info->sections['changelog'] = __('There is no changelog available.', 'plugin-update-checker');
 				}
@@ -117,11 +117,7 @@ if ( !class_exists('Puc_v4p4_Vcs_PluginUpdateChecker') ):
 		 * @return bool
 		 */
 		protected function readmeTxtExistsLocally() {
-			$pluginDirectory = $this->getAbsoluteDirectoryPath();
-			if ( empty($pluginDirectory) || !is_dir($pluginDirectory) || ($pluginDirectory === '.') ) {
-				return false;
-			}
-			return is_file($pluginDirectory . '/' . $this->api->getLocalReadmeName());
+			return $this->package->fileExists($this->api->getLocalReadmeName());
 		}
 
 		/**

@@ -5,7 +5,7 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 	 * A custom plugin update checker.
 	 *
 	 * @author Janis Elsts
-	 * @copyright 2016
+	 * @copyright 2018
 	 * @access public
 	 */
 	class Puc_v4p4_Plugin_UpdateChecker extends Puc_v4p4_UpdateChecker {
@@ -16,7 +16,11 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		public $pluginFile = '';  //Plugin filename relative to the plugins directory. Many WP APIs use this to identify plugins.
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
-		private $cachedInstalledVersion = null;
+		/**
+		 * @var Puc_v4p4_Plugin_Package
+		 */
+		protected $package;
+
 		private $extraUi = null;
 
 		/**
@@ -89,10 +93,6 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 			//Override requests for plugin information
 			add_filter('plugins_api', array($this, 'injectInfo'), 20, 3);
 
-			//Clear the version number cache when something - anything - is upgraded or WP clears the update cache.
-			add_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
-			add_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
-
 			parent::installHooks();
 		}
 
@@ -113,11 +113,9 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		public function removeHooks() {
 			parent::removeHooks();
 			$this->extraUi->removeHooks();
+			$this->package->removeHooks();
 
 			remove_filter('plugins_api', array($this, 'injectInfo'), 20);
-			
-			remove_filter('upgrader_post_install', array($this, 'clearCachedVersion'));
-			remove_action('delete_site_transient_update_plugins', array($this, 'clearCachedVersion'));
 		}
 
 		/**
@@ -163,83 +161,6 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
-		 * Get the currently installed version of the plugin.
-		 *
-		 * @return string Version number.
-		 */
-		public function getInstalledVersion(){
-			if ( isset($this->cachedInstalledVersion) ) {
-				return $this->cachedInstalledVersion;
-			}
-
-			$pluginHeader = $this->getPluginHeader();
-			if ( isset($pluginHeader['Version']) ) {
-				$this->cachedInstalledVersion = $pluginHeader['Version'];
-				return $pluginHeader['Version'];
-			} else {
-				//This can happen if the filename points to something that is not a plugin.
-				$this->triggerError(
-					sprintf(
-						"Can't to read the Version header for '%s'. The filename is incorrect or is not a plugin.",
-						$this->pluginFile
-					),
-					E_USER_WARNING
-				);
-				return null;
-			}
-		}
-
-		/**
-		 * Get plugin's metadata from its file header.
-		 *
-		 * @return array
-		 */
-		protected function getPluginHeader() {
-			if ( !is_file($this->pluginAbsolutePath) ) {
-				//This can happen if the plugin filename is wrong.
-				$this->triggerError(
-					sprintf(
-						"Can't to read the plugin header for '%s'. The file does not exist.",
-						$this->pluginFile
-					),
-					E_USER_WARNING
-				);
-				return array();
-			}
-
-			if ( !function_exists('get_plugin_data') ){
-				/** @noinspection PhpIncludeInspection */
-				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-			}
-			return get_plugin_data($this->pluginAbsolutePath, false, false);
-		}
-
-		/**
-		 * @return array
-		 */
-		protected function getHeaderNames() {
-			return array(
-				'Name' => 'Plugin Name',
-				'PluginURI' => 'Plugin URI',
-				'Version' => 'Version',
-				'Description' => 'Description',
-				'Author' => 'Author',
-				'AuthorURI' => 'Author URI',
-				'TextDomain' => 'Text Domain',
-				'DomainPath' => 'Domain Path',
-				'Network' => 'Network',
-
-				//The newest WordPress version that this plugin requires or has been tested with.
-				//We support several different formats for compatibility with other libraries.
-				'Tested WP' => 'Tested WP',
-				'Requires WP' => 'Requires WP',
-				'Tested up to' => 'Tested up to',
-				'Requires at least' => 'Requires at least',
-			);
-		}
-
-
-		/**
 		 * Intercept plugins_api() calls that request information about our plugin and
 		 * use the configured API endpoint to satisfy them.
 		 *
@@ -279,7 +200,7 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		 * @return stdClass
 		 */
 		protected function addUpdateToList($updates, $updateToAdd) {
-			if ( $this->isMuPlugin() ) {
+			if ( $this->package->isMuPlugin() ) {
 				//WP does not support automatic update installation for mu-plugins, but we can
 				//still display a notice.
 				$updateToAdd->package = null;
@@ -306,7 +227,7 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		 * @return string
 		 */
 		protected function getUpdateListKey() {
-			if ( $this->isMuPlugin() ) {
+			if ( $this->package->isMuPlugin() ) {
 				return $this->muPluginFile;
 			}
 			return $this->pluginFile;
@@ -356,15 +277,11 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		/**
 		 * Get the translated plugin title.
 		 *
+		 * @deprecated
 		 * @return string
 		 */
 		public function getPluginTitle() {
-			$title  = '';
-			$header = $this->getPluginHeader();
-			if ( $header && !empty($header['Name']) && isset($header['TextDomain']) ) {
-				$title = translate($header['Name'], $header['TextDomain']);
-			}
-			return $title;
+			return $this->package->getPluginTitle();
 		}
 
 		/**
@@ -379,20 +296,11 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		/**
 		 * Check if the plugin file is inside the mu-plugins directory.
 		 *
+		 * @deprecated
 		 * @return bool
 		 */
 		protected function isMuPlugin() {
-			static $cachedResult = null;
-
-			if ( $cachedResult === null ) {
-				//Convert both paths to the canonical form before comparison.
-				$muPluginDir = realpath(WPMU_PLUGIN_DIR);
-				$pluginPath  = realpath($this->pluginAbsolutePath);
-
-				$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);
-			}
-
-			return $cachedResult;
+			return $this->package->isMuPlugin();
 		}
 
 		/**
@@ -402,19 +310,7 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		 * @return bool
 		 */
 		protected function isUnknownMuPlugin() {
-			return empty($this->muPluginFile) && $this->isMuPlugin();
-		}
-
-		/**
-		 * Clear the cached plugin version. This method can be set up as a filter (hook) and will
-		 * return the filter argument unmodified.
-		 *
-		 * @param mixed $filterArgument
-		 * @return mixed
-		 */
-		public function clearCachedVersion($filterArgument = null) {
-			$this->cachedInstalledVersion = null;
-			return $filterArgument;
+			return empty($this->muPluginFile) && $this->package->isMuPlugin();
 		}
 
 		/**
@@ -424,13 +320,6 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 		 */
 		public function getAbsolutePath() {
 			return $this->pluginAbsolutePath;
-		}
-
-		/**
-		 * @return string
-		 */
-		public function getAbsoluteDirectoryPath() {
-			return dirname($this->pluginAbsolutePath);
 		}
 
 		/**
@@ -485,6 +374,22 @@ if ( !class_exists('Puc_v4p4_Plugin_UpdateChecker', false) ):
 
 		protected function createDebugBarExtension() {
 			return new Puc_v4p4_DebugBar_PluginExtension($this);
+		}
+
+		/**
+		 * Create a package instance that represents this plugin or theme.
+		 *
+		 * @return Puc_v4p4_InstalledPackage
+		 */
+		protected function createInstalledPackage() {
+			return new Puc_v4p4_Plugin_Package($this->pluginAbsolutePath, $this);
+		}
+
+		/**
+		 * @return Puc_v4p4_Plugin_Package
+		 */
+		public function getInstalledPackage() {
+			return $this->package;
 		}
 	}
 

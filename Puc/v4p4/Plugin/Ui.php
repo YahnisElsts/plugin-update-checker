@@ -198,7 +198,7 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 		public function displayManualCheckResult() {
 			if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->updateChecker->slug) ) {
 				$status = strval($_GET['puc_update_check_result']);
-				$title = $this->updateChecker->getPluginTitle();
+				$title = $this->updateChecker->getInstalledPackage()->getPluginTitle();
 				$noticeClass = 'updated notice-success';
 				$details = '';
 
