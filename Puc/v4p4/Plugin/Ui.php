@@ -14,10 +14,17 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 			$this->updateChecker = $updateChecker;
 			$this->manualCheckErrorTransient = $this->updateChecker->getUniqueName('manual_check_errors');
 
-			add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 3);
-			add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
-			add_action('admin_init', array($this, 'handleManualCheck'));
-			add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
+			add_action('admin_init', array($this, 'onAdminInit'));
+		}
+
+		public function onAdminInit() {
+			if ( $this->updateChecker->userCanInstallUpdates() ) {
+				$this->handleManualCheck();
+
+				add_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10, 3);
+				add_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10, 2);
+				add_action('all_admin_notices', array($this, 'displayManualCheckResult'));
+			}
 		}
 
 		/**
@@ -43,7 +50,7 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 		 * @return array
 		 */
 		public function addViewDetailsLink($pluginMeta, $pluginFile, $pluginData = array()) {
-			if ( $this->isMyPluginFile($pluginFile) && $this->updateChecker->userCanInstallUpdates() && !isset($pluginData['slug']) ) {
+			if ( $this->isMyPluginFile($pluginFile) && !isset($pluginData['slug']) ) {
 				$linkText = apply_filters($this->updateChecker->getUniqueName('view_details_link'), __('View details'));
 				if ( !empty($linkText) ) {
 					$viewDetailsLinkPosition = 'append';
@@ -104,7 +111,7 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 		 * @return array
 		 */
 		public function addCheckForUpdatesLink($pluginMeta, $pluginFile) {
-			if ( $this->isMyPluginFile($pluginFile) && $this->updateChecker->userCanInstallUpdates() ) {
+			if ( $this->isMyPluginFile($pluginFile) ) {
 				$linkUrl = wp_nonce_url(
 					add_query_arg(
 						array(
@@ -144,7 +151,6 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 			$shouldCheck =
 				isset($_GET['puc_check_for_updates'], $_GET['puc_slug'])
 				&& $_GET['puc_slug'] == $this->updateChecker->slug
-				&& $this->updateChecker->userCanInstallUpdates()
 				&& check_admin_referer('puc_check_for_updates');
 
 			if ( $shouldCheck ) {
@@ -185,6 +191,7 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 					),
 					self_admin_url('plugins.php')
 				));
+				exit;
 			}
 		}
 
@@ -261,9 +268,9 @@ if ( !class_exists('Puc_v4p4_Plugin_Ui', false) ):
 		}
 
 		public function removeHooks() {
+			remove_action('admin_init', array($this, 'onAdminInit'));
 			remove_filter('plugin_row_meta', array($this, 'addViewDetailsLink'), 10);
 			remove_filter('plugin_row_meta', array($this, 'addCheckForUpdatesLink'), 10);
-			remove_action('admin_init', array($this, 'handleManualCheck'));
 			remove_action('all_admin_notices', array($this, 'displayManualCheckResult'));
 		}
 	}
