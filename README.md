@@ -20,6 +20,7 @@ From the users' perspective, it works just like with plugins and themes hosted o
     - [How to Release an Update](#how-to-release-an-update-2)
   - [GitLab Integration](#gitlab-integration)
     - [How to Release an Update](#how-to-release-an-update-3)
+- [License Management](#license-management)
 - [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -268,6 +269,11 @@ GitLab doesn't have an equivalent to GitHub's releases, so the process is slight
 	 PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version.
 	 
 	 Caveat: If you set the branch to `master` (the default), the update checker will look for recent releases and tags first. It'll only use the `master` branch if it doesn't find anything else suitable.
+
+License Management
+------------------
+
+Currently, the update checker doesn't have any built-in license management features. It only provides some hooks that you can use to, for example, append license keys to update requests (`$updateChecker->addQueryArgFilter()`). If you're looking for ways to manage and verify licenses, please post your feedback in [this issue](https://github.com/YahnisElsts/plugin-update-checker/issues/222).  
 
 Resources
 ---------
