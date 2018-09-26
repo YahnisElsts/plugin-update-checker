@@ -121,11 +121,15 @@ class PucReadmeParser {
 		$_sections = preg_split('/^[\s]*==[\s]*(.+?)[\s]*==/m', $file_contents, -1, PREG_SPLIT_DELIM_CAPTURE|PREG_SPLIT_NO_EMPTY);
 
 		$sections = array();
-		for ( $i=1; $i < count($_sections); $i +=2 ) {
-			$_sections[$i] = preg_replace('/(^[\s]*)=[\s]+(.+?)[\s]+=/m', '$1<h4>$2</h4>', $_sections[$i]);
-			$_sections[$i] = $this->filter_text( $_sections[$i], true );
-			$title = $this->sanitize_text( $_sections[$i-1] );
-			$sections[str_replace(' ', '_', strtolower($title))] = array('title' => $title, 'content' => $_sections[$i]);
+		for ( $i=0; $i < count($_sections); $i +=2 ) {
+			$title = $this->sanitize_text( $_sections[$i] );
+			if ( isset($_sections[$i+1]) ) {
+				$content = preg_replace('/(^[\s]*)=[\s]+(.+?)[\s]+=/m', '$1<h4>$2</h4>', $_sections[$i+1]);
+				$content = $this->filter_text( $content, true );
+			} else {
+				$content = '';
+			}
+			$sections[str_replace(' ', '_', strtolower($title))] = array('title' => $title, 'content' => $content);
 		}
 
 
