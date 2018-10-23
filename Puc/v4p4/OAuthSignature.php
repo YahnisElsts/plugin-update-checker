@@ -80,7 +80,19 @@ if ( !class_exists('Puc_v4p4_OAuthSignature', false) ):
 		 */
 		private function nonce() {
 			$mt = microtime();
-			$rand = mt_rand();
+
+			$rand = null;
+			if ( is_callable('random_bytes') ) {
+				try {
+					$rand = random_bytes(16);
+				} catch (Exception $ex) {
+					//Fall back to mt_rand (below).
+				}
+			}
+			if ( $rand === null ) {
+				$rand = mt_rand();
+			}
+
 			return md5($mt . '_' . $rand);
 		}
 	}
