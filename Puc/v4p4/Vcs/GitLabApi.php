@@ -11,7 +11,7 @@ if ( !class_exists('Puc_v4p4_Vcs_GitLabApi', false) ):
 		/**
 		 * @var string GitLab server host.
 		 */
-		private $repositoryHost;
+		protected $repositoryHost;
 
 		/**
 		 * @var string GitLab repository name.
