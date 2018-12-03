@@ -36,6 +36,15 @@ if ( !class_exists('Puc_v4p4_Vcs_GitLabApi', false) ):
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
+			} elseif ( ($this->repositoryHost === 'gitlab.com') ) {
+				//This is probably a repository in a subgroup, e.g. "/organization/category/repo".
+				$parts = explode('/', trim($path, '/'));
+				if ( count($parts) < 3 ) {
+					throw new InvalidArgumentException('Invalid GitLab.com repository URL: "' . $repositoryUrl . '"');
+				}
+				$lastPart = array_pop($parts);
+				$this->userName = implode('/', $parts);
+				$this->repositoryName = $lastPart;
 			} else {
 				//This is not a traditional url, it could be gitlab is in a deeper subdirectory.
 				//Get the path segments.
