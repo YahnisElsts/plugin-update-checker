@@ -184,10 +184,10 @@ if ( !class_exists('Puc_v4p4_Vcs_GitLabApi', false) ):
 			);
 
 			foreach ($variables as $name => $value) {
-				$url = str_replace("/:{$name}", urlencode('/' . $value), $url);
+				$url = str_replace("/:{$name}", '/' . urlencode($value), $url);
 			}
 
-			$url = substr($url, 3);
+			$url = substr($url, 1);
 			$url = sprintf('https://%1$s/api/v4/projects/%2$s', $this->repositoryHost, $url);
 
 			if ( !empty($this->accessToken) ) {
