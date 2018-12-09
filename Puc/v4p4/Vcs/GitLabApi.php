@@ -209,7 +209,7 @@ if ( !class_exists('Puc_v4p4_Vcs_GitLabApi', false) ):
 		 * @return null|string Either the contents of the file, or null if the file doesn't exist or there's an error.
 		 */
 		public function getRemoteFile($path, $ref = 'master') {
-			$response = $this->api('/:user/:repo/repository/files/' . $path, array('ref' => $ref));
+			$response = $this->api('/:id/repository/files/' . $path, array('ref' => $ref));
 			if ( is_wp_error($response) || !isset($response->content) || $response->encoding !== 'base64' ) {
 				return null;
 			}
