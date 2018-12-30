@@ -160,9 +160,19 @@ if ( !class_exists('Puc_v4p5_Plugin_Package', false) ):
 			static $cachedResult = null;
 
 			if ( $cachedResult === null ) {
+				if ( !defined('WPMU_PLUGIN_DIR') || !is_string(WPMU_PLUGIN_DIR) ) {
+					$cachedResult = false;
+					return $cachedResult;
+				}
+
 				//Convert both paths to the canonical form before comparison.
 				$muPluginDir = realpath(WPMU_PLUGIN_DIR);
 				$pluginPath  = realpath($this->pluginAbsolutePath);
+				//If realpath() fails, just normalize the syntax instead.
+				if (($muPluginDir === false) || ($pluginPath === false)) {
+					$muPluginDir = Puc_v4p5_Factory::normalizePath(WPMU_PLUGIN_DIR);
+					$pluginPath  = Puc_v4p5_Factory::normalizePath($this->pluginAbsolutePath);
+				}
 
 				$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);
 			}
