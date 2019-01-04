@@ -235,19 +235,23 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 		'unique-plugin-or-theme-slug'
 	);
 
-	//Note: Self-hosted instances of GitLab must be initialized like this:
-	$myUpdateChecker = new Puc_v4p5_Vcs_PluginUpdateChecker(
-		new Puc_v4p5_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
-		__FILE__,
-		'unique-plugin-or-theme-slug'
-	);
-
 	//Optional: If you're using a private repository, specify the access token like this:
 	$myUpdateChecker->setAuthentication('your-token-here');
 
 	//Optional: Set the branch that contains the stable release.
 	$myUpdateChecker->setBranch('stable-branch-name');
 	```
+	
+	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
+	```php
+    $myUpdateChecker = new Puc_v4p5_Vcs_PluginUpdateChecker(
+        new Puc_v4p5_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
+        __FILE__,
+        'unique-plugin-or-theme-slug'
+    );
+   //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
+   ```
+	
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
