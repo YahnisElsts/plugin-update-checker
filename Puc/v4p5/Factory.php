@@ -208,7 +208,7 @@ if ( !class_exists('Puc_v4p5_Factory', false) ):
 				}
 			}
 			
-			return apply_filter('puc_get_vcs_service', $service, $host, $path, $metadataUrl);
+			return apply_filters('puc_get_vcs_service', $service, $host, $path, $metadataUrl);
 		}
 
 		/**
