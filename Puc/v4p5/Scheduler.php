@@ -126,10 +126,10 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 			} else if ( $this->throttleRedundantChecks && ($this->updateChecker->getUpdate() !== null) ) {
 				//Check less frequently if it's already known that an update is available.
 				$period = $this->throttledCheckPeriod * 3600;
-			} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
+			} else if ( (defined('DOING_CRON') && constant('DOING_CRON')) || in_array($currentFilter, array('admin_init')) ) {
 				//WordPress cron schedules are not exact, so lets do an update check even
 				//if slightly less than $checkPeriod hours have elapsed since the last check.
-				$cronFuzziness = 20 * 60;
+				$cronFuzziness = (defined('DOING_CRON') && constant('DOING_CRON')) ? 20 * 60 : 0;
 				$period = $this->checkPeriod * 3600 - $cronFuzziness;
 			} else {
 				$period = $this->checkPeriod * 3600;
