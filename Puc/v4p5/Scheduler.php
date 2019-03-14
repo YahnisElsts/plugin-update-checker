@@ -77,47 +77,57 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 		}
 
 		/**
-		 * Runs upon the WP action upgrader_process_complete
+		 * Runs upon the WP action upgrader_process_complete.
 		 *
-		 * We look at the parameters, to decide whether to pass on to maybeCheckForUpdates(), or not
+		 * We look at the parameters to decide whether to call maybeCheckForUpdates() or not.
 		 *
 		 * @param WP_Upgrader $upgrader  WP_Upgrader instance
 		 * @param array $upgradeInfo extra information about the upgrade
 		 */
-		public function upgraderProcessComplete($upgrader, $upgradeInfo){
+		public function upgraderProcessComplete(
+			/** @noinspection PhpUnusedParameterInspection */
+			$upgrader, $upgradeInfo
+		) {
 
-			//Sanity check and limitation to relevant types
-			if ( !is_array($upgradeInfo) || !isset($upgradeInfo['type']) || !isset($upgradeInfo['action']) || 'update' !== $upgradeInfo['action'] || !in_array($upgradeInfo['type'], array('plugin', 'theme')) ) {
+			//Sanity check and limitation to relevant types.
+			if (
+				!is_array($upgradeInfo) || !isset($upgradeInfo['type'], $upgradeInfo['action'])
+				|| 'update' !== $upgradeInfo['action'] || !in_array($upgradeInfo['type'], array('plugin', 'theme'))
+			) {
 				return;
 			}
-		
-			//Filter out notifications of upgrades that should have no bearing upon whether or not our current info is up-to-date
+
+			//Filter out notifications of upgrades that should have no bearing upon whether or not our
+			//current info is up-to-date.
 			if ( is_a($this->updateChecker, 'Puc_v4p5_Theme_UpdateChecker') ) {
 				if ( 'theme' !== $upgradeInfo['type'] || !isset($upgradeInfo['themes']) ) {
 					return;
 				}
-				
-				//Letting too many things going through for checks is not a real problem, so we compare widely
-				if ( !in_array(strtolower($this->updateChecker->directoryName), array_map('strtolower', $upgradeInfo['themes'])) ) {
+
+				//Letting too many things going through for checks is not a real problem, so we compare widely.
+				if ( !in_array(
+					strtolower($this->updateChecker->directoryName),
+					array_map('strtolower', $upgradeInfo['themes'])
+				) ) {
 					return;
 				}
-				
 			}
-		
+
 			if ( is_a($this->updateChecker, 'Puc_v4p5_Plugin_UpdateChecker') ) {
 				if ( 'plugin' !== $upgradeInfo['type'] || !isset($upgradeInfo['plugins']) ) {
 					return;
 				}
-				
-				//Themes pass in directory names in the information array, but plugins use the relative plugin path
-				if ( !in_array(strtolower($this->updateChecker->directoryName), array_map('dirname', array_map('strtolower', $upgradeInfo['plugins']))) ) {
+
+				//Themes pass in directory names in the information array, but plugins use the relative plugin path.
+				if ( !in_array(
+					strtolower($this->updateChecker->directoryName),
+					array_map('dirname', array_map('strtolower', $upgradeInfo['plugins']))
+				) ) {
 					return;
 				}
-
 			}
 
 			$this->maybeCheckForUpdates();
-		
 		}
 		
 		/**
@@ -133,7 +143,7 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 		 *
 		 * This method is declared public because it's a hook callback. Calling it directly is not recommended.
 		 */
-		public function maybeCheckForUpdates(){
+		public function maybeCheckForUpdates() {
 			if ( empty($this->checkPeriod) ){
 				return;
 			}
@@ -188,7 +198,7 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 		 * @param array $schedules
 		 * @return array
 		 */
-		public function _addCustomSchedule($schedules){
+		public function _addCustomSchedule($schedules) {
 			if ( $this->checkPeriod && ($this->checkPeriod > 0) ){
 				$scheduleName = 'every' . $this->checkPeriod . 'hours';
 				$schedules[$scheduleName] = array(
@@ -204,7 +214,7 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 		 *
 		 * @return void
 		 */
-		public function removeUpdaterCron(){
+		public function removeUpdaterCron() {
 			wp_clear_scheduled_hook($this->cronHook);
 		}
 
