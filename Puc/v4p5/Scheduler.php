@@ -68,7 +68,7 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 					add_action($hook, array($this, 'maybeCheckForUpdates'));
 				}
 				//This hook fires after a bulk update is complete.
-				add_action('upgrader_process_complete', array($this, 'maybeCheckForUpdates'), 11, 0);
+				add_action('upgrader_process_complete', array($this, 'upgraderProcessComplete'), 11, 2);
 
 			} else {
 				//Periodic checks are disabled.
@@ -76,6 +76,50 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 			}
 		}
 
+		/**
+		 * Runs upon the WP action upgrader_process_complete
+		 *
+		 * We look at the parameters, to decide whether to pass on to maybeCheckForUpdates(), or not
+		 *
+		 * @param WP_Upgrader $upgrader  WP_Upgrader instance
+		 * @param array $upgradeInfo extra information about the upgrade
+		 */
+		public function upgraderProcessComplete($upgrader, $upgradeInfo){
+
+			//Sanity check
+			if ( !is_array($upgradeInfo) || !isset($upgradeInfo['type']) || !isset($upgradeInfo['action']) || 'update' !== $upgradeInfo['action'] ) {
+				return;
+			}
+		
+			//Filter out notifications of upgrades that should have no bearing upon whether or not our current info is up-to-date
+			if ( is_a($this->updateChecker, 'Puc_v4p5_Theme_UpdateChecker') ) {
+				if ( 'theme' !== $upgradeInfo['type'] || !isset($upgradeInfo['themes']) ) {
+					return;
+				}
+				
+				//Letting too many things going through for checks is not a real problem, so we compare widely
+				if ( !in_array(strtolower($this->updateChecker->directoryName), array_map('strtolower', $upgradeInfo['themes'])) ) {
+					return;
+				}
+				
+			}
+		
+			if ( is_a($this->updateChecker, 'Puc_v4p5_Plugin_UpdateChecker') ) {
+				if ( 'plugin' !== $upgradeInfo['type'] || !isset($upgradeInfo['plugins']) ) {
+					return;
+				}
+				
+				//Themes pass in directory names in the information array, but plugins use the relative plugin path
+				if ( !in_array(strtolower($this->updateChecker->directoryName), array_map('dirname', array_map('strtolower', $upgradeInfo['plugins']))) ) {
+					return;
+				}
+
+			}
+
+			$this->maybeCheckForUpdates();
+		
+		}
+		
 		/**
 		 * Check for updates if the configured check interval has already elapsed.
 		 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
