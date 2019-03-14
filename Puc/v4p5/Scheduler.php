@@ -87,7 +87,7 @@ if ( !class_exists('Puc_v4p5_Scheduler', false) ):
 		public function upgraderProcessComplete($upgrader, $upgradeInfo){
 
 			//Sanity check
-			if ( !is_array($upgradeInfo) || !isset($upgradeInfo['type']) ) {
+			if ( !is_array($upgradeInfo) || !isset($upgradeInfo['type']) || !isset($upgradeInfo['action']) || 'update' !== $upgradeInfo['action'] ) {
 				return;
 			}
 		
