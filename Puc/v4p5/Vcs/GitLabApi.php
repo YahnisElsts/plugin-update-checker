@@ -14,6 +14,11 @@ if ( !class_exists('Puc_v4p5_Vcs_GitLabApi', false) ):
 		protected $repositoryHost;
 
 		/**
+		 * @var string Protocol used by this GitLab server: "http" or "https".
+		 */
+		protected $repositoryProtocol = 'https';
+
+		/**
 		 * @var string GitLab repository name.
 		 */
 		protected $repositoryName;
@@ -30,6 +35,10 @@ if ( !class_exists('Puc_v4p5_Vcs_GitLabApi', false) ):
 				$port = ':' . $port;
 			}
 			$this->repositoryHost = @parse_url($repositoryUrl, PHP_URL_HOST) . $port;
+
+			if ( $this->repositoryHost !== 'gitlab.com' ) {
+				$this->repositoryProtocol = @parse_url($repositoryUrl, PHP_URL_SCHEME);
+			}
 
 			//Find the repository information
 			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
@@ -197,7 +206,7 @@ if ( !class_exists('Puc_v4p5_Vcs_GitLabApi', false) ):
 			}
 
 			$url = substr($url, 1);
-			$url = sprintf('https://%1$s/api/v4/projects/%2$s', $this->repositoryHost, $url);
+			$url = sprintf('%1$s://%2$s/api/v4/projects/%3$s', $this->repositoryProtocol, $this->repositoryHost, $url);
 
 			if ( !empty($this->accessToken) ) {
 				$queryParams['private_token'] = $this->accessToken;
@@ -234,7 +243,8 @@ if ( !class_exists('Puc_v4p5_Vcs_GitLabApi', false) ):
 		 */
 		public function buildArchiveDownloadUrl($ref = 'master') {
 			$url = sprintf(
-				'https://%1$s/api/v4/projects/%2$s/repository/archive.zip',
+				'%1$s://%2$s/api/v4/projects/%3$s/repository/archive.zip',
+				$this->repositoryProtocol,
 				$this->repositoryHost,
 				urlencode($this->userName . '/' . $this->repositoryName)
 			);
