@@ -377,7 +377,7 @@ if ( !class_exists('Puc_v4p5_UpdateChecker', false) ):
 		 * @return string|null Version number.
 		 */
 		public function getInstalledVersion() {
-			return $this->package->getInstalledVersion();
+			return apply_filters($this->getUniqueName('get_installed_version'), $this->package->getInstalledVersion());
 		}
 
 		/**
