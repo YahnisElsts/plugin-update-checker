@@ -30,18 +30,18 @@ if ( !class_exists('Puc_v4p6_Vcs_GitLabApi', false) ):
 
 		public function __construct($repositoryUrl, $accessToken = null) {
 			//Parse the repository host to support custom hosts.
-			$port = @parse_url($repositoryUrl, PHP_URL_PORT);
+			$port = parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ){
 				$port = ':' . $port;
 			}
-			$this->repositoryHost = @parse_url($repositoryUrl, PHP_URL_HOST) . $port;
+			$this->repositoryHost = parse_url($repositoryUrl, PHP_URL_HOST) . $port;
 
 			if ( $this->repositoryHost !== 'gitlab.com' ) {
-				$this->repositoryProtocol = @parse_url($repositoryUrl, PHP_URL_SCHEME);
+				$this->repositoryProtocol = parse_url($repositoryUrl, PHP_URL_SCHEME);
 			}
 
 			//Find the repository information
-			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];

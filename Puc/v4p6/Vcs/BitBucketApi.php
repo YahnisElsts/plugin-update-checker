@@ -18,7 +18,7 @@ if ( !class_exists('Puc_v4p6_Vcs_BitBucketApi', false) ):
 		private $repository;
 
 		public function __construct($repositoryUrl, $credentials = array()) {
-			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->username = $matches['username'];
 				$this->repository = $matches['repository'];

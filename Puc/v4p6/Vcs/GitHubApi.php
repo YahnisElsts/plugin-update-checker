@@ -38,7 +38,7 @@ if ( !class_exists('Puc_v4p6_Vcs_GitHubApi', false) ):
 		protected $assetApiBaseUrl = null;
 
 		public function __construct($repositoryUrl, $accessToken = null) {
-			$path = @parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];

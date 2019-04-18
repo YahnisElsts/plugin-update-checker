@@ -189,7 +189,7 @@ if ( !class_exists('Puc_v4p6_UpdateChecker', false) ):
 		public function allowMetadataHost($allow, $host) {
 			static $metadataHost = 0; //Using 0 instead of NULL because parse_url can return NULL.
 			if ( $metadataHost === 0 ) {
-				$metadataHost = @parse_url($this->metadataUrl, PHP_URL_HOST);
+				$metadataHost = parse_url($this->metadataUrl, PHP_URL_HOST);
 			}
 
 			if ( is_string($metadataHost) && (strtolower($host) === strtolower($metadataHost)) ) {
