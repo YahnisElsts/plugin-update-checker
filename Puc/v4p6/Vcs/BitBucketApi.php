@@ -157,11 +157,11 @@ if ( !class_exists('Puc_v4p6_Vcs_BitBucketApi', false) ):
 		 * @return null|string Either the contents of the file, or null if the file doesn't exist or there's an error.
 		 */
 		public function getRemoteFile($path, $ref = 'master') {
-			$response = $this->api('src/' . $ref . '/' . ltrim($path), '1.0');
-			if ( is_wp_error($response) || !isset($response, $response->data) ) {
+			$response = $this->api('src/' . $ref . '/' . ltrim($path));
+			if ( is_wp_error($response) || !is_string($response) ) {
 				return null;
 			}
-			return $response->data;
+			return $response;
 		}
 
 		/**
@@ -186,13 +186,16 @@ if ( !class_exists('Puc_v4p6_Vcs_BitBucketApi', false) ):
 		 * @return mixed|WP_Error
 		 */
 		public function api($url, $version = '2.0') {
+			$url = ltrim($url, '/');
+			$isSrcResource = Puc_v4p6_Utils::startsWith($url, 'src/');
+
 			$url = implode('/', array(
 				'https://api.bitbucket.org',
 				$version,
 				'repositories',
 				$this->username,
 				$this->repository,
-				ltrim($url, '/')
+				$url
 			));
 			$baseUrl = $url;
 
@@ -213,7 +216,13 @@ if ( !class_exists('Puc_v4p6_Vcs_BitBucketApi', false) ):
 			$code = wp_remote_retrieve_response_code($response);
 			$body = wp_remote_retrieve_body($response);
 			if ( $code === 200 ) {
-				$document = json_decode($body);
+				if ( $isSrcResource ) {
+					//Most responses are JSON-encoded, but src resources just
+					//return raw file contents.
+					$document = $body;
+				} else {
+					$document = json_decode($body);
+				}
 				return $document;
 			}
 
