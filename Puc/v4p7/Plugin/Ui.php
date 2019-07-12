@@ -210,11 +210,11 @@ if ( !class_exists('Puc_v4p7_Plugin_Ui', false) ):
 				$details = '';
 
 				if ( $status == 'no_update' ) {
-					$message = sprintf(_x('The %s plugin is up to date.', 'the plugin title', 'plugin-update-checker'), $title);
+					$message = sprintf(__('The %s plugin is up to date.', 'plugin-update-checker'), $title);
 				} else if ( $status == 'update_available' ) {
-					$message = sprintf(_x('A new version of the %s plugin is available.', 'the plugin title', 'plugin-update-checker'), $title);
+					$message = sprintf(__('A new version of the %s plugin is available.', 'plugin-update-checker'), $title);
 				} else if ( $status === 'error' ) {
-					$message = sprintf(_x('Could not determine if updates are available for %s.', 'the plugin title', 'plugin-update-checker'), $title);
+					$message = sprintf(__('Could not determine if updates are available for %s.', 'plugin-update-checker'), $title);
 					$noticeClass = 'error notice-error';
 
 					$details = $this->formatManualCheckErrors(get_site_transient($this->manualCheckErrorTransient));
