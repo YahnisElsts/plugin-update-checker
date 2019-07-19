@@ -166,6 +166,7 @@ if ( !class_exists('Puc_v4p7_Plugin_Ui', false) ):
 					$questionableErrorCodes = array(
 						'puc-github-http-error',
 						'puc-gitlab-http-error',
+						'puc-gitea-http-error',
 						'puc-bitbucket-http-error',
 					);
 
