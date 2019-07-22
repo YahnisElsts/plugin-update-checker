@@ -29,6 +29,10 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		protected $accessToken;
 
 		public function __construct($repositoryUrl, $accessToken = null) {
+
+
+
+
 			//Parse the repository host to support custom hosts.
 			$port = parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ){
@@ -36,41 +40,21 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 			}
 			$this->repositoryHost = parse_url($repositoryUrl, PHP_URL_HOST) . $port;
 
-			if ( $this->repositoryHost !== 'try.gitea.io' ) {
+
+			if ( $this->repositoryHost !== 'gitea.com' ) {
 				$this->repositoryProtocol = parse_url($repositoryUrl, PHP_URL_SCHEME);
 			}
 
+
+
 			//Find the repository information
 			$path = parse_url($repositoryUrl, PHP_URL_PATH);
-			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
+			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) )
+			{
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
-			} elseif ( ($this->repositoryHost === 'try.gitea.io') ) {
-				//This is probably a repository in a subgroup, e.g. "/organization/category/repo".
-				$parts = explode('/', trim($path, '/'));
-				if ( count($parts) < 3 ) {
-					throw new InvalidArgumentException('Invalid GiTea repository URL: "' . $repositoryUrl . '"');
-				}
-				$lastPart = array_pop($parts);
-				$this->userName = implode('/', $parts);
-				$this->repositoryName = $lastPart;
 			} else {
-				//This is not a traditional url, it could be GiTea is in a deeper subdirectory.
-				//Get the path segments.
-				$segments = explode('/', untrailingslashit(ltrim($path, '/')));
-
-				//We need at least /user-name/repository-name/
-				if ( count($segments) < 2 ) {
-					throw new InvalidArgumentException('Invalid GiTea repository URL: "' . $repositoryUrl . '"');
-				}
-
-				//Get the username and repository name.
-				$usernameRepo = array_splice($segments, -2, 2);
-				$this->userName = $usernameRepo[0];
-				$this->repositoryName = $usernameRepo[1];
-
-				//Append the remaining segments to the host.
-				$this->repositoryHost = trailingslashit($this->repositoryHost) . implode('/', $segments);
+				throw new InvalidArgumentException('Invalid GiTea repository URL: "' . $repositoryUrl . '"');
 			}
 
 			parent::__construct($repositoryUrl, $accessToken);
@@ -131,27 +115,55 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 				'apiResponse' => $branch,
 			));
 
-			if ( isset($branch->commit, $branch->commit->committed_date) ) {
-				$reference->updated = $branch->commit->committed_date;
+			if ( isset($branch->commit, $branch->commit->timestamp) ) {
+				$reference->updated = $branch->commit->timestamp;
 			}
 
 			return $reference;
 		}
 
 		/**
+		 * Get the latest commit that changed the specified file.
+		 *
+		 * @param string $filename
+		 * @param string $ref Reference name (e.g. branch or tag).
+		 * @return StdClass|null
+		 */
+		
+		 public function getLatestCommit($filename, $ref = 'master') {
+			$commits = $this->api(
+				'/repos/:user/:repo/contents/' . $filename,
+				array(
+					'sha'  => $ref,
+				)
+			);
+
+			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
+				return $commits[2];
+			
+			}
+			return null;
+		}
+		
+		/**
 		 * Get the timestamp of the latest commit that changed the specified branch or tag.
 		 *
 		 * @param string $ref Reference name (e.g. branch or tag).
 		 * @return string|null
 		 */
+		
 		public function getLatestCommitTime($ref = 'master') {
+			/*
 			$commits = $this->api('/:user/:repo/commits/' . $ref . '/statuses');
 			if ( is_wp_error($commits) || !is_array($commits) || !isset($commits[0]) ) {
 				return null;
 			}
-
+			new WP_Error( 'puc-github-http-error', sprintf('GitHub API error. sha -> ' . $commits[0] , $baseUrl, print_r($commit)));
 			return $commits[0];
+			 */
+			return null;
 		}
+		
 
 		/**
 		 * Perform a GiTea API request.
@@ -246,14 +258,13 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		 */
 		public function buildArchiveDownloadUrl($ref = 'master') {
 			$url = sprintf(
-				'%1$s://%2$s/api/v1/repos/%3$s/archive/%4$s.zip',
-				$this->repositoryProtocol,
-				$this->repositoryHost,
-				$this->userName . '/' . $this->repositoryName,
-				//urlencode($this->userName . '/' . $this->repositoryName)
+				'%1$s://%2$s/api/v1/repos/%3$s/%4$s/archive/%5$s.zip',
+				urlencode($this->repositoryProtocol),
+				urlencode($this->repositoryHost),
+				urlencode($this->userName),
+				urlencode($this->repositoryName),
 				urlencode($ref)
 			);
-			//$url = add_query_arg('sha', urlencode($ref), $url);
 
 			if ( !empty($this->accessToken) ) {
 				$url = add_query_arg('access_token', $this->accessToken, $url);
@@ -263,9 +274,7 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		}
 
 		/**
-		 * Get a specific tag.
-		 *
-		 * TODO: add Tag compatibility like Github!
+		 * Get a specific tag. 
 		 *
 		 * @param string $tagName
 		 * @return void
@@ -299,6 +308,10 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 			parent::setAuthentication($credentials);
 			$this->accessToken = is_string($credentials) ? $credentials : null;
 		}
+
+		/**
+		 * TODO: Add ReleaseAssets
+		 */
 	}
 
 endif;
