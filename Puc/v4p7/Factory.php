@@ -202,7 +202,7 @@ if ( !class_exists('Puc_v4p7_Factory', false) ):
 					'github.com' => 'GitHub',
 					'bitbucket.org' => 'BitBucket',
 					'gitlab.com' => 'GitLab',
-					'try.gitea.io' => 'GiTea',
+					'gitea.com' => 'GiTea',
 				);
 				if ( isset($knownServices[$host]) ) {
 					$service = $knownServices[$host];

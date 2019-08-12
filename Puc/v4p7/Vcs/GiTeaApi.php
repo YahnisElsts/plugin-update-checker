@@ -31,8 +31,6 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		public function __construct($repositoryUrl, $accessToken = null) {
 
 
-
-
 			//Parse the repository host to support custom hosts.
 			$port = parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ){
@@ -44,7 +42,6 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 			if ( $this->repositoryHost !== 'gitea.com' ) {
 				$this->repositoryProtocol = parse_url($repositoryUrl, PHP_URL_SCHEME);
 			}
-
 
 
 			//Find the repository information
@@ -132,13 +129,13 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		
 		 public function getLatestCommit($filename, $ref = 'master') {
 			$commits = $this->api(
-				'/repos/:user/:repo/contents/' . $filename,
+				'/:user/:repo/contents/' . $filename,
 				array(
 					'sha'  => $ref,
 				)
 			);
 
-			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
+			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[2]) ) {
 				return $commits[2];
 			
 			}
@@ -153,15 +150,13 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		 */
 		
 		public function getLatestCommitTime($ref = 'master') {
-			/*
-			$commits = $this->api('/:user/:repo/commits/' . $ref . '/statuses');
-			if ( is_wp_error($commits) || !is_array($commits) || !isset($commits[0]) ) {
+			$commits = $this->api('/:user/:repo/branches/' . $ref);
+			
+			if ( is_wp_error($commits) || !is_array($commits) || !isset($commits) ) {
 				return null;
 			}
-			new WP_Error( 'puc-github-http-error', sprintf('GitHub API error. sha -> ' . $commits[0] , $baseUrl, print_r($commit)));
-			return $commits[0];
-			 */
-			return null;
+			
+			return $commits->commit->timestamp;
 		}
 		
 
@@ -242,7 +237,7 @@ if ( !class_exists('Puc_v4p7_Vcs_GiTeaApi', false) ):
 		 * @return null|string Either the contents of the file, or null if the file doesn't exist or there's an error.
 		 */
 		public function getRemoteFile($path, $ref = 'master') {
-			$response = $this->api('/:user/:repo/raw/' . $path, array('ref' => $ref));
+			$response = $this->api('/:user/:repo/contents/' . $path, array('ref' => $ref));
 			if ( is_wp_error($response) || !isset($response->content) || $response->encoding !== 'base64' ) {
 				return null;
 			}
