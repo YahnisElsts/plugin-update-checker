@@ -174,7 +174,7 @@ if ( !class_exists('Puc_v4p7_Plugin_Package', false) ):
 					$pluginPath  = Puc_v4p7_Factory::normalizePath($this->pluginAbsolutePath);
 				}
 
-				$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);
+				$cachedResult = $muPluginDir ? (strpos($pluginPath, $muPluginDir) === 0) : false;
 			}
 
 			return $cachedResult;
