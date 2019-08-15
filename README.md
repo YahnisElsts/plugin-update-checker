@@ -45,7 +45,7 @@ Getting Started
 		}
 		```
 		
-        This is a minimal example that leaves out optional fields. See [this table](https://docs.google.com/spreadsheets/d/1eOBbW7Go2qEQXReOOCdidMTf_tDYRq4JfegcO1CBPIs/edit?usp=sharing&authkey=CK7h9toK&output=html) for a full list of supported fields and their descriptions.
+        This is a minimal example that leaves out optional fields. See [this table](https://docs.google.com/spreadsheets/d/1eOBbW7Go2qEQXReOOCdidMTf_tDYRq4JfegcO1CBPIs/edit?usp=sharing) for a full list of supported fields and their descriptions.
 	- Theme example:
 	
 		```json
