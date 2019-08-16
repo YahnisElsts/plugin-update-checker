@@ -15,15 +15,16 @@ new Puc_v4p7_Autoloader();
 //Register classes defined in this version with the factory.
 foreach (
 	array(
-		'Plugin_UpdateChecker' => 'Puc_v4p7_Plugin_UpdateChecker',
-		'Theme_UpdateChecker'  => 'Puc_v4p7_Theme_UpdateChecker',
+		'Plugin_UpdateChecker'		=> 'Puc_v4p7_Plugin_UpdateChecker',
+		'Theme_UpdateChecker'		=> 'Puc_v4p7_Theme_UpdateChecker',
 
-		'Vcs_PluginUpdateChecker' => 'Puc_v4p7_Vcs_PluginUpdateChecker',
-		'Vcs_ThemeUpdateChecker'  => 'Puc_v4p7_Vcs_ThemeUpdateChecker',
+		'Vcs_PluginUpdateChecker'	=> 'Puc_v4p7_Vcs_PluginUpdateChecker',
+		'Vcs_ThemeUpdateChecker'	=> 'Puc_v4p7_Vcs_ThemeUpdateChecker',
 
-		'GitHubApi'    => 'Puc_v4p7_Vcs_GitHubApi',
-		'BitBucketApi' => 'Puc_v4p7_Vcs_BitBucketApi',
-		'GitLabApi'    => 'Puc_v4p7_Vcs_GitLabApi',
+		'GitHubApi'			=> 'Puc_v4p7_Vcs_GitHubApi',
+		'BitBucketApi'			=> 'Puc_v4p7_Vcs_BitBucketApi',
+		'GitLabApi'			=> 'Puc_v4p7_Vcs_GitLabApi',	
+		'GiTeaApi'			=> 'Puc_v4p7_Vcs_GiTeaApi',
 	)
 	as $pucGeneralClass => $pucVersionedClass
 ) {
