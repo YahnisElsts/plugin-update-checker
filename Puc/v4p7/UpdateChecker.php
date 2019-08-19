@@ -338,9 +338,9 @@ if ( !class_exists('Puc_v4p7_UpdateChecker', false) ):
 		 * "Compatibility: Unknown".
 		 * The function mimics how wordpress.org API crafts the "tested" field out of "Tested up to".
 		 *
-		 * @param Puc_v4p7_Update|null $update
+		 * @param Puc_v4p7_Metadata|null $update
 		 */
-		protected function fixSupportedWordpressVersion(Puc_v4p7_Update $update = null) {
+		protected function fixSupportedWordpressVersion(Puc_v4p7_Metadata $update = null) {
 			if ( !isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested) ) {
 				return;
 			}

@@ -180,6 +180,8 @@ if ( !class_exists('Puc_v4p7_Plugin_UpdateChecker', false) ):
 			}
 
 			$pluginInfo = $this->requestInfo();
+			$this->fixSupportedWordpressVersion($pluginInfo);
+
 			$pluginInfo = apply_filters($this->getUniqueName('pre_inject_info'), $pluginInfo);
 			if ( $pluginInfo ) {
 				return $pluginInfo->toWpFormat();
