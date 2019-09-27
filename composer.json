@@ -18,8 +18,8 @@
 	},
 	"autoload": {
 		"psr-0": {
-			"Puc_v4p7_" : "Puc/v4p7/",
-			"Puc_v4_" : "Puc/v4/",
+			"Puc_v4p7_" : "",
+			"Puc_v4_" : "",
 			"PucReadmeParser" : "vendor/",
 			"Parsedown" : "vendor/"
 		}
