@@ -16,12 +16,9 @@ if ( !class_exists('Puc_v4p7_Autoloader', false) ):
 
 			$this->libraryDir = realpath($this->rootDir . '../..') . '/';
 			$this->staticMap = array(
-				'PucReadmeParser' => 'vendor/readme-parser.php',
-				'Parsedown' => 'vendor/ParsedownLegacy.php',
+				'PucReadmeParser' => 'vendor/PucReadmeParser.php',
+				'Parsedown' => 'vendor/Parsedown.php',
 			);
-			if ( version_compare(PHP_VERSION, '5.3.0', '>=') ) {
-				$this->staticMap['Parsedown'] = 'vendor/Parsedown.php';
-			}
 
 			spl_autoload_register(array($this, 'autoload'));
 		}
