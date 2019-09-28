@@ -244,8 +244,8 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
 	```php
-    $myUpdateChecker = new Puc_v4p7_Vcs_PluginUpdateChecker(
-        new Puc_v4p7_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
+    $myUpdateChecker = new Puc_v4p8_Vcs_PluginUpdateChecker(
+        new Puc_v4p8_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
         __FILE__,
         'unique-plugin-or-theme-slug'
     );
