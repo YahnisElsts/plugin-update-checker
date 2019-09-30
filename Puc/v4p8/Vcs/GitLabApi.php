@@ -28,7 +28,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 		 */
 		protected $accessToken;
 
-		public function __construct($repositoryUrl, $accessToken = null) {
+		public function __construct($repositoryUrl, $accessToken = null, $subgroup = null) {
 			//Parse the repository host to support custom hosts.
 			$port = parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ){
@@ -55,6 +55,12 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 				$this->userName = implode('/', $parts);
 				$this->repositoryName = $lastPart;
 			} else {
+				// there is a subgroup in the url: gitlab.domain.com/group/subgroup/repository
+				// maybe there nested subgroups: gitlab.domain.com/group/subgroup/subgroup2/repository
+				if ($subgroup !== null) {
+					$path = str_replace(trailingslashit($subgroup), '', $path);
+				}
+
 				//This is not a traditional url, it could be gitlab is in a deeper subdirectory.
 				//Get the path segments.
 				$segments = explode('/', untrailingslashit(ltrim($path, '/')));
@@ -69,8 +75,15 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 				$this->userName = $usernameRepo[0];
 				$this->repositoryName = $usernameRepo[1];
 
-				//Append the remaining segments to the host.
-				$this->repositoryHost = trailingslashit($this->repositoryHost) . implode('/', $segments);
+				//Append the remaining segments to the host if there are segments left.
+				if (count($segments) > 0) {
+					$this->repositoryHost = trailingslashit($this->repositoryHost) . implode('/', $segments);
+				}
+
+				// add subgroups to username
+				if ($subgroup !== null) {
+					$this->userName = $usernameRepo[0] . '/' . untrailingslashit($subgroup);
+				}
 			}
 
 			parent::__construct($repositoryUrl, $accessToken);
