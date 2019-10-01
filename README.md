@@ -251,7 +251,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
     );
    //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
    ```
-   If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html) you have to tell the update checker, which folders are subgroups:
+   If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
    ```php
        $myUpdateChecker = new Puc_v4p8_Vcs_PluginUpdateChecker(
            new Puc_v4p8_Vcs_GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
