@@ -31,7 +31,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 		public function __construct($repositoryUrl, $accessToken = null, $subgroup = null) {
 			//Parse the repository host to support custom hosts.
 			$port = parse_url($repositoryUrl, PHP_URL_PORT);
-			if ( !empty($port) ){
+			if ( !empty($port) ) {
 				$port = ':' . $port;
 			}
 			$this->repositoryHost = parse_url($repositoryUrl, PHP_URL_HOST) . $port;
@@ -55,9 +55,8 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 				$this->userName = implode('/', $parts);
 				$this->repositoryName = $lastPart;
 			} else {
-				// there is a subgroup in the url: gitlab.domain.com/group/subgroup/repository
-				// maybe there nested subgroups: gitlab.domain.com/group/subgroup/subgroup2/repository
-				if ($subgroup !== null) {
+				//There could be subgroups in the URL:  gitlab.domain.com/group/subgroup/subgroup2/repository
+				if ( $subgroup !== null ) {
 					$path = str_replace(trailingslashit($subgroup), '', $path);
 				}
 
@@ -76,12 +75,12 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 				$this->repositoryName = $usernameRepo[1];
 
 				//Append the remaining segments to the host if there are segments left.
-				if (count($segments) > 0) {
+				if ( count($segments) > 0 ) {
 					$this->repositoryHost = trailingslashit($this->repositoryHost) . implode('/', $segments);
 				}
 
-				// add subgroups to username
-				if ($subgroup !== null) {
+				//Add subgroups to username.
+				if ( $subgroup !== null ) {
 					$this->userName = $usernameRepo[0] . '/' . untrailingslashit($subgroup);
 				}
 			}
@@ -116,10 +115,10 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 
 			$tag = $versionTags[0];
 			return new Puc_v4p8_Vcs_Reference(array(
-				'name' => $tag->name,
-				'version' => ltrim($tag->name, 'v'),
+				'name'        => $tag->name,
+				'version'     => ltrim($tag->name, 'v'),
 				'downloadUrl' => $this->buildArchiveDownloadUrl($tag->name),
-				'apiResponse' => $tag
+				'apiResponse' => $tag,
 			));
 		}
 
@@ -136,7 +135,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 			}
 
 			$reference = new Puc_v4p8_Vcs_Reference(array(
-				'name' => $branch->name,
+				'name'        => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 				'apiResponse' => $branch,
 			));
@@ -178,7 +177,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitLabApi', false) ):
 			if ( !empty($this->httpFilterName) ) {
 				$options = apply_filters($this->httpFilterName, $options);
 			}
-			
+
 			$response = wp_remote_get($url, $options);
 			if ( is_wp_error($response) ) {
 				do_action('puc_api_error', $response, null, $url, $this->slug);
