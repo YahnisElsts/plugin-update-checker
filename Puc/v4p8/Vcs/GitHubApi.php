@@ -185,7 +185,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		 */
 		public function getLatestCommitTime($ref) {
 			$commits = $this->api('/repos/:user/:repo/commits', array('sha' => $ref));
-			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
+			if ( !is_wp_error($commits) && isset($commits[0]) ) {
 				return $commits[0]->commit->author->date;
 			}
 			return null;
