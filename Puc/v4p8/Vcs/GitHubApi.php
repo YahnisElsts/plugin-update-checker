@@ -108,7 +108,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		public function getLatestTag() {
 			$tags = $this->api('/repos/:user/:repo/tags');
 
-			if ( is_wp_error($tags) || empty($tags) || !is_array($tags) ) {
+			if ( is_wp_error($tags) || !is_array($tags) ) {
 				return null;
 			}
 
@@ -166,7 +166,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 					'sha'  => $ref,
 				)
 			);
-			if ( !is_wp_error($commits) && is_array($commits) && isset($commits[0]) ) {
+			if ( !is_wp_error($commits) && isset($commits[0]) ) {
 				return $commits[0];
 			}
 			return null;
