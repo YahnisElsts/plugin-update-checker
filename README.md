@@ -251,7 +251,16 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
     );
    //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
    ```
-	
+   If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html) you have to tell the update checker, which folders are subgroups:
+   ```php
+       $myUpdateChecker = new Puc_v4p8_Vcs_PluginUpdateChecker(
+           new Puc_v4p8_Vcs_GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
+           __FILE__,
+           'unique-plugin-or-theme-slug'
+       );
+    
+   ```
+   
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
