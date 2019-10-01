@@ -37,6 +37,11 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		 */
 		protected $assetApiBaseUrl = null;
 
+		/**
+		 * @var bool
+		 */
+		private $downloadFilterAdded = false;
+
 		public function __construct($repositoryUrl, $accessToken = null) {
 			$path = parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
@@ -382,10 +387,9 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		 * @return bool
 		 */
 		public function addHttpRequestFilter($result) {
-			static $filterAdded = false;
-			if ( $this->releaseAssetsEnabled && !$filterAdded && $this->isAuthenticationEnabled() ) {
+			if ( $this->releaseAssetsEnabled && !$this->downloadFilterAdded && $this->isAuthenticationEnabled() ) {
 				add_filter('http_request_args', array($this, 'setReleaseDownloadHeader'), 10, 2);
-				$filterAdded = true;
+				$this->downloadFilterAdded = true;
 			}
 			return $result;
 		}
