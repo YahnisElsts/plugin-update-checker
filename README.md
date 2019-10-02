@@ -9,19 +9,20 @@ From the users' perspective, it works just like with plugins and themes hosted o
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Getting Started](#getting-started)
-  - [Self-hosted Plugins and Themes](#self-hosted-plugins-and-themes)
-    - [How to Release an Update](#how-to-release-an-update)
-    - [Notes](#notes)
-  - [GitHub Integration](#github-integration)
-    - [How to Release an Update](#how-to-release-an-update-1)
-    - [Notes](#notes-1)
-  - [BitBucket Integration](#bitbucket-integration)
-    - [How to Release an Update](#how-to-release-an-update-2)
-  - [GitLab Integration](#gitlab-integration)
-    - [How to Release an Update](#how-to-release-an-update-3)
-- [License Management](#license-management)
-- [Resources](#resources)
+- [Plugin Update Checker](#plugin-update-checker)
+	- [Getting Started](#getting-started)
+		- [Self-hosted Plugins and Themes](#self-hosted-plugins-and-themes)
+			- [How to Release an Update](#how-to-release-an-update)
+			- [Notes](#notes)
+		- [GitHub Integration](#github-integration)
+			- [How to Release an Update](#how-to-release-an-update-1)
+			- [Notes](#notes-1)
+		- [BitBucket Integration](#bitbucket-integration)
+			- [How to Release an Update](#how-to-release-an-update-2)
+		- [GitLab Integration](#gitlab-integration)
+			- [How to Release an Update](#how-to-release-an-update-3)
+	- [License Management](#license-management)
+	- [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -106,7 +107,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 	//Optional: Set the branch that contains the stable release.
 	$myUpdateChecker->setBranch('stable-branch-name');
 	```
-3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
 
@@ -192,7 +193,7 @@ The library will pull update details from the following parts of a release/tag/b
 	//Optional: Set the branch that contains the stable release.
 	$myUpdateChecker->setBranch('stable-branch-name');
 	```
-3. Optional: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. For plugins, the contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+3. Optional: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/) to your repository. For plugins, the contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
 
@@ -200,7 +201,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 - **`Stable tag` header** 
 	
-	This is the recommended approach if you're using tags to mark each version. Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. Set the "stable tag" header to the tag that represents the latest release. Example:
+	This is the recommended approach if you're using tags to mark each version. Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/) to your repository. Set the "stable tag" header to the tag that represents the latest release. Example:
 	```text
 	Stable tag: v1.2.3
 	```
@@ -261,7 +262,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
     
    ```
    
-3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/about/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
+3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release an Update
 
