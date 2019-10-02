@@ -9,20 +9,19 @@ From the users' perspective, it works just like with plugins and themes hosted o
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Plugin Update Checker](#plugin-update-checker)
-	- [Getting Started](#getting-started)
-		- [Self-hosted Plugins and Themes](#self-hosted-plugins-and-themes)
-			- [How to Release an Update](#how-to-release-an-update)
-			- [Notes](#notes)
-		- [GitHub Integration](#github-integration)
-			- [How to Release an Update](#how-to-release-an-update-1)
-			- [Notes](#notes-1)
-		- [BitBucket Integration](#bitbucket-integration)
-			- [How to Release an Update](#how-to-release-an-update-2)
-		- [GitLab Integration](#gitlab-integration)
-			- [How to Release an Update](#how-to-release-an-update-3)
-	- [License Management](#license-management)
-	- [Resources](#resources)
+- [Getting Started](#getting-started)
+  - [Self-hosted Plugins and Themes](#self-hosted-plugins-and-themes)
+    - [How to Release an Update](#how-to-release-an-update)
+    - [Notes](#notes)
+  - [GitHub Integration](#github-integration)
+    - [How to Release an Update](#how-to-release-an-update-1)
+    - [Notes](#notes-1)
+  - [BitBucket Integration](#bitbucket-integration)
+    - [How to Release an Update](#how-to-release-an-update-2)
+  - [GitLab Integration](#gitlab-integration)
+    - [How to Release an Update](#how-to-release-an-update-3)
+- [License Management](#license-management)
+- [Resources](#resources)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
