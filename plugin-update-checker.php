@@ -7,8 +7,4 @@
  * Released under the MIT license. See license.txt for details.
  */
 
-require dirname(__FILE__) . '/Puc/v4p8/Autoloader.php';
-new Puc_v4p8_Autoloader();
-
-require dirname(__FILE__) . '/Puc/v4p8/Factory.php';
-require dirname(__FILE__) . '/Puc/v4/Factory.php';
+require dirname(__FILE__) . '/load-v4p8.php';

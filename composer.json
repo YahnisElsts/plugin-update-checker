@@ -17,6 +17,7 @@
 		"php": ">=5.2.0"
 	},
 	"autoload": {
+		"files": ["load-v4p8.php"],
 		"psr-0": {
 			"Puc_v4p8_" : "",
 			"Puc_v4_" : "",
