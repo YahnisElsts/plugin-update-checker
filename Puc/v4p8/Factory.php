@@ -80,7 +80,7 @@ if ( !class_exists('Puc_v4p8_Factory', false) ):
 				);
 				return null;
 			}
-      
+
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
@@ -127,7 +127,7 @@ if ( !class_exists('Puc_v4p8_Factory', false) ):
 			}
 			return $path;
 		}
-		
+
 		/**
 		 * Check if the path points to a plugin file.
 		 *
@@ -207,7 +207,7 @@ if ( !class_exists('Puc_v4p8_Factory', false) ):
 					$service = $knownServices[$host];
 				}
 			}
-			
+
 			return apply_filters('puc_get_vcs_service', $service, $host, $path, $metadataUrl);
 		}
 
@@ -294,25 +294,39 @@ if ( !class_exists('Puc_v4p8_Factory', false) ):
 		}
 	}
 
-	//Register classes defined in this version with the factory.
-	foreach (
-		array(
-			'Plugin_UpdateChecker' => 'Puc_v4p8_Plugin_UpdateChecker',
-			'Theme_UpdateChecker'  => 'Puc_v4p8_Theme_UpdateChecker',
-
-			'Vcs_PluginUpdateChecker' => 'Puc_v4p8_Vcs_PluginUpdateChecker',
-			'Vcs_ThemeUpdateChecker'  => 'Puc_v4p8_Vcs_ThemeUpdateChecker',
-
-			'GitHubApi'    => 'Puc_v4p8_Vcs_GitHubApi',
-			'BitBucketApi' => 'Puc_v4p8_Vcs_BitBucketApi',
-			'GitLabApi'    => 'Puc_v4p8_Vcs_GitLabApi',
-		)
-		as $pucGeneralClass => $pucVersionedClass
-	) {
-		Puc_v4_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.8');
-		//Also add it to the minor-version factory in case the major-version factory
-		//was already defined by another, older version of the update checker.
-		Puc_v4p8_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.8');
-	}
-
 endif;
+
+
+/* We need to load the major-version and minor-version factory classes at the same time if possible.
+ * If we don't, an older version of the library could register the major-version factory later and then
+ * that older factory wouldn't know about this version. That's why we put both classes in the same file.
+ *
+ * This could be handled more elegantly with a custom autoloader or a simple script that just loads our
+ * dependencies, but we need to support the Composer autoloader. Unfortunately, the "files" autoloading
+ * mechanism has its own issues. See:
+ * https://github.com/YahnisElsts/plugin-update-checker/issues/300
+ */
+if ( !class_exists('Puc_v4_Factory', false) ):
+	class Puc_v4_Factory extends Puc_v4p8_Factory { }
+endif;
+
+//Register classes defined in this version with the factory.
+foreach (
+	array(
+		'Plugin_UpdateChecker' => 'Puc_v4p8_Plugin_UpdateChecker',
+		'Theme_UpdateChecker'  => 'Puc_v4p8_Theme_UpdateChecker',
+
+		'Vcs_PluginUpdateChecker' => 'Puc_v4p8_Vcs_PluginUpdateChecker',
+		'Vcs_ThemeUpdateChecker'  => 'Puc_v4p8_Vcs_ThemeUpdateChecker',
+
+		'GitHubApi'    => 'Puc_v4p8_Vcs_GitHubApi',
+		'BitBucketApi' => 'Puc_v4p8_Vcs_BitBucketApi',
+		'GitLabApi'    => 'Puc_v4p8_Vcs_GitLabApi',
+	)
+	as $pucGeneralClass => $pucVersionedClass
+) {
+	Puc_v4_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.8');
+	//Also add it to the minor-version factory in case the major-version factory
+	//was already defined by another, older version of the update checker.
+	Puc_v4p8_Factory::addVersion($pucGeneralClass, $pucVersionedClass, '4.8');
+}
