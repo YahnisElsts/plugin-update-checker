@@ -68,7 +68,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			$reference = new Puc_v4p8_Vcs_Reference(array(
 				'name'        => $release->tag_name,
 				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
-				'downloadUrl' => $this->signDownloadUrl($release->zipball_url),
+				'downloadUrl' => $release->zipball_url,
 				'updated'     => $release->created_at,
 				'apiResponse' => $release,
 			));
@@ -84,9 +84,10 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 					if ( $this->isAuthenticationEnabled() ) {
 						/**
 						 * Keep in mind that we'll need to add an "Accept" header to download this asset.
-						 * @see setReleaseDownloadHeader()
+						 *
+						 * @see setUpdateDownloadHeaders()
 						 */
-						$reference->downloadUrl = $this->signDownloadUrl($matchingAssets[0]->url);
+						$reference->downloadUrl = $matchingAssets[0]->url;
 					} else {
 						//It seems that browser_download_url only works for public repositories.
 						//Using an access_token doesn't help. Maybe OAuth would work?
@@ -126,7 +127,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			return new Puc_v4p8_Vcs_Reference(array(
 				'name'        => $tag->name,
 				'version'     => ltrim($tag->name, 'v'),
-				'downloadUrl' => $this->signDownloadUrl($tag->zipball_url),
+				'downloadUrl' => $tag->zipball_url,
 				'apiResponse' => $tag,
 			));
 		}
@@ -203,6 +204,10 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			$url = $this->buildApiUrl($url, $queryParams);
 
 			$options = array('timeout' => 10);
+			if ( $this->isAuthenticationEnabled() ) {
+				$options['headers'] = array('Authorization' => $this->getAuthorizationHeader());
+			}
+
 			if ( !empty($this->httpFilterName) ) {
 				$options = apply_filters($this->httpFilterName, $options);
 			}
@@ -245,9 +250,6 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			}
 			$url = 'https://api.github.com' . $url;
 
-			if ( !empty($this->accessToken) ) {
-				$queryParams['access_token'] = $this->accessToken;
-			}
 			if ( !empty($queryParams) ) {
 				$url = add_query_arg($queryParams, $url);
 			}
@@ -285,9 +287,6 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 				urlencode($this->repositoryName),
 				urlencode($ref)
 			);
-			if ( !empty($this->accessToken) ) {
-				$url = $this->signDownloadUrl($url);
-			}
 			return $url;
 		}
 
@@ -305,6 +304,10 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		public function setAuthentication($credentials) {
 			parent::setAuthentication($credentials);
 			$this->accessToken = is_string($credentials) ? $credentials : null;
+
+			//Optimization: Instead of filtering all HTTP requests, let's do it only when
+			//WordPress is about to download an update.
+			add_filter('upgrader_pre_download', array($this, 'addHttpRequestFilter'), 10, 1); //WP 3.7+
 		}
 
 		/**
@@ -333,17 +336,6 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		}
 
 		/**
-		 * @param string $url
-		 * @return string
-		 */
-		public function signDownloadUrl($url) {
-			if ( empty($this->credentials) ) {
-				return $url;
-			}
-			return add_query_arg('access_token', $this->credentials, $url);
-		}
-
-		/**
 		 * Enable updating via release assets.
 		 *
 		 * If the latest release contains no usable assets, the update checker
@@ -361,10 +353,6 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 				$this->userName,
 				$this->repositoryName
 			);
-
-			//Optimization: Instead of filtering all HTTP requests, let's do it only when
-			//WordPress is about to download an update.
-			add_filter('upgrader_pre_download', array($this, 'addHttpRequestFilter'), 10, 1); //WP 3.7+
 		}
 
 		/**
@@ -387,30 +375,66 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		 * @return bool
 		 */
 		public function addHttpRequestFilter($result) {
-			if ( $this->releaseAssetsEnabled && !$this->downloadFilterAdded && $this->isAuthenticationEnabled() ) {
-				add_filter('http_request_args', array($this, 'setReleaseDownloadHeader'), 10, 2);
+			if ( !$this->downloadFilterAdded && $this->isAuthenticationEnabled() ) {
+				add_filter('http_request_args', array($this, 'setUpdateDownloadHeaders'), 10, 2);
+				add_action('requests-requests.before_redirect', array($this, 'removeAuthHeaderFromRedirects'), 10, 4);
 				$this->downloadFilterAdded = true;
 			}
 			return $result;
 		}
 
 		/**
-		 * Set the HTTP header that's necessary to download private release assets.
+		 * Set the HTTP headers that are necessary to download updates from private repositories.
 		 *
 		 * See GitHub docs:
 		 * @link https://developer.github.com/v3/repos/releases/#get-a-single-release-asset
+		 * @link https://developer.github.com/v3/auth/#basic-authentication
 		 *
 		 * @internal
 		 * @param array $requestArgs
 		 * @param string $url
 		 * @return array
 		 */
-		public function setReleaseDownloadHeader($requestArgs, $url = '') {
-			//Is WordPress trying to download one of our assets?
-			if ( strpos($url, $this->assetApiBaseUrl) !== false ) {
-				$requestArgs['headers']['accept'] = 'application/octet-stream';
+		public function setUpdateDownloadHeaders($requestArgs, $url = '') {
+			//Is WordPress trying to download one of our release assets?
+			if ( $this->releaseAssetsEnabled && (strpos($url, $this->assetApiBaseUrl) !== false) ) {
+				$requestArgs['headers']['Accept'] = 'application/octet-stream';
+			}
+			//Use Basic authentication, but only if the download is from our repository.
+			$repoApiBaseUrl = $this->buildApiUrl('/repos/:user/:repo/', array());
+			if ( $this->isAuthenticationEnabled() && (strpos($url, $repoApiBaseUrl)) === 0 ) {
+				$requestArgs['headers']['Authorization'] = $this->getAuthorizationHeader();
 			}
 			return $requestArgs;
+		}
+
+		/**
+		 * When following a redirect, the Requests library will automatically forward
+		 * the authorization header to other hosts. We don't want that because it breaks
+		 * AWS downloads and can leak authorization information.
+		 *
+		 * @internal
+		 * @param string $location
+		 * @param array $headers
+		 */
+		public function removeAuthHeaderFromRedirects(&$location, &$headers) {
+			$repoApiBaseUrl = $this->buildApiUrl('/repos/:user/:repo/', array());
+			if ( strpos($location, $repoApiBaseUrl) === 0 ) {
+				return; //This request is going to GitHub, so it's fine.
+			}
+			//Remove the header.
+			if ( isset($headers['Authorization']) ) {
+				unset($headers['Authorization']);
+			}
+		}
+
+		/**
+		 * Generate the value of the "Authorization" header.
+		 *
+		 * @return string
+		 */
+		protected function getAuthorizationHeader() {
+			return 'Basic ' . base64_encode($this->userName . ':' . $this->accessToken);
 		}
 	}
 
