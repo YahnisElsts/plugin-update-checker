@@ -68,7 +68,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			$reference = new Puc_v4p8_Vcs_Reference(array(
 				'name'        => $release->tag_name,
 				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
-				'downloadUrl' => $this->signDownloadUrl($release->zipball_url),
+				'downloadUrl' => $this->resolveDownloadUrl($release->zipball_url),
 				'updated'     => $release->created_at,
 				'apiResponse' => $release,
 			));
@@ -82,11 +82,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 				$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
 				if ( !empty($matchingAssets) ) {
 					if ( $this->isAuthenticationEnabled() ) {
-						/**
-						 * Keep in mind that we'll need to add an "Accept" header to download this asset.
-						 * @see setReleaseDownloadHeader()
-						 */
-						$reference->downloadUrl = $this->signDownloadUrl($matchingAssets[0]->url);
+						$reference->downloadUrl = $this->resolveDownloadUrl($matchingAssets[0]->url);
 					} else {
 						//It seems that browser_download_url only works for public repositories.
 						//Using an access_token doesn't help. Maybe OAuth would work?
@@ -126,7 +122,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			return new Puc_v4p8_Vcs_Reference(array(
 				'name'        => $tag->name,
 				'version'     => ltrim($tag->name, 'v'),
-				'downloadUrl' => $this->signDownloadUrl($tag->zipball_url),
+				'downloadUrl' => $this->resolveDownloadUrl($tag->zipball_url),
 				'apiResponse' => $tag,
 			));
 		}
@@ -192,6 +188,20 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		}
 
 		/**
+		 * Returns an array of options for an api request
+		 *
+		 * @return array
+		 */
+		protected function apiOptions() {
+			return array(
+				'timeout' => 10,
+				'headers' => array(
+					'Authorization' => 'Basic ' . base64_encode($this->userName . ':' . $this->accessToken)
+				)
+			);
+		}
+
+		/**
 		 * Perform a GitHub API request.
 		 *
 		 * @param string $url
@@ -202,7 +212,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			$baseUrl = $url;
 			$url = $this->buildApiUrl($url, $queryParams);
 
-			$options = array('timeout' => 10);
+			$options = $this->apiOptions();
 			if ( !empty($this->httpFilterName) ) {
 				$options = apply_filters($this->httpFilterName, $options);
 			}
@@ -245,9 +255,6 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 			}
 			$url = 'https://api.github.com' . $url;
 
-			if ( !empty($this->accessToken) ) {
-				$queryParams['access_token'] = $this->accessToken;
-			}
 			if ( !empty($queryParams) ) {
 				$url = add_query_arg($queryParams, $url);
 			}
@@ -286,7 +293,7 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 				urlencode($ref)
 			);
 			if ( !empty($this->accessToken) ) {
-				$url = $this->signDownloadUrl($url);
+				$url = $this->resolveDownloadUrl($url);
 			}
 			return $url;
 		}
@@ -336,11 +343,22 @@ if ( !class_exists('Puc_v4p8_Vcs_GitHubApi', false) ):
 		 * @param string $url
 		 * @return string
 		 */
-		public function signDownloadUrl($url) {
+		public function resolveDownloadUrl($url) {
 			if ( empty($this->credentials) ) {
 				return $url;
 			}
-			return add_query_arg('access_token', $this->credentials, $url);
+
+			$options = $this->apiOptions();
+			$options['redirection'] = 0;
+
+			$response = wp_remote_get($url, $options);
+			$download = wp_remote_retrieve_header($response, 'location');
+
+			if ( empty($download) ) {
+				return $url;
+			}
+
+			return $download;
 		}
 
 		/**
