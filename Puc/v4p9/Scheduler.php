@@ -87,6 +87,7 @@ if ( !class_exists('Puc_v4p9_Scheduler', false) ):
 		 * Runs upon the WP action upgrader_process_complete.
 		 *
 		 * We look at the parameters to decide whether to call maybeCheckForUpdates() or not.
+		 * We also check if the update checker has been removed by the update.
 		 *
 		 * @param WP_Upgrader $upgrader  WP_Upgrader instance
 		 * @param array $upgradeInfo extra information about the upgrade
@@ -95,6 +96,15 @@ if ( !class_exists('Puc_v4p9_Scheduler', false) ):
 			/** @noinspection PhpUnusedParameterInspection */
 			$upgrader, $upgradeInfo
 		) {
+			//Cancel all further actions if the current version of PUC has been deleted or overwritten
+			//by a different version during the upgrade. If we try to do anything more in that situation,
+			//we could trigger a fatal error by trying to autoload a deleted class.
+			clearstatcache();
+			if ( !file_exists(__FILE__) ) {
+				$this->removeHooks();
+				$this->updateChecker->removeHooks();
+				return;
+			}
 
 			//Sanity check and limitation to relevant types.
 			if (
@@ -136,7 +146,7 @@ if ( !class_exists('Puc_v4p9_Scheduler', false) ):
 
 			$this->maybeCheckForUpdates();
 		}
-		
+
 		/**
 		 * Check for updates if the configured check interval has already elapsed.
 		 * Will use a shorter check interval on certain admin pages like "Dashboard -> Updates" or when doing cron.
@@ -232,6 +242,24 @@ if ( !class_exists('Puc_v4p9_Scheduler', false) ):
 		 */
 		public function getCronHookName() {
 			return $this->cronHook;
+		}
+
+		/**
+		 * Remove most hooks added by the scheduler.
+		 */
+		public function removeHooks() {
+			remove_filter('cron_schedules', array($this, '_addCustomSchedule'));
+			remove_action('admin_init', array($this, 'maybeCheckForUpdates'));
+			remove_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
+
+			if ( $this->cronHook !== null ) {
+				remove_action($this->cronHook, array($this, 'maybeCheckForUpdates'));
+			}
+			if ( !empty($this->hourlyCheckHooks) ) {
+				foreach ($this->hourlyCheckHooks as $hook) {
+					remove_action($hook, array($this, 'maybeCheckForUpdates'));
+				}
+			}
 		}
 	}
 
