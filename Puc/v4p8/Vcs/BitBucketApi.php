@@ -140,7 +140,7 @@ if ( !class_exists('Puc_v4p8_Vcs_BitBucketApi', false) ):
 		 * @param string $ref
 		 * @return string
 		 */
-		protected function getDownloadUrl($ref) {
+		protected function getDownloadUrl($ref, $method = 'download') {
 			// Added functionality to allow download as method
 			if( $method == 'download' ) {
 				$endpoint = 'https://api.bitbucket.org/2.0/repositories/%s/%s/downloads/%s.zip';
