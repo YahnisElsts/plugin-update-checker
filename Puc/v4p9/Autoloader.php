@@ -14,7 +14,12 @@ if ( !class_exists('Puc_v4p9_Autoloader', false) ):
 			$nameParts = explode('_', __CLASS__, 3);
 			$this->prefix = $nameParts[0] . '_' . $nameParts[1] . '_';
 
-			$this->libraryDir = realpath($this->rootDir . '../..') . '/';
+			$this->libraryDir = $this->rootDir . '../..';
+			if ( !self::isPhar() ) {
+				$this->libraryDir = realpath($this->libraryDir);
+			}
+			$this->libraryDir = $this->libraryDir . '/';
+
 			$this->staticMap = array(
 				'PucReadmeParser' => 'vendor/PucReadmeParser.php',
 				'Parsedown' => 'vendor/Parsedown.php',
@@ -22,6 +27,17 @@ if ( !class_exists('Puc_v4p9_Autoloader', false) ):
 			);
 
 			spl_autoload_register(array($this, 'autoload'));
+		}
+
+		/**
+		 * Determine if this file is running as part of a Phar archive.
+		 *
+		 * @return bool
+		 */
+		private static function isPhar() {
+			//Check if the current file path starts with "phar://".
+			static $pharProtocol = 'phar://';
+			return (substr(__FILE__, 0, strlen($pharProtocol)) === $pharProtocol);
 		}
 
 		public function autoload($className) {
