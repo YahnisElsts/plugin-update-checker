@@ -31,15 +31,29 @@ if ( !class_exists('Puc_v4p9_Metadata', false) ):
 			$apiResponse = json_decode($json);
 			if ( empty($apiResponse) || !is_object($apiResponse) ){
 				$errorMessage = "Failed to parse update metadata. Try validating your .json file with http://jsonlint.com/";
-				do_action('puc_api_error', new WP_Error('puc-invalid-json', $errorMessage));
-				trigger_error($errorMessage, E_USER_NOTICE);
+
+				$api_error = new WP_Error('puc-invalid-json', $errorMessage);
+				do_action('puc_api_error', $api_error);
+
+				// Allow 3rd parties to suppress the notice, as they might have their own
+				// error handling mechanism in place
+				// @link https://github.com/YahnisElsts/plugin-update-checker/issues/347
+				if(apply_filters('puc_show_trigger_api_response_error', true, $api_error)) {
+					trigger_error($errorMessage, E_USER_NOTICE);
+				}
 				return false;
 			}
 
 			$valid = $target->validateMetadata($apiResponse);
 			if ( is_wp_error($valid) ){
 				do_action('puc_api_error', $valid);
-				trigger_error($valid->get_error_message(), E_USER_NOTICE);
+
+				// Allow 3rd parties to suppress the notice, as they might have their own
+				// error handling mechanism in place
+				// @link https://github.com/YahnisElsts/plugin-update-checker/issues/347
+				if(apply_filters('puc_show_trigger_api_response_error', true, $valid)) {
+					trigger_error($valid->get_error_message(), E_USER_NOTICE);
+				}
 				return false;
 			}
 
