@@ -1,4 +1,4 @@
-.puc-debug-bar-panel pre {
+.puc-debug-bar-panel-v4 pre {
 	margin-top: 0;
 }
 
@@ -59,4 +59,12 @@ table.puc-debug-data td {
 
 .puc-ajax-nonce {
 	display: none;
+}
+
+.puc-ajax-response dt {
+	margin: 0;
+}
+
+.puc-ajax-response dd {
+	margin: 0 0 1em;
 }
