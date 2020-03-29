@@ -222,7 +222,7 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 				);
 				$seek = apply_filters( 'puc_get_source_uri', $seek );
 				$data = get_file_data( $fullPath, $seek );
-				foreach( $seek as $key => $uri ) {
+				foreach( $data as $key => $uri ) {
 					if ( $uri ) return $uri;
 				}
 			}
