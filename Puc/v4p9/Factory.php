@@ -24,7 +24,7 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 		 * @param string $fullPath
 		 * @param array
 		 */
-		public static function updateChecker( $fullPath, $args = array() ) {
+		public static function buildFromHeader( $fullPath, $args = array() ) {
 			$fullPath = self::normalizePath( $fullPath );
 
 			//Set up defaults.
@@ -36,7 +36,7 @@ if ( !class_exists('Puc_v4p9_Factory', false) ):
 				'muPluginFile' => '',
 			);
 			$args = array_merge( $defaults, array_intersect_key( $args, $defaults ) );
-			extract( $args );
+			extract( $args, EXTR_SKIP );
 
 			//Check for the service URI
 			if ( empty( $metadataUrl ) ) {
