@@ -27,6 +27,7 @@ if ( !class_exists('Puc_v4p9_Plugin_Info', false) ):
 
 		public $requires;
 		public $tested;
+		public $requires_php;
 		public $upgrade_notice;
 
 		public $rating;
@@ -94,6 +95,7 @@ if ( !class_exists('Puc_v4p9_Plugin_Info', false) ):
 			$sameFormat = array(
 				'name', 'slug', 'version', 'requires', 'tested', 'rating', 'upgrade_notice',
 				'num_ratings', 'downloaded', 'active_installs', 'homepage', 'last_updated',
+				'requires_php',
 			);
 			foreach($sameFormat as $field){
 				if ( isset($this->$field) ) {

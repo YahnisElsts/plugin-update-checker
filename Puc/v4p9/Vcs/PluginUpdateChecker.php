@@ -139,6 +139,8 @@ if ( !class_exists('Puc_v4p9_Vcs_PluginUpdateChecker') ):
 				'Tested WP' => 'tested',
 				'Requires at least' => 'requires',
 				'Tested up to' => 'tested',
+
+				'Requires PHP' => 'requires_php',
 			);
 			foreach ($headerToPropertyMap as $headerName => $property) {
 				if ( isset($fileHeader[$headerName]) && !empty($fileHeader[$headerName]) ) {
@@ -171,6 +173,9 @@ if ( !class_exists('Puc_v4p9_Vcs_PluginUpdateChecker') ):
 			}
 			if ( !empty($readme['requires_at_least']) ) {
 				$pluginInfo->requires = $readme['requires_at_least'];
+			}
+			if ( !empty($readme['requires_php']) ) {
+				$pluginInfo->requires_php = $readme['requires_php'];
 			}
 
 			if ( isset($readme['upgrade_notice'], $readme['upgrade_notice'][$pluginInfo->version]) ) {

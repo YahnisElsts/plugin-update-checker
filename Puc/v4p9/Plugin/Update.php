@@ -13,11 +13,12 @@ if ( !class_exists('Puc_v4p9_Plugin_Update', false) ):
 		public $homepage;
 		public $upgrade_notice;
 		public $tested;
+		public $requires_php = false;
 		public $icons = array();
 		public $filename; //Plugin filename relative to the plugins directory.
 
 		protected static $extraFields = array(
-			'id', 'homepage', 'tested', 'upgrade_notice', 'icons', 'filename',
+			'id', 'homepage', 'tested', 'requires_php', 'upgrade_notice', 'icons', 'filename',
 		);
 
 		/**
@@ -79,6 +80,7 @@ if ( !class_exists('Puc_v4p9_Plugin_Update', false) ):
 			$update->id = $this->id;
 			$update->url = $this->homepage;
 			$update->tested = $this->tested;
+			$update->requires_php = $this->requires_php;
 			$update->plugin = $this->filename;
 
 			if ( !empty($this->upgrade_notice) ) {
