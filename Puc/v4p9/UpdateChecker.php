@@ -357,26 +357,39 @@ if ( !class_exists('Puc_v4p9_UpdateChecker', false) ):
 
 			$wpVersion = $GLOBALS['wp_version'];
 
-			if ( function_exists('get_preferred_from_update_core') ) {
-				$coreUpdate = get_preferred_from_update_core();
-				if ( isset($coreUpdate->current) && version_compare($coreUpdate->current, $wpVersion, '>') ) {
-					$actualWpVersions[] = $coreUpdate->current;
+			if ( function_exists('get_core_updates') ) {
+				$coreUpdates = get_core_updates();
+				if ( is_array($coreUpdates) ) {
+					foreach ($coreUpdates as $coreUpdate) {
+						if ( isset($coreUpdate->current) ) {
+							$actualWpVersions[] = $coreUpdate->current;
+						}
+					}
 				}
 			}
 
 			$actualWpVersions[] = $wpVersion;
 
-			$actualWpPatchNumber = "999";
+			$actualWpPatchNumber = null;
 			foreach ($actualWpVersions as $version) {
-				if ( preg_match('/^(?P<majorMinor>\d++\.\d++)\.(?P<patch>\d++)/', $version, $versionParts) ) {
+				if ( preg_match('/^(?P<majorMinor>\d++\.\d++)(?:\.(?P<patch>\d++))?/', $version, $versionParts) ) {
 					if ( $versionParts['majorMinor'] === $update->tested ) {
-						$actualWpPatchNumber = $versionParts['patch'];
-						break;
+						$patch = isset($versionParts['patch']) ? intval($versionParts['patch']) : 0;
+						if ( $actualWpPatchNumber === null ) {
+							$actualWpPatchNumber = $patch;
+						} else {
+							$actualWpPatchNumber = max($actualWpPatchNumber, $patch);
+						}
 					}
 				}
 			}
+			if ( $actualWpPatchNumber === null ) {
+				$actualWpPatchNumber = 999;
+			}
 
-			$update->tested .= '.' . $actualWpPatchNumber;
+			if ( $actualWpPatchNumber > 0 ) {
+				$update->tested .= '.' . $actualWpPatchNumber;
+			}
 		}
 
 		/**
