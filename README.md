@@ -28,7 +28,7 @@ From the users' perspective, it works just like with plugins and themes hosted o
 Getting Started
 ---------------
 
-In each of the above examples, part of the instructions are to load the plugin updater class. It is recommended to do this during the `plugins_loaded` WordPress action. If you do it only during an `admin_*` action, then available updates will not be visible to a wide variety of WordPress maanagement components; they would then only be visible to a logged-in user on the dashboard using the dashboard pages.
+*Note:* In each of the below examples, part of the instructions are to create an instance of the update checker class. It's recommended to do this either during the `plugins_loaded` action or outside of any hooks. If you do it only during an `admin_*` action, then updates will not be visible to a wide variety of WordPress maanagement tools; they will only be visible to logged-in users on dashboard pages.
 
 ### Self-hosted Plugins and Themes
 
