@@ -28,6 +28,8 @@ From the users' perspective, it works just like with plugins and themes hosted o
 Getting Started
 ---------------
 
+In each of the above examples, part of the instructions are to load the plugin updater class. It is recommended to do this during the `plugins_loaded` WordPress action. If you do it only during an `admin_*` action, then available updates will not be visible to a wide variety of WordPress maanagement components; they would then only be visible to a logged-in user on the dashboard using the dashboard pages.
+
 ### Self-hosted Plugins and Themes
 
 1. Download [the latest release](https://github.com/YahnisElsts/plugin-update-checker/releases/latest) and copy the `plugin-update-checker` directory to your plugin or theme.
