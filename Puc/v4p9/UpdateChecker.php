@@ -524,6 +524,10 @@ if ( !class_exists('Puc_v4p9_UpdateChecker', false) ):
 			} else {
 				//Clean up any stale update info.
 				$updates = $this->removeUpdateFromList($updates);
+				//Add a placeholder item to the "no_update" list to enable auto-update support.
+				//If we don't do this, the option to enable automatic updates will only show up
+				//when an update is available.
+				$updates = $this->addNoUpdateItem($updates);
 			}
 
 			return $updates;
@@ -553,6 +557,40 @@ if ( !class_exists('Puc_v4p9_UpdateChecker', false) ):
 				unset($updates->response[$this->getUpdateListKey()]);
 			}
 			return $updates;
+		}
+
+		/**
+		 * See this post for more information:
+		 * @link https://make.wordpress.org/core/2020/07/30/recommended-usage-of-the-updates-api-to-support-the-auto-updates-ui-for-plugins-and-themes-in-wordpress-5-5/
+		 *
+		 * @param stdClass|null $updates
+		 * @return stdClass
+		 */
+		protected function addNoUpdateItem($updates) {
+			if ( !is_object($updates) ) {
+				$updates = new stdClass();
+				$updates->response = array();
+				$updates->no_update = array();
+			} else if ( !isset($updates->no_update) ) {
+				$updates->no_update = array();
+			}
+
+			$updates->no_update[$this->getUpdateListKey()] = (object) $this->getNoUpdateItemFields();
+
+			return $updates;
+		}
+
+		/**
+		 * Subclasses should override this method to add fields that are specific to plugins or themes.
+		 * @return array
+		 */
+		protected function getNoUpdateItemFields() {
+			return array(
+				'new_version'   => $this->getInstalledVersion(),
+				'url'           => '',
+				'package'       => '',
+				'requires_php'  => '',
+			);
 		}
 
 		/**

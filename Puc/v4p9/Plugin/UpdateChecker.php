@@ -235,6 +235,22 @@ if ( !class_exists('Puc_v4p9_Plugin_UpdateChecker', false) ):
 			return $this->pluginFile;
 		}
 
+		protected function getNoUpdateItemFields() {
+			return array_merge(
+				parent::getNoUpdateItemFields(),
+				array(
+					'id'            => $this->pluginFile,
+					'slug'          => $this->slug,
+					'plugin'        => $this->pluginFile,
+					'icons'         => array(),
+					'banners'       => array(),
+					'banners_rtl'   => array(),
+					'tested'        => '',
+					'compatibility' => new stdClass(),
+				)
+			);
+		}
+
 		/**
 		 * Alias for isBeingUpgraded().
 		 *

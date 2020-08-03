@@ -53,6 +53,16 @@ if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
 			return $themeUpdate;
 		}
 
+		protected function getNoUpdateItemFields() {
+			return array_merge(
+				parent::getNoUpdateItemFields(),
+				array(
+					'theme'        => $this->directoryName,
+					'requires'     => '',
+				)
+			);
+		}
+
 		public function userCanInstallUpdates() {
 			return current_user_can('update_themes');
 		}
