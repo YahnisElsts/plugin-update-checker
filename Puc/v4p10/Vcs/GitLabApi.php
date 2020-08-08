@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
+if ( !class_exists('Puc_v4p10_Vcs_GitLabApi', false) ):
 
-	class Puc_v4p9_Vcs_GitLabApi extends Puc_v4p9_Vcs_Api {
+	class Puc_v4p10_Vcs_GitLabApi extends Puc_v4p10_Vcs_Api {
 		/**
 		 * @var string GitLab username.
 		 */
@@ -91,7 +91,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 		/**
 		 * Get the latest release from GitLab.
 		 *
-		 * @return Puc_v4p9_Vcs_Reference|null
+		 * @return Puc_v4p10_Vcs_Reference|null
 		 */
 		public function getLatestRelease() {
 			return $this->getLatestTag();
@@ -100,7 +100,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v4p9_Vcs_Reference|null
+		 * @return Puc_v4p10_Vcs_Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/:id/repository/tags');
@@ -114,7 +114,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 			}
 
 			$tag = $versionTags[0];
-			return new Puc_v4p9_Vcs_Reference(array(
+			return new Puc_v4p10_Vcs_Reference(array(
 				'name'        => $tag->name,
 				'version'     => ltrim($tag->name, 'v'),
 				'downloadUrl' => $this->buildArchiveDownloadUrl($tag->name),
@@ -126,7 +126,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 		 * Get a branch by name.
 		 *
 		 * @param string $branchName
-		 * @return null|Puc_v4p9_Vcs_Reference
+		 * @return null|Puc_v4p10_Vcs_Reference
 		 */
 		public function getBranch($branchName) {
 			$branch = $this->api('/:id/repository/branches/' . $branchName);
@@ -134,7 +134,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v4p9_Vcs_Reference(array(
+			$reference = new Puc_v4p10_Vcs_Reference(array(
 				'name'        => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 				'apiResponse' => $branch,
@@ -283,7 +283,7 @@ if ( !class_exists('Puc_v4p9_Vcs_GitLabApi', false) ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p9_Vcs_Reference
+		 * @return null|Puc_v4p10_Vcs_Reference
 		 */
 		public function chooseReference($configBranch) {
 			$updateSource = null;

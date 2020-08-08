@@ -1,9 +1,9 @@
 <?php
 
-if ( !class_exists('Puc_v4p9_DebugBar_Panel', false) && class_exists('Debug_Bar_Panel', false) ):
+if ( !class_exists('Puc_v4p10_DebugBar_Panel', false) && class_exists('Debug_Bar_Panel', false) ):
 
-	class Puc_v4p9_DebugBar_Panel extends Debug_Bar_Panel {
-		/** @var Puc_v4p9_UpdateChecker */
+	class Puc_v4p10_DebugBar_Panel extends Debug_Bar_Panel {
+		/** @var Puc_v4p10_UpdateChecker */
 		protected $updateChecker;
 
 		private $responseBox = '<div class="puc-ajax-response" style="display: none;"></div>';

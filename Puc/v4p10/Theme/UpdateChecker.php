@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
+if ( !class_exists('Puc_v4p10_Theme_UpdateChecker', false) ):
 
-	class Puc_v4p9_Theme_UpdateChecker extends Puc_v4p9_UpdateChecker {
+	class Puc_v4p10_Theme_UpdateChecker extends Puc_v4p10_UpdateChecker {
 		protected $filterSuffix = 'theme';
 		protected $updateTransient = 'update_themes';
 		protected $translationType = 'theme';
@@ -39,13 +39,13 @@ if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
 		/**
 		 * Retrieve the latest update (if any) from the configured API endpoint.
 		 *
-		 * @return Puc_v4p9_Update|null An instance of Update, or NULL when no updates are available.
+		 * @return Puc_v4p10_Update|null An instance of Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
-			list($themeUpdate, $result) = $this->requestMetadata('Puc_v4p9_Theme_Update', 'request_update');
+			list($themeUpdate, $result) = $this->requestMetadata('Puc_v4p10_Theme_Update', 'request_update');
 
 			if ( $themeUpdate !== null ) {
-				/** @var Puc_v4p9_Theme_Update $themeUpdate */
+				/** @var Puc_v4p10_Theme_Update $themeUpdate */
 				$themeUpdate->slug = $this->slug;
 			}
 
@@ -71,10 +71,10 @@ if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
 		 * Create an instance of the scheduler.
 		 *
 		 * @param int $checkPeriod
-		 * @return Puc_v4p9_Scheduler
+		 * @return Puc_v4p10_Scheduler
 		 */
 		protected function createScheduler($checkPeriod) {
-			return new Puc_v4p9_Scheduler($this, $checkPeriod, array('load-themes.php'));
+			return new Puc_v4p10_Scheduler($this, $checkPeriod, array('load-themes.php'));
 		}
 
 		/**
@@ -88,7 +88,7 @@ if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
 		}
 
 		protected function createDebugBarExtension() {
-			return new Puc_v4p9_DebugBar_Extension($this, 'Puc_v4p9_DebugBar_ThemePanel');
+			return new Puc_v4p10_DebugBar_Extension($this, 'Puc_v4p10_DebugBar_ThemePanel');
 		}
 
 		/**
@@ -142,10 +142,10 @@ if ( !class_exists('Puc_v4p9_Theme_UpdateChecker', false) ):
 		/**
 		 * Create a package instance that represents this plugin or theme.
 		 *
-		 * @return Puc_v4p9_InstalledPackage
+		 * @return Puc_v4p10_InstalledPackage
 		 */
 		protected function createInstalledPackage() {
-			return new Puc_v4p9_Theme_Package($this->stylesheet, $this);
+			return new Puc_v4p10_Theme_Package($this->stylesheet, $this);
 		}
 	}
 
