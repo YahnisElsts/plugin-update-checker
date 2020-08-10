@@ -143,6 +143,15 @@ if ( !class_exists('Puc_v4p9_DebugBar_Extension', false) ):
 		}
 
 		/**
+		 * Remove hooks that were added by this extension.
+		 */
+		public function removeHooks() {
+			remove_filter('debug_bar_panels', array($this, 'addDebugBarPanel'));
+			remove_action('debug_bar_enqueue_scripts', array($this, 'enqueuePanelDependencies'));
+			remove_action('wp_ajax_puc_v4_debug_check_now', array($this, 'ajaxCheckNow'));
+		}
+
+		/**
 		 * @param string $filePath
 		 * @return string
 		 */
