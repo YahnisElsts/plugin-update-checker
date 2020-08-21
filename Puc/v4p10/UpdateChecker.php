@@ -65,6 +65,11 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		 */
 		protected $cachedMetadataHost = 0;
 
+		/**
+		 * @var Puc_v4p9_DebugBar_Extension|null
+		 */
+		protected $debugBarExtension = null;
+
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
@@ -167,6 +172,10 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 
 			if ( $this->scheduler ) {
 				$this->scheduler->removeHooks();
+			}
+
+			if ( $this->debugBarExtension ) {
+				$this->debugBarExtension->removeHooks();
 			}
 		}
 
@@ -963,7 +972,7 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		 */
 		public function maybeInitDebugBar() {
 			if ( class_exists('Debug_Bar', false) && file_exists(dirname(__FILE__) . '/DebugBar') ) {
-				$this->createDebugBarExtension();
+				$this->debugBarExtension = $this->createDebugBarExtension();
 			}
 		}
 
