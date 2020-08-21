@@ -66,7 +66,7 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 		protected $cachedMetadataHost = 0;
 
 		/**
-		 * @var Puc_v4p9_DebugBar_Extension|null
+		 * @var Puc_v4p10_DebugBar_Extension|null
 		 */
 		protected $debugBarExtension = null;
 
