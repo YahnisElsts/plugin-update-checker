@@ -111,6 +111,14 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 				return null;
 			}
 
+			//Add the current namespace to the class name(s).
+			if ( defined('__NAMESPACE__') && version_compare(PHP_VERSION, '5.3', '>=') ) {
+				$checkerClass = __NAMESPACE__ . '\\' . $checkerClass;
+				if ( isset($apiClass) ) {
+					$apiClass = __NAMESPACE__ . '\\' . $apiClass;
+				}
+			}
+
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
