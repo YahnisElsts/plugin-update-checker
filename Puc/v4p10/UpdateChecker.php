@@ -675,6 +675,9 @@ if ( !class_exists('Puc_v4p10_UpdateChecker', false) ):
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
 			if ( !is_wp_error($status) ){
+				if ( version_compare(PHP_VERSION, '5.3', '>=') && (strpos($metaClass, '\\') === false) ) {
+					$metaClass = __NAMESPACE__ . '\\' . $metaClass;
+				}
 				$metadata = call_user_func(array($metaClass, 'fromJson'), $result['body']);
 			} else {
 				do_action('puc_api_error', $status, $result, $url, $this->slug);
