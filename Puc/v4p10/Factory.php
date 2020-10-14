@@ -286,6 +286,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 * @return string|null Full class name.
 		 */
 		protected static function getCompatibleClassVersion($class) {
+			$class = str_replace('\\', '', $class);
 			if ( isset(self::$classVersions[$class][self::$latestCompatibleVersion]) ) {
 				return self::$classVersions[$class][self::$latestCompatibleVersion];
 			}
