@@ -156,8 +156,9 @@ if ( !class_exists('Puc_v4p10_Plugin_Ui', false) ):
 			if ( $shouldCheck ) {
 				$update = $this->updateChecker->checkForUpdates();
 				$status = ($update === null) ? 'no_update' : 'update_available';
+				$lastRequestApiErrors = $this->updateChecker->getLastRequestApiErrors();
 
-				if ( ($update === null) && !empty($this->lastRequestApiErrors) ) {
+				if ( ($update === null) && !empty($lastRequestApiErrors) ) {
 					//Some errors are not critical. For example, if PUC tries to retrieve the readme.txt
 					//file from GitHub and gets a 404, that's an API error, but it doesn't prevent updates
 					//from working. Maybe the plugin simply doesn't have a readme.
@@ -169,7 +170,7 @@ if ( !class_exists('Puc_v4p10_Plugin_Ui', false) ):
 						'puc-bitbucket-http-error',
 					);
 
-					foreach ($this->lastRequestApiErrors as $item) {
+					foreach ($lastRequestApiErrors as $item) {
 						$wpError = $item['error'];
 						/** @var WP_Error $wpError */
 						if ( !in_array($wpError->get_error_code(), $questionableErrorCodes) ) {
@@ -180,7 +181,7 @@ if ( !class_exists('Puc_v4p10_Plugin_Ui', false) ):
 
 					if ( $foundCriticalErrors ) {
 						$status = 'error';
-						set_site_transient($this->manualCheckErrorTransient, $this->lastRequestApiErrors, 60);
+						set_site_transient($this->manualCheckErrorTransient, $lastRequestApiErrors, 60);
 					}
 				}
 
