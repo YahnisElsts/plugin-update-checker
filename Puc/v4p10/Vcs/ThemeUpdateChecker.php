@@ -1,22 +1,22 @@
 <?php
 
-if ( !class_exists('Puc_v4p10_Vcs_ThemeUpdateChecker', false) ):
+if ( !class_exists('Puc_v4p11_Vcs_ThemeUpdateChecker', false) ):
 
-	class Puc_v4p10_Vcs_ThemeUpdateChecker extends Puc_v4p10_Theme_UpdateChecker implements Puc_v4p10_Vcs_BaseChecker {
+	class Puc_v4p11_Vcs_ThemeUpdateChecker extends Puc_v4p11_Theme_UpdateChecker implements Puc_v4p11_Vcs_BaseChecker {
 		/**
 		 * @var string The branch where to look for updates. Defaults to "master".
 		 */
 		protected $branch = 'master';
 
 		/**
-		 * @var Puc_v4p10_Vcs_Api Repository API client.
+		 * @var Puc_v4p11_Vcs_Api Repository API client.
 		 */
 		protected $api = null;
 
 		/**
-		 * Puc_v4p10_Vcs_ThemeUpdateChecker constructor.
+		 * Puc_v4p11_Vcs_ThemeUpdateChecker constructor.
 		 *
-		 * @param Puc_v4p10_Vcs_Api $api
+		 * @param Puc_v4p11_Vcs_Api $api
 		 * @param null $stylesheet
 		 * @param null $customSlug
 		 * @param int $checkPeriod
@@ -35,7 +35,7 @@ if ( !class_exists('Puc_v4p10_Vcs_ThemeUpdateChecker', false) ):
 			$api = $this->api;
 			$api->setLocalDirectory($this->package->getAbsoluteDirectoryPath());
 
-			$update = new Puc_v4p10_Theme_Update();
+			$update = new Puc_v4p11_Theme_Update();
 			$update->slug = $this->slug;
 
 			//Figure out which reference (tag or branch) we'll use to get the latest version of the theme.
@@ -60,13 +60,13 @@ if ( !class_exists('Puc_v4p10_Vcs_ThemeUpdateChecker', false) ):
 			//Get headers from the main stylesheet in this branch/tag. Its "Version" header and other metadata
 			//are what the WordPress install will actually see after upgrading, so they take precedence over releases/tags.
 			$remoteHeader = $this->package->getFileHeader($api->getRemoteFile('style.css', $ref));
-			$update->version = Puc_v4p10_Utils::findNotEmpty(array(
+			$update->version = Puc_v4p11_Utils::findNotEmpty(array(
 				$remoteHeader['Version'],
-				Puc_v4p10_Utils::get($updateSource, 'version'),
+				Puc_v4p11_Utils::get($updateSource, 'version'),
 			));
 
 			//The details URL defaults to the Theme URI header or the repository URL.
-			$update->details_url = Puc_v4p10_Utils::findNotEmpty(array(
+			$update->details_url = Puc_v4p11_Utils::findNotEmpty(array(
 				$remoteHeader['ThemeURI'],
 				$this->package->getHeaderValue('ThemeURI'),
 				$this->metadataUrl,

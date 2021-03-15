@@ -1,7 +1,7 @@
 <?php
-if ( !class_exists('Puc_v4p10_Vcs_Api') ):
+if ( !class_exists('Puc_v4p11_Vcs_Api') ):
 
-	abstract class Puc_v4p10_Vcs_Api {
+	abstract class Puc_v4p11_Vcs_Api {
 		protected $tagNameProperty = 'name';
 		protected $slug = '';
 
@@ -27,7 +27,7 @@ if ( !class_exists('Puc_v4p10_Vcs_Api') ):
 		protected $localDirectory = null;
 
 		/**
-		 * Puc_v4p10_Vcs_Api constructor.
+		 * Puc_v4p11_Vcs_Api constructor.
 		 *
 		 * @param string $repositoryUrl
 		 * @param array|string|null $credentials
@@ -48,7 +48,7 @@ if ( !class_exists('Puc_v4p10_Vcs_Api') ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p10_Vcs_Reference
+		 * @return null|Puc_v4p11_Vcs_Reference
 		 */
 		abstract public function chooseReference($configBranch);
 
@@ -105,7 +105,7 @@ if ( !class_exists('Puc_v4p10_Vcs_Api') ):
 		 * Get a branch.
 		 *
 		 * @param string $branchName
-		 * @return Puc_v4p10_Vcs_Reference|null
+		 * @return Puc_v4p11_Vcs_Reference|null
 		 */
 		abstract public function getBranch($branchName);
 
@@ -113,7 +113,7 @@ if ( !class_exists('Puc_v4p10_Vcs_Api') ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v4p10_Vcs_Reference|null
+		 * @return Puc_v4p11_Vcs_Reference|null
 		 */
 		abstract public function getTag($tagName);
 
@@ -121,7 +121,7 @@ if ( !class_exists('Puc_v4p10_Vcs_Api') ):
 		 * Get the tag that looks like the highest version number.
 		 * (Implementations should skip pre-release versions if possible.)
 		 *
-		 * @return Puc_v4p10_Vcs_Reference|null
+		 * @return Puc_v4p11_Vcs_Reference|null
 		 */
 		abstract public function getLatestTag();
 

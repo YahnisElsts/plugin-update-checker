@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4p10_Factory', false) ):
+if ( !class_exists('Puc_v4p11_Factory', false) ):
 
 	/**
 	 * A factory that builds update checker instances.
@@ -11,7 +11,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 	 * At the moment it can only build instances of the UpdateChecker class. Other classes are
 	 * intended mainly for internal use and refer directly to specific implementations.
 	 */
-	class Puc_v4p10_Factory {
+	class Puc_v4p11_Factory {
 		protected static $classVersions = array();
 		protected static $sorted = false;
 
@@ -23,7 +23,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 *
 		 * @param string $fullPath Full path to the main plugin file or the theme's style.css.
 		 * @param array $args Optional arguments. Keys should match the argument names of the buildUpdateChecker() method.
-		 * @return Puc_v4p10_Plugin_UpdateChecker|Puc_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
+		 * @return Puc_v4p11_Plugin_UpdateChecker|Puc_v4p11_Theme_UpdateChecker|Puc_v4p11_Vcs_BaseChecker
 		 */
 		public static function buildFromHeader($fullPath, $args = array()) {
 			$fullPath = self::normalizePath($fullPath);
@@ -54,7 +54,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 * This method automatically detects if you're using it for a plugin or a theme and chooses
 		 * the appropriate implementation for your update source (JSON file, GitHub, BitBucket, etc).
 		 *
-		 * @see Puc_v4p10_UpdateChecker::__construct
+		 * @see Puc_v4p11_UpdateChecker::__construct
 		 *
 		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
@@ -62,7 +62,7 @@ if ( !class_exists('Puc_v4p10_Factory', false) ):
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param string $optionName Where to store book-keeping info about update checks.
 		 * @param string $muPluginFile The plugin filename relative to the mu-plugins directory.
-		 * @return Puc_v4p10_Plugin_UpdateChecker|Puc_v4p10_Theme_UpdateChecker|Puc_v4p10_Vcs_BaseChecker
+		 * @return Puc_v4p11_Plugin_UpdateChecker|Puc_v4p11_Theme_UpdateChecker|Puc_v4p11_Vcs_BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = self::normalizePath($fullPath);

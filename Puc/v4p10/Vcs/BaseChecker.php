@@ -1,7 +1,7 @@
 <?php
-if ( !interface_exists('Puc_v4p10_Vcs_BaseChecker', false) ):
+if ( !interface_exists('Puc_v4p11_Vcs_BaseChecker', false) ):
 
-	interface Puc_v4p10_Vcs_BaseChecker {
+	interface Puc_v4p11_Vcs_BaseChecker {
 		/**
 		 * Set the repository branch to use for updates. Defaults to 'master'.
 		 *
@@ -19,7 +19,7 @@ if ( !interface_exists('Puc_v4p10_Vcs_BaseChecker', false) ):
 		public function setAuthentication($credentials);
 
 		/**
-		 * @return Puc_v4p10_Vcs_Api
+		 * @return Puc_v4p11_Vcs_Api
 		 */
 		public function getVcsApi();
 	}
