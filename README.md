@@ -101,12 +101,12 @@ By default, the library will check the specified URL for changes every 12 hours.
 		__FILE__,
 		'unique-plugin-or-theme-slug'
 	);
+	
+	//Set the branch that contains the stable release.
+	$myUpdateChecker->setBranch('stable-branch-name');
 
 	//Optional: If you're using a private repository, specify the access token like this:
 	$myUpdateChecker->setAuthentication('your-token-here');
-
-	//Optional: Set the branch that contains the stable release.
-	$myUpdateChecker->setBranch('stable-branch-name');
 	```
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
