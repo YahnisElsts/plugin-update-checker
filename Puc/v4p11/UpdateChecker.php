@@ -338,11 +338,13 @@ if ( !class_exists('Puc_v4p11_UpdateChecker', false) ):
 			//Let plugins/themes modify the update.
 			$update = apply_filters($this->getUniqueName('request_update_result'), $update, $httpResult);
 
-			$this->fixSupportedWordpressVersion($update);
+			if ( !empty($update) ) {
+				$this->fixSupportedWordpressVersion($update);
 
-			if ( isset($update, $update->translations) ) {
-				//Keep only those translation updates that apply to this site.
-				$update->translations = $this->filterApplicableTranslations($update->translations);
+				if ( isset($update, $update->translations) ) {
+					//Keep only those translation updates that apply to this site.
+					$update->translations = $this->filterApplicableTranslations($update->translations);
+				}
 			}
 
 			return $update;
@@ -670,7 +672,7 @@ if ( !class_exists('Puc_v4p11_UpdateChecker', false) ):
 			$result = wp_remote_get($url, $options);
 
 			$result = apply_filters($this->getUniqueName('request_metadata_http_result'), $result, $url, $options);
-			
+
 			//Try to parse the response
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
