@@ -101,12 +101,12 @@ By default, the library will check the specified URL for changes every 12 hours.
 		__FILE__,
 		'unique-plugin-or-theme-slug'
 	);
+	
+	//Set the branch that contains the stable release.
+	$myUpdateChecker->setBranch('stable-branch-name');
 
 	//Optional: If you're using a private repository, specify the access token like this:
 	$myUpdateChecker->setAuthentication('your-token-here');
-
-	//Optional: Set the branch that contains the stable release.
-	$myUpdateChecker->setBranch('stable-branch-name');
 	```
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
@@ -246,8 +246,8 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
 	```php
-    $myUpdateChecker = new Puc_v4p10_Vcs_PluginUpdateChecker(
-        new Puc_v4p10_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
+    $myUpdateChecker = new Puc_v4p11_Vcs_PluginUpdateChecker(
+        new Puc_v4p11_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
         __FILE__,
         'unique-plugin-or-theme-slug'
     );
@@ -255,8 +255,8 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
    ```
    If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
    ```php
-       $myUpdateChecker = new Puc_v4p10_Vcs_PluginUpdateChecker(
-           new Puc_v4p10_Vcs_GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
+       $myUpdateChecker = new Puc_v4p11_Vcs_PluginUpdateChecker(
+           new Puc_v4p11_Vcs_GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
            __FILE__,
            'unique-plugin-or-theme-slug'
        );
