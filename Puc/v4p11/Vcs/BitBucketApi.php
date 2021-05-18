@@ -42,7 +42,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 			$updateSource = $this->getStableTag($configBranch);
 
 			//Look for version-like tags.
-			if ( !$updateSource && ($configBranch === 'master') ) {
+			if ( !$updateSource && ($configBranch === 'master' || $configBranch === 'main') ) {
 				$updateSource = $this->getLatestTag();
 			}
 			//If all else fails, use the specified branch itself.
