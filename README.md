@@ -267,10 +267,27 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 #### How to Release an Update
 
-GitLab doesn't have an equivalent to GitHub's releases, so the process is slightly different. You can use any of the following approaches: 
-	
-- **Tags** 
-	
+- **GitLab releases**
+
+	Create a new release using the "Releases" feature on Gitlab. Gitlab releases *will only be checked* if the branch is set to master (`$myUpdateChecker->setBranch('master');`) or not specified - releases *will not be checked* if any other branch is specified (`$myUpdateChecker->setBranch('stable-branch-name');`).
+
+	If you want to use Gitlab Releases source code asset, call the `enableReleaseAssets()`
+	```php
+	$myUpdateChecker->getVcsApi()->enableReleaseAssets();
+	```
+	OR if you want to use the Gitlab Release generic package instead, call the `enableReleasePackage()`
+	```php
+	$myUpdateChecker->getVcsApi()->enableReleasePackage();
+	```
+
+	For more information about Gitlab Release generic package refer to the following links:
+	- [Gitlab Release Documentation](https://docs.gitlab.com/ee/user/project/releases/#create-release-from-gitlab-ci)
+	- [Gitlab Release Assets as Generic Package Documentation](https://gitlab.com/gitlab-org/release-cli/-/tree/master/docs/examples/release-assets-as-generic-package/)
+	- [Example .gitlab-ci.yml file using Release Assets as Generic Package for generating a package from the Sensei-LMS wordpress plugin](https://gist.github.com/timwiel/9dfd3526c768efad4973254085e065ce)
+
+
+- **Tags**
+
 	To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
 	
 	PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
