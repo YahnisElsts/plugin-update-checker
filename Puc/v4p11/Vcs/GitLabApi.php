@@ -109,7 +109,11 @@ if ( !class_exists('Puc_v4p11_Vcs_GitLabApi', false) ):
 				return null;
 			}
 
-			$release = $releases[0];
+			foreach ($releases as $release) {
+				if ( true !== $release->upcoming_release ) {
+					break 1; //Break the loop on the first release we find that isn't an upcoming release
+				}
+			}
 			if ( is_wp_error($release) || !is_object($release) || !isset($release->tag_name) ) {
 				return null;
 			}
