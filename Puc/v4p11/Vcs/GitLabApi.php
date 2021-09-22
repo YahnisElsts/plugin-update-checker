@@ -372,7 +372,7 @@ if ( !class_exists('Puc_v4p11_Vcs_GitLabApi', false) ):
 				$updateSource = $this->getLatestTag();
 			}
 
-			//3. Do branch if all else fails
+			//3. Do branch (including master if no latest tag found) if branch is specified OR nothing at all specified
 			if ( empty( $updateSource ) ) {
 				$updateSource = $this->getBranch($configBranch);
 			}
