@@ -362,17 +362,18 @@ if ( !class_exists('Puc_v4p11_Vcs_GitLabApi', false) ):
 		public function chooseReference($configBranch) {
 			$updateSource = null;
 
-			// GitLab doesn't handle releases the same as GitHub so just use the latest tag
-			if ( $configBranch === 'master' ) {
-				//Use the latest release.
+			//1. Do releases first irrelevant of branches
+			if ( $this->releaseAssetsEnabled || $this->releasePackageEnabled ) {
 				$updateSource = $this->getLatestRelease();
-				if ( $updateSource === null ) {
-					//Failing that, use the tag with the highest version number.
-					$updateSource = $this->getLatestTag();
-				}
 			}
 
-			if ( empty($updateSource) ) {
+			//2. Do tag with the highest version number next if branch is master
+			if ( empty( $updateSource ) === null && $configBranch === 'master' ) {
+				$updateSource = $this->getLatestTag();
+			}
+
+			//3. Do branch if all else fails
+			if ( empty( $updateSource ) ) {
 				$updateSource = $this->getBranch($configBranch);
 			}
 
