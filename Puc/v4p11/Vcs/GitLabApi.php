@@ -389,7 +389,7 @@ if ( !class_exists('Puc_v4p11_Vcs_GitLabApi', false) ):
 			$this->releasePackageEnabled = false;
 		}
 
-		public function enableReleasePackage() {
+		public function enableReleasePackages() {
 			$this->releaseAssetsEnabled  = false;
 			$this->releasePackageEnabled = true;
 		}

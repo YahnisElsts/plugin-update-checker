@@ -280,7 +280,7 @@ A Gitlab repository can be checked for updates in 4 different ways.
 	- Add the following code:
 		```php
 		//Add the following code to your main plugin file or `functions.php` file to check for a new update from releases using generic packages
-		$myUpdateChecker->getVcsApi()->enableReleasePackage();
+		$myUpdateChecker->getVcsApi()->enableReleasePackages();
 		```
 	- PUC will periodically check the release version (i.e. the tag name of the release) and will display a notification if the release is a greater version than the installed version.
 	- The release tag name should loosely follow [SemVer](http://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
