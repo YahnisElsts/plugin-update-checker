@@ -263,9 +263,19 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
 #### How to Release a Gitlab Update
-A Gitlab repository can be checked for updates using 4 different options. The default is option 4.
+A Gitlab repository can be checked for updates using 4 different options.
 
-1. Update from **GitLab Releases using Generic Packages**:
+1. Update from any **Gitlab Stable branch** (other than `master` or `main`):
+	- Point the update checker at any stable, production-ready branch and PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version.
+	- Add the following code:
+		```php
+		//Add the following code to your main plugin file or `functions.php` file to check for an new update from a non-master branch
+		$myUpdateChecker->setBranch('stable-branch-name');
+		```
+	- Caveats:
+		- If you set the branch to `main` (the default) or `master` (the historic default), the update checker will look for recent releases and tags first. It'll only use the `main` or `master` branch if it doesn't find anything else suitable.
+
+2. Update from **GitLab Releases using Generic Packages**:
 	- Use a Gitlab CI/CD Pipeline to automatically generate your update on release using a Generic Package. The benefit of using Generic Package assets over the Source Code assets as it the code can already be built and production ready.
 	- Add the following code:
 		```php
@@ -280,7 +290,7 @@ A Gitlab repository can be checked for updates using 4 different options. The de
 		- [Example .gitlab-ci.yml file using Release Generic Packages for generating a update package from the Sensei-LMS wordpress plugin](https://gist.github.com/timwiel/9dfd3526c768efad4973254085e065ce)
 
 
-2. Update **GitLab Releases using Source Code Assets**:
+3. Update **GitLab Releases using Source Code Assets**:
 	- Create a new release using the "Releases" feature on Gitlab and PUC will periodically check the release version (based on release tag name) and display a notification if the release version is greater than the installed version.
 	- Add the following code:
 		```php
@@ -291,22 +301,11 @@ A Gitlab repository can be checked for updates using 4 different options. The de
 	- PUC will periodically check the release version (based on release tag name) and display a notification the release has a greater than the installed version.
 
 
-3. Update from any **Gitlab Stable branch** (other than `master`):
-	- Point the update checker at any stable, production-ready branch and PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version.
-	- Add the following code:
-		```php
-		//Add the following code to your main plugin file or `functions.php` file to check for an new update from a non-master branch
-		$myUpdateChecker->setBranch('stable-branch-name');
-		```
-	- Caveat: If you set the branch to `master` (the default), the update checker will look for recent releases and tags first. It'll only use the `master` branch if it doesn't find anything else suitable.
-
-
-4. Update from **Tags** on the master branch (default option):
+4. Update from **Tags** on the master branch (this is the default option):
 	- To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
 	- Add the following code:
 		```php
 		//Add the following code to your main plugin file or `functions.php` file to check for an new update from a non-master branch
-		//OR don't add any of the 4 options to your main plugin file or `functions.php`
 		$myUpdateChecker->setBranch('master');
 		```
 	- PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
