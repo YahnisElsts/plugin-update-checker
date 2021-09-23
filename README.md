@@ -19,7 +19,7 @@ From the users' perspective, it works just like with plugins and themes hosted o
   - [BitBucket Integration](#bitbucket-integration)
     - [How to Release an Update](#how-to-release-an-update-2)
   - [GitLab Integration](#gitlab-integration)
-    - [How to Release an Update](#how-to-release-a-gitlab-update)
+    - [How to Release a GitLab Update](#how-to-release-a-gitlab-update)
 - [License Management](#license-management)
 - [Resources](#resources)
 
@@ -262,24 +262,24 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
-#### How to Release a Gitlab Update
-A Gitlab repository can be checked for updates using 4 different options.
+#### How to Release a GitLab Update
+A Gitlab repository can be checked for updates in 4 different ways.
 
-1. Update from any **Gitlab Stable branch** (other than `master` or `main`):
+1. **Stable branch** (other than `master` or `main`):
 	- Point the update checker at any stable, production-ready branch and PUC will periodically check the `Version` header in the main plugin file or `style.css` and display a notification if it's greater than the installed version.
 	- Add the following code:
 		```php
-		//Add the following code to your main plugin file or `functions.php` file to check for an new update from a non-master branch
+		//Add the following code to your main plugin file or `functions.php` file to check for updates from a custom branch
 		$myUpdateChecker->setBranch('stable-branch-name');
 		```
 	- Caveats:
-		- If you set the branch to `main` (the default) or `master` (the historic default), the update checker will look for recent releases and tags first. It'll only use the `main` or `master` branch if it doesn't find anything else suitable.
+		- If you set the branch to `main` (the default) or `master` (the historical default), the update checker will look for recent releases and tags first. It'll only use the `main` or `master` branch if it doesn't find anything else suitable.
 
-2. Update from **GitLab Releases using Generic Packages**:
-	- Use a Gitlab CI/CD Pipeline to automatically generate your update on release using a Generic Package. The benefit of using Generic Package assets over the Source Code assets as it the code can already be built and production ready.
+2. **GitLab Releases using Generic Packages**:
+	- Use a Gitlab CI/CD Pipeline to automatically generate your update on release using a Generic Package. The benefit of using Generic Package assets over the Source Code assets is that the code can already be built and production ready.
 	- Add the following code:
 		```php
-		//Add the following code to your main plugin file or `functions.php` file to check for an new update from releases using generic packages
+		//Add the following code to your main plugin file or `functions.php` file to check for a new update from releases using generic packages
 		$myUpdateChecker->getVcsApi()->enableReleasePackage();
 		```
 	- PUC will periodically check the release version (i.e. the tag name of the release) and will display a notification if the release is a greater version than the installed version.
@@ -290,23 +290,23 @@ A Gitlab repository can be checked for updates using 4 different options.
 		- [Example .gitlab-ci.yml file using Release Generic Packages for generating a update package from the Sensei-LMS wordpress plugin](https://gist.github.com/timwiel/9dfd3526c768efad4973254085e065ce)
 
 
-3. Update **GitLab Releases using Source Code Assets**:
-	- Create a new release using the "Releases" feature on Gitlab and PUC will periodically check the release version (based on release tag name) and display a notification if the release version is greater than the installed version.
-	- Add the following code:
-		```php
-		//Add the following code to your main plugin file or `functions.php` file to check for an new update from releases using release assets
-		$myUpdateChecker->getVcsApi()->enableReleaseAssets();
-		```
-	- The release name should loosely follow [SemVer](http://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
-	- PUC will periodically check the release version (based on release tag name) and display a notification the release has a greater than the installed version.
+3. **GitLab Releases using Source Code Assets**:
+    - Create a new release using the "Releases" feature on Gitlab.
+    - Add the following code:
+        ```php
+        //Add the following code to your main plugin file or `functions.php` file to check for a new update from releases using release assets
+        $myUpdateChecker->getVcsApi()->enableReleaseAssets();
+        ```
+    - PUC will periodically check the release version (based on release tag name) and display a notification if the release version is greater than the installed version.
+    - The release name should loosely follow [SemVer](http://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
 
 
-4. Update from **Tags** on the master branch (this is the default option):
-	- To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
-	- Add the following code:
+4. **Tags** (this is the default option):
+	- To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`.
+	- Optionally, add the following code:
 		```php
-		//Add the following code to your main plugin file or `functions.php` file to check for an new update from a non-master branch
-		$myUpdateChecker->setBranch('master');
+		//Add the following code to your main plugin file or `functions.php` file to check for updates from the default branch
+		$myUpdateChecker->setBranch('master'); //or 'main'
 		```
 	- PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
 
