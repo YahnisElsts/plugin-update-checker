@@ -54,6 +54,7 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 				$info->version = $updateSource->version;
 				$info->last_updated = $updateSource->updated;
 				$info->download_url = $updateSource->downloadUrl;
+				$info->icons = $this->setPluginIcons();
 
 				if ( !empty($updateSource->changelog) ) {
 					$info->sections['changelog'] = $updateSource->changelog;
@@ -212,6 +213,36 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 			$panel->row('Branch', $this->branch);
 			$panel->row('Authentication enabled', $this->api->isAuthenticationEnabled() ? 'Yes' : 'No');
 			$panel->row('API client', get_class($this->api));
+		}
+
+		public function setPluginIcons() {
+			$icons = array();
+			$basepath_check = realpath(dirname( __FILE__ ) . '/../../../../' );
+			$basepath_url = realpath(dirname( __FILE__ ) . '/../../../' );
+
+			if ( is_file( $basepath_check . '/assets/icon.svg' ) ) {
+				$icons['svg'] = plugin_dir_url( $basepath_url ) . 'assets/icon.svg';
+			}
+			if ( is_file(  $basepath_check . '/assets/icon-256x256.jpg' ) ) {
+				$icons['2x'] = plugin_dir_url( $basepath_url ) . 'assets/icon-256x256.jpg';
+			}
+			if ( is_file(  $basepath_check . '/assets/icon-256x256.png' ) ) {
+				$icons['2x'] = plugin_dir_url( $basepath_url ) . 'assets/icon-256x256.png';
+			}
+			if ( is_file(  $basepath_check . '/assets/icon-128x128.jpg' ) ) {
+				$icons['1x'] = plugin_dir_url( $basepath_url ) . 'assets/icon-128x128.jpg';
+				$icons['default'] = plugin_dir_url( $basepath_url ) . 'assets/icon-128x128.jpg';
+			}
+			if ( is_file(  $basepath_check . '/assets/icon-128x128.png' ) ) {
+				$icons['1x'] = plugin_dir_url( $basepath_url ) . 'assets/icon-128x128.png';
+				$icons['default'] = plugin_dir_url( $basepath_url ) . 'assets/icon-128x128.png';
+			}
+
+			if (count($icons) > 0) {
+				return $icons;
+			} else {
+				return null;
+			}
 		}
 	}
 
