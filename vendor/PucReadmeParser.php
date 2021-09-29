@@ -157,8 +157,44 @@ class PucReadmeParser {
 		if ( isset($final_sections['screenshots']) ) {
 			preg_match_all('|<li>(.*?)</li>|s', $final_sections['screenshots'], $screenshots, PREG_SET_ORDER);
 			if ( $screenshots ) {
-				foreach ( (array) $screenshots as $ss )
-					$final_screenshots[] = $ss[1];
+				/**
+				 * Parse Screenshots from Readme.txt
+				 *
+				 * Refer to @link https://wordpress.org/plugins/readme.txt
+				 * and @link https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/ of the standard
+				 */
+				$assetDirectory = realpath(dirname( __FILE__ ) . '/../../' ) . DIRECTORY_SEPARATOR . 'assets';
+				$assetBaseUrl = trailingslashit(plugins_url('', $assetDirectory . '/imaginary.file'));
+				$ss_prefix = 'screenshot-';
+				$ss_count = 1;
+
+				foreach ( (array) $screenshots as $ss ) {
+					$ss_text = $ss[1];
+					$ss_url = null;
+
+					$filename_path = trailingslashit($assetDirectory) . $ss_prefix . $ss_count;
+					$filename_url = $assetBaseUrl . $ss_prefix . $ss_count;
+					/**
+					 * @link https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/
+					 */
+					if ( is_file( $filename_path . '.png') ) {
+						$ss_url = $filename_url . '.png';
+					} elseif ( is_file( $filename_path . '.jpg') ) {
+						$ss_url = $filename_url . '.jpg';
+					}
+
+					if ( ! empty($ss_url) ) {
+						$ss_html = '<li>';
+							$ss_html .= '<img src="'.$ss_url.'" alt="'.$ss_text.'" />';
+							$ss_html .= '<p>'.$ss_text.'</p>';
+						$ss_html .= '</li>';
+						$final_screenshots[] = $ss_html;
+					} else {
+						$final_screenshots[] = '<li>' . $ss_text . '</li>';
+					}
+					$ss_count++;
+				}
+				$final_sections['screenshots'] = '<ol>'.implode('',$final_screenshots).'</ol>';
 			}
 		}
 
