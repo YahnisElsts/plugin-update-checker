@@ -65,7 +65,7 @@ if ( !class_exists('Puc_v4p11_Vcs_Api') ):
 				return array();
 			}
 
-			$parser = new PucReadmeParser();
+			$parser = new PucReadmeParser_v4p11();
 			return $parser->parse_readme_contents($fileContents);
 		}
 
