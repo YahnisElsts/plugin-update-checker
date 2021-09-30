@@ -47,6 +47,7 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 
 			$this->setInfoFromHeader($this->package->getPluginHeader(), $info);
 			$this->setIconsFromLocalAssets($info);
+			$this->setBannersFromLocalAssets($info);
 
 			//Pick a branch or tag.
 			$updateSource = $api->chooseReference($this->branch);
@@ -224,6 +225,42 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 				$icons['default'] = $icons[$firstKey];
 
 				$pluginInfo->icons = $icons;
+			}
+		}
+
+		/**
+		 * Add banners from the currently installed version to a Plugin Info object.
+		 *
+		 * The banners should be in a subdirectory named "assets". Supported image formats
+		 * and file names are described here:
+		 * @link https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/#plugin-headers
+		 *
+		 * @param Puc_v4p11_Plugin_Info $pluginInfo
+		 */
+		protected function setBannersFromLocalAssets($pluginInfo) {
+			$assetDirectory = $this->package->getAbsoluteDirectoryPath() . DIRECTORY_SEPARATOR . 'assets';
+			if ( !is_dir($assetDirectory) ) {
+				return;
+			}
+			$assetBaseUrl = trailingslashit(plugins_url('', $assetDirectory . '/imaginary.file'));
+
+			$filesToKeys = array(
+				'banner-772x250.png' => 'high',
+				'banner-772x250.jpg' => 'high',
+				'banner-1544x500.png' => 'low',
+				'banner-1544x500.jpg' => 'low',
+			);
+
+			$banners = array();
+			foreach ($filesToKeys as $fileName => $key) {
+				$fullBannerPath = $assetDirectory . DIRECTORY_SEPARATOR . $fileName;
+				if ( !isset($icons[$key]) && is_file($fullBannerPath) ) {
+					$banners[$key] = $assetBaseUrl . $fileName;
+				}
+			}
+
+			if ( !empty($banners) ) {
+				$pluginInfo->banners = $banners;
 			}
 		}
 
