@@ -181,6 +181,8 @@ class PucReadmeParser_v4p11 {
 						$ss_url = $filename_url . '.png';
 					} elseif ( is_file( $filename_path . '.jpg') ) {
 						$ss_url = $filename_url . '.jpg';
+					} elseif ( is_file( $filename_path . '.jpeg') ) {
+						$ss_url = $filename_url . '.jpeg';
 					} elseif ( is_file( $filename_path . '.gif') ) {
 						$ss_url = $filename_url . '.gif';
 					}
