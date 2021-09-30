@@ -181,6 +181,8 @@ class PucReadmeParser_v4p11 {
 						$ss_url = $filename_url . '.png';
 					} elseif ( is_file( $filename_path . '.jpg') ) {
 						$ss_url = $filename_url . '.jpg';
+					} elseif ( is_file( $filename_path . '.gif') ) {
+						$ss_url = $filename_url . '.gif';
 					}
 
 					if ( ! empty($ss_url) ) {
@@ -317,7 +319,7 @@ class PucReadmeParser_v4p11 {
 		);
 
 		$text = balanceTags($text);
-		
+
 		$text = wp_kses( $text, $allowed );
 		$text = trim($text);
 		return $text;
