@@ -195,27 +195,13 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 		 * @param Puc_v4p11_Plugin_Info $pluginInfo
 		 */
 		protected function setIconsFromLocalAssets($pluginInfo) {
-			$assetDirectory = $this->package->getAbsoluteDirectoryPath() . DIRECTORY_SEPARATOR . 'assets';
-			if ( !is_dir($assetDirectory) ) {
-				return;
-			}
-			$assetBaseUrl = trailingslashit(plugins_url('', $assetDirectory . '/imaginary.file'));
-
-			$filesToKeys = array(
+			$icons = $this->getLocalAssetUrls(array(
 				'icon.svg'         => 'svg',
 				'icon-256x256.png' => '2x',
 				'icon-256x256.jpg' => '2x',
 				'icon-128x128.png' => '1x',
 				'icon-128x128.jpg' => '1x',
-			);
-
-			$icons = array();
-			foreach ($filesToKeys as $fileName => $key) {
-				$fullIconPath = $assetDirectory . DIRECTORY_SEPARATOR . $fileName;
-				if ( !isset($icons[$key]) && is_file($fullIconPath) ) {
-					$icons[$key] = $assetBaseUrl . $fileName;
-				}
-			}
+			));
 
 			if ( !empty($icons) ) {
 				//The "default" key seems to be used only as last-resort fallback in WP core (5.8/5.9),
@@ -238,30 +224,38 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 		 * @param Puc_v4p11_Plugin_Info $pluginInfo
 		 */
 		protected function setBannersFromLocalAssets($pluginInfo) {
-			$assetDirectory = $this->package->getAbsoluteDirectoryPath() . DIRECTORY_SEPARATOR . 'assets';
-			if ( !is_dir($assetDirectory) ) {
-				return;
-			}
-			$assetBaseUrl = trailingslashit(plugins_url('', $assetDirectory . '/imaginary.file'));
-
-			$filesToKeys = array(
+			$banners = $this->getLocalAssetUrls(array(
 				'banner-772x250.png' => 'high',
 				'banner-772x250.jpg' => 'high',
 				'banner-1544x500.png' => 'low',
 				'banner-1544x500.jpg' => 'low',
-			);
-
-			$banners = array();
-			foreach ($filesToKeys as $fileName => $key) {
-				$fullBannerPath = $assetDirectory . DIRECTORY_SEPARATOR . $fileName;
-				if ( !isset($icons[$key]) && is_file($fullBannerPath) ) {
-					$banners[$key] = $assetBaseUrl . $fileName;
-				}
-			}
+			));
 
 			if ( !empty($banners) ) {
 				$pluginInfo->banners = $banners;
 			}
+		}
+
+		/**
+		 * @param array<string, string> $filesToKeys
+		 * @return array<string, string>
+		 */
+		protected function getLocalAssetUrls($filesToKeys) {
+			$assetDirectory = $this->package->getAbsoluteDirectoryPath() . DIRECTORY_SEPARATOR . 'assets';
+			if ( !is_dir($assetDirectory) ) {
+				return array();
+			}
+			$assetBaseUrl = trailingslashit(plugins_url('', $assetDirectory . '/imaginary.file'));
+
+			$foundAssets = array();
+			foreach ($filesToKeys as $fileName => $key) {
+				$fullBannerPath = $assetDirectory . DIRECTORY_SEPARATOR . $fileName;
+				if ( !isset($icons[$key]) && is_file($fullBannerPath) ) {
+					$foundAssets[$key] = $assetBaseUrl . $fileName;
+				}
+			}
+
+			return $foundAssets;
 		}
 
 		public function setBranch($branch) {
