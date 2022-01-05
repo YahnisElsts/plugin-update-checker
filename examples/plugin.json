@@ -16,7 +16,9 @@
 		"description": "(Required) Plugin description. Basic HTML can be used in all sections.",
 		"installation": "(Recommended) Installation instructions.",
 		"changelog": "(Recommended) Changelog. <p>This section will be displayed by default when the user clicks 'View version x.y.z details'.</p>",
-		"custom_section": "This is a custom section labeled 'Custom Section'."
+		"custom_section": "This is a custom section labeled 'Custom Section'.",
+		"faq" => "This is a faq section labeled 'FAQ'.",
+    	"screenshots" => "This is a screenshots section",
 	},
 	
 	"icons" : {
