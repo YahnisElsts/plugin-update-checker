@@ -134,6 +134,7 @@ if ( !class_exists('Puc_v4p11_Vcs_GitLabApi', false) ):
 				 * @link https://gist.github.com/timwiel/9dfd3526c768efad4973254085e065ce
 				 */
 				foreach ($release->assets->links as $link) {
+					//TODO: Check the "format" property instead of the URL suffix.
 					if ( 'zip' === substr($link->url, -3) ) {
 						$download_url = $link->url;
 						break 1;
