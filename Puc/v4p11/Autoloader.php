@@ -21,7 +21,7 @@ if ( !class_exists('Puc_v4p11_Autoloader', false) ):
 			$this->libraryDir = $this->libraryDir . '/';
 
 			$this->staticMap = array(
-				'PucReadmeParser' => 'vendor/PucReadmeParser.php',
+				'PucReadmeParser_v4p11' => 'vendor/PucReadmeParser.php',
 				'Parsedown' => 'vendor/Parsedown.php',
 				'Puc_v4_Factory' => 'Puc/v4/Factory.php',
 			);
