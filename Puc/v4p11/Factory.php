@@ -337,7 +337,11 @@ if ( !class_exists('Puc_v4p11_Factory', false) ):
 		 */
 		public static function addVersion($generalClass, $versionedClass, $version) {
 			if ( empty(self::$myMajorVersion) ) {
-				$nameParts = explode('_', __CLASS__, 3);
+				$className = (defined('__NAMESPACE__') && __NAMESPACE__)
+					? substr(__CLASS__, strlen(__NAMESPACE__) + 1)
+					: __CLASS__;
+
+				$nameParts = explode('_', $className, 3);
 				self::$myMajorVersion = substr(ltrim($nameParts[1], 'v'), 0, 1);
 			}
 

@@ -11,8 +11,15 @@ if ( !class_exists('Puc_v4p11_Autoloader', false) ):
 
 		public function __construct() {
 			$this->rootDir = dirname(__FILE__) . '/';
-			$nameParts = explode('_', __CLASS__, 3);
-			$this->prefix = $nameParts[0] . '_' . $nameParts[1] . '_';
+
+			if ( defined('__NAMESPACE__') && __NAMESPACE__ ) {
+				$namespaceWithSlash = __NAMESPACE__ . '\\';
+			} else {
+				$namespaceWithSlash = '';
+			}
+
+			$nameParts = explode('_', substr(__CLASS__, strlen($namespaceWithSlash)), 3);
+			$this->prefix = $namespaceWithSlash . $nameParts[0] . '_' . $nameParts[1] . '_';
 
 			$this->libraryDir = $this->rootDir . '../..';
 			if ( !self::isPhar() ) {
@@ -21,9 +28,9 @@ if ( !class_exists('Puc_v4p11_Autoloader', false) ):
 			$this->libraryDir = $this->libraryDir . '/';
 
 			$this->staticMap = array(
-				'PucReadmeParser' => 'vendor/PucReadmeParser.php',
-				'Parsedown' => 'vendor/Parsedown.php',
-				'Puc_v4_Factory' => 'Puc/v4/Factory.php',
+				$namespaceWithSlash . 'PucReadmeParser' => 'vendor/PucReadmeParser.php',
+				$namespaceWithSlash . 'Parsedown'       => 'vendor/Parsedown.php',
+				$namespaceWithSlash . 'Puc_v4_Factory'  => 'Puc/v4/Factory.php',
 			);
 
 			spl_autoload_register(array($this, 'autoload'));
