@@ -12,7 +12,7 @@ if ( !class_exists('Puc_v4p11_Autoloader', false) ):
 		public function __construct() {
 			$this->rootDir = dirname(__FILE__) . '/';
 
-			if ( defined('__NAMESPACE__') && __NAMESPACE__ ) {
+			if ( version_compare(PHP_VERSION, '5.3', '>=') && __NAMESPACE__ ) {
 				$namespaceWithSlash = __NAMESPACE__ . '\\';
 			} else {
 				$namespaceWithSlash = '';

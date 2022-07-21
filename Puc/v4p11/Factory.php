@@ -337,7 +337,7 @@ if ( !class_exists('Puc_v4p11_Factory', false) ):
 		 */
 		public static function addVersion($generalClass, $versionedClass, $version) {
 			if ( empty(self::$myMajorVersion) ) {
-				$className = (defined('__NAMESPACE__') && __NAMESPACE__)
+				$className = (version_compare(PHP_VERSION, '5.3', '>=') && __NAMESPACE__)
 					? substr(__CLASS__, strlen(__NAMESPACE__) + 1)
 					: __CLASS__;
 
