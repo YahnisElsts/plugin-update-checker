@@ -1,8 +1,8 @@
 <?php
-require dirname(__FILE__) . '/Puc/v4p11/Autoloader.php';
+require dirname(__FILE__) . '/Puc/v4p12/Autoloader.php';
 new Puc_v4p11_Autoloader();
 
-require dirname(__FILE__) . '/Puc/v4p11/Factory.php';
+require dirname(__FILE__) . '/Puc/v4p12/Factory.php';
 require dirname(__FILE__) . '/Puc/v4/Factory.php';
 
 //Register classes defined in this version with the factory.
