@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p11_Autoloader', false) ):
+if ( !class_exists('Puc_v4p12_Autoloader', false) ):
 
-	class Puc_v4p11_Autoloader {
+	class Puc_v4p12_Autoloader {
 		private $prefix = '';
 		private $rootDir = '';
 		private $libraryDir = '';

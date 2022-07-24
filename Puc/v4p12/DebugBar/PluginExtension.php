@@ -1,12 +1,12 @@
 <?php
-if ( !class_exists('Puc_v4p11_DebugBar_PluginExtension', false) ):
+if ( !class_exists('Puc_v4p12_DebugBar_PluginExtension', false) ):
 
-	class Puc_v4p11_DebugBar_PluginExtension extends Puc_v4p11_DebugBar_Extension {
-		/** @var Puc_v4p11_Plugin_UpdateChecker */
+	class Puc_v4p12_DebugBar_PluginExtension extends Puc_v4p12_DebugBar_Extension {
+		/** @var Puc_v4p12_Plugin_UpdateChecker */
 		protected $updateChecker;
 
 		public function __construct($updateChecker) {
-			parent::__construct($updateChecker, 'Puc_v4p11_DebugBar_PluginPanel');
+			parent::__construct($updateChecker, 'Puc_v4p12_DebugBar_PluginPanel');
 
 			add_action('wp_ajax_puc_v4_debug_request_info', array($this, 'ajaxRequestInfo'));
 		}

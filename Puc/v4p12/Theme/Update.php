@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('Puc_v4p11_Theme_Update', false) ):
+if ( !class_exists('Puc_v4p12_Theme_Update', false) ):
 
-	class Puc_v4p11_Theme_Update extends Puc_v4p11_Update {
+	class Puc_v4p12_Theme_Update extends Puc_v4p12_Update {
 		public $details_url = '';
 
 		protected static $extraFields = array('details_url');
@@ -44,8 +44,8 @@ if ( !class_exists('Puc_v4p11_Theme_Update', false) ):
 		/**
 		 * Create a new instance by copying the necessary fields from another object.
 		 *
-		 * @param StdClass|Puc_v4p11_Theme_Update $object The source object.
-		 * @return Puc_v4p11_Theme_Update The new copy.
+		 * @param StdClass|Puc_v4p12_Theme_Update $object The source object.
+		 * @return Puc_v4p12_Theme_Update The new copy.
 		 */
 		public static function fromObject($object) {
 			$update = new self();

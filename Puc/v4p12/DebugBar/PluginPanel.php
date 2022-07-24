@@ -1,10 +1,10 @@
 <?php
 
-if ( !class_exists('Puc_v4p11_DebugBar_PluginPanel', false) ):
+if ( !class_exists('Puc_v4p12_DebugBar_PluginPanel', false) ):
 
-	class Puc_v4p11_DebugBar_PluginPanel extends Puc_v4p11_DebugBar_Panel {
+	class Puc_v4p12_DebugBar_PluginPanel extends Puc_v4p12_DebugBar_Panel {
 		/**
-		 * @var Puc_v4p11_Plugin_UpdateChecker
+		 * @var Puc_v4p12_Plugin_UpdateChecker
 		 */
 		protected $updateChecker;
 

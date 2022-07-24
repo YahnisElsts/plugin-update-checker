@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4p11_Vcs_Reference', false) ):
+if ( !class_exists('Puc_v4p12_Vcs_Reference', false) ):
 
 	/**
 	 * This class represents a VCS branch or tag. It's intended as a read only, short-lived container
@@ -13,7 +13,7 @@ if ( !class_exists('Puc_v4p11_Vcs_Reference', false) ):
 	 * @property string|null $changelog
 	 * @property int|null $downloadCount
 	 */
-	class Puc_v4p11_Vcs_Reference {
+	class Puc_v4p12_Vcs_Reference {
 		private $properties = array();
 
 		public function __construct($properties = array()) {

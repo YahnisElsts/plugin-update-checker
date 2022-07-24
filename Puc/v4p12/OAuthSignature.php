@@ -1,11 +1,11 @@
 <?php
 
-if ( !class_exists('Puc_v4p11_OAuthSignature', false) ):
+if ( !class_exists('Puc_v4p12_OAuthSignature', false) ):
 
 	/**
 	 * A basic signature generator for zero-legged OAuth 1.0.
 	 */
-	class Puc_v4p11_OAuthSignature {
+	class Puc_v4p12_OAuthSignature {
 		private $consumerKey = '';
 		private $consumerSecret = '';
 

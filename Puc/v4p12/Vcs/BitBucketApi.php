@@ -1,9 +1,9 @@
 <?php
-if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
+if ( !class_exists('Puc_v4p12_Vcs_BitBucketApi', false) ):
 
-	class Puc_v4p11_Vcs_BitBucketApi extends Puc_v4p11_Vcs_Api {
+	class Puc_v4p12_Vcs_BitBucketApi extends Puc_v4p12_Vcs_Api {
 		/**
-		 * @var Puc_v4p11_OAuthSignature
+		 * @var Puc_v4p12_OAuthSignature
 		 */
 		private $oauth = null;
 
@@ -33,7 +33,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		 * Figure out which reference (i.e tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p11_Vcs_Reference
+		 * @return null|Puc_v4p12_Vcs_Reference
 		 */
 		public function chooseReference($configBranch) {
 			$updateSource = null;
@@ -67,7 +67,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 				$ref = $branch->target->hash;
 			}
 
-			return new Puc_v4p11_Vcs_Reference(array(
+			return new Puc_v4p12_Vcs_Reference(array(
 				'name' => $ref,
 				'updated' => $branch->target->date,
 				'downloadUrl' => $this->getDownloadUrl($branch->name),
@@ -78,7 +78,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v4p11_Vcs_Reference|null
+		 * @return Puc_v4p12_Vcs_Reference|null
 		 */
 		public function getTag($tagName) {
 			$tag = $this->api('/refs/tags/' . $tagName);
@@ -86,7 +86,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 				return null;
 			}
 
-			return new Puc_v4p11_Vcs_Reference(array(
+			return new Puc_v4p12_Vcs_Reference(array(
 				'name' => $tag->name,
 				'version' => ltrim($tag->name, 'v'),
 				'updated' => $tag->target->date,
@@ -97,7 +97,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v4p11_Vcs_Reference|null
+		 * @return Puc_v4p12_Vcs_Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/refs/tags?sort=-target.date');
@@ -111,7 +111,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 			//Return the first result.
 			if ( !empty($versionTags) ) {
 				$tag = $versionTags[0];
-				return new Puc_v4p11_Vcs_Reference(array(
+				return new Puc_v4p12_Vcs_Reference(array(
 					'name' => $tag->name,
 					'version' => ltrim($tag->name, 'v'),
 					'updated' => $tag->target->date,
@@ -125,7 +125,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		 * Get the tag/ref specified by the "Stable tag" header in the readme.txt of a given branch.
 		 *
 		 * @param string $branch
-		 * @return null|Puc_v4p11_Vcs_Reference
+		 * @return null|Puc_v4p12_Vcs_Reference
 		 */
 		protected function getStableTag($branch) {
 			$remoteReadme = $this->getRemoteReadme($branch);
@@ -195,7 +195,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		 */
 		public function api($url, $version = '2.0') {
 			$url = ltrim($url, '/');
-			$isSrcResource = Puc_v4p11_Utils::startsWith($url, 'src/');
+			$isSrcResource = Puc_v4p12_Utils::startsWith($url, 'src/');
 
 			$url = implode('/', array(
 				'https://api.bitbucket.org',
@@ -250,7 +250,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 			parent::setAuthentication($credentials);
 
 			if ( !empty($credentials) && !empty($credentials['consumer_key']) ) {
-				$this->oauth = new Puc_v4p11_OAuthSignature(
+				$this->oauth = new Puc_v4p12_OAuthSignature(
 					$credentials['consumer_key'],
 					$credentials['consumer_secret']
 				);

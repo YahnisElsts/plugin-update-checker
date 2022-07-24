@@ -1,12 +1,12 @@
 <?php
-if ( !class_exists('Puc_v4p11_DebugBar_Extension', false) ):
+if ( !class_exists('Puc_v4p12_DebugBar_Extension', false) ):
 
-	class Puc_v4p11_DebugBar_Extension {
+	class Puc_v4p12_DebugBar_Extension {
 		const RESPONSE_BODY_LENGTH_LIMIT = 4000;
 
-		/** @var Puc_v4p11_UpdateChecker */
+		/** @var Puc_v4p12_UpdateChecker */
 		protected $updateChecker;
-		protected $panelClass = 'Puc_v4p11_DebugBar_Panel';
+		protected $panelClass = 'Puc_v4p12_DebugBar_Panel';
 
 		public function __construct($updateChecker, $panelClass = null) {
 			$this->updateChecker = $updateChecker;
@@ -163,11 +163,11 @@ if ( !class_exists('Puc_v4p11_DebugBar_Extension', false) ):
 			$absolutePath = realpath(dirname(__FILE__) . '/../../../' . ltrim($filePath, '/'));
 
 			//Where is the library located inside the WordPress directory structure?
-			$absolutePath = Puc_v4p11_Factory::normalizePath($absolutePath);
+			$absolutePath = Puc_v4p12_Factory::normalizePath($absolutePath);
 
-			$pluginDir = Puc_v4p11_Factory::normalizePath(WP_PLUGIN_DIR);
-			$muPluginDir = Puc_v4p11_Factory::normalizePath(WPMU_PLUGIN_DIR);
-			$themeDir = Puc_v4p11_Factory::normalizePath(get_theme_root());
+			$pluginDir = Puc_v4p12_Factory::normalizePath(WP_PLUGIN_DIR);
+			$muPluginDir = Puc_v4p12_Factory::normalizePath(WPMU_PLUGIN_DIR);
+			$themeDir = Puc_v4p12_Factory::normalizePath(get_theme_root());
 
 			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
 				//It's part of a plugin.

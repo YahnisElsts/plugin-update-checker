@@ -1,5 +1,5 @@
 <?php
-if ( !class_exists('Puc_v4p11_Metadata', false) ):
+if ( !class_exists('Puc_v4p12_Metadata', false) ):
 
 	/**
 	 * A base container for holding information about updates and plugin metadata.
@@ -8,7 +8,7 @@ if ( !class_exists('Puc_v4p11_Metadata', false) ):
 	 * @copyright 2016
 	 * @access public
 	 */
-	abstract class Puc_v4p11_Metadata {
+	abstract class Puc_v4p12_Metadata {
 
 		/**
 		 * Create an instance of this class from a JSON document.
