@@ -199,8 +199,17 @@ if ( !class_exists('Puc_v4p12_StateStore', false) ):
 		}
 
 		private function getLibPrefix() {
-			$parts = explode('_', __CLASS__, 3);
-			return $parts[0] . '_' . $parts[1] . '_';
+			$lastSlashPos = strrpos(__CLASS__, '\\');
+			if ( $lastSlashPos !== false ) {
+				$namespacePrefix = substr(__CLASS__, 0, $lastSlashPos + 1);
+				$className = substr(__CLASS__, $lastSlashPos + 1);
+			} else {
+				$namespacePrefix = '';
+				$className = __CLASS__;
+			}
+
+			$parts = explode('_', $className, 3);
+			return $namespacePrefix . $parts[0] . '_' . $parts[1] . '_';
 		}
 	}
 
