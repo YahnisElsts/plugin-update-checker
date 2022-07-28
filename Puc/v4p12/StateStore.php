@@ -180,11 +180,11 @@ if ( !class_exists('Puc_v4p12_StateStore', false) ):
 				$updateClass = null;
 				if ( isset($state->updateBaseClass) ) {
 					$updateClass = $this->getLibPrefix() . $state->updateBaseClass;
-				} else if ( isset($state->updateClass) && class_exists($state->updateClass) ) {
+				} else if ( isset($state->updateClass) ) {
 					$updateClass = $state->updateClass;
 				}
 
-				if ( $updateClass !== null ) {
+				if ( ($updateClass !== null) && class_exists($updateClass) ) {
 					$this->update = call_user_func(array($updateClass, 'fromObject'), $state->update);
 				}
 			}
