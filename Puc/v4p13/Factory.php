@@ -256,8 +256,8 @@ if ( !class_exists('Puc_v4p13_Factory', false) ):
 			$service = null;
 
 			//Which hosting service does the URL point to?
-			$host = parse_url($metadataUrl, PHP_URL_HOST);
-			$path = parse_url($metadataUrl, PHP_URL_PATH);
+			$host = (string)(parse_url($metadataUrl, PHP_URL_HOST));
+			$path = (string)(parse_url($metadataUrl, PHP_URL_PATH));
 
 			//Check if the path looks like "/user-name/repository".
 			//For GitLab.com it can also be "/user/group1/group2/.../repository".
