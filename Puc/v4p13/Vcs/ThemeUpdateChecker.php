@@ -24,10 +24,11 @@ if ( !class_exists('Puc_v4p13_Vcs_ThemeUpdateChecker', false) ):
 		 */
 		public function __construct($api, $stylesheet = null, $customSlug = null, $checkPeriod = 12, $optionName = '') {
 			$this->api = $api;
-			$this->api->setHttpFilterName($this->getUniqueName('request_update_options'));
 
 			parent::__construct($api->getRepositoryUrl(), $stylesheet, $customSlug, $checkPeriod, $optionName);
 
+			$this->api->setHttpFilterName($this->getUniqueName('request_update_options'));
+			$this->api->setStrategyFilterName($this->getUniqueName('vcs_update_detection_strategies'));
 			$this->api->setSlug($this->slug);
 		}
 

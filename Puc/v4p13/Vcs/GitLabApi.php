@@ -356,28 +356,19 @@ if ( !class_exists('Puc_v4p13_Vcs_GitLabApi', false) ):
 			throw new LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
 		}
 
-		/**
-		 * Figure out which reference (i.e tag or branch) contains the latest version.
-		 *
-		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p13_Vcs_Reference
-		 */
-		public function chooseReference($configBranch) {
+		protected function getUpdateDetectionStrategies($configBranch) {
+			$strategies = array();
 
-			if ( $configBranch === 'main' || $configBranch === 'master' ) {
-				//Use the latest release.
-				$updateSource = $this->getLatestRelease();
-				if ( $updateSource === null ) {
-					//Failing that, use the tag with the highest version number.
-					$updateSource = $this->getLatestTag();
-				}
-			}
-			//Alternatively, just use the branch itself.
-			if ( empty($updateSource) ) {
-				$updateSource = $this->getBranch($configBranch);
+			if ( ($configBranch === 'main') || ($configBranch === 'master') ) {
+				$strategies[self::STRATEGY_LATEST_RELEASE] = array($this, 'getLatestRelease');
+				$strategies[self::STRATEGY_LATEST_TAG] = array($this, 'getLatestTag');
 			}
 
-			return $updateSource;
+			$strategies[self::STRATEGY_BRANCH] = function() use ($configBranch) {
+				return $this->getBranch($configBranch);
+			};
+
+			return $strategies;
 		}
 
 		public function setAuthentication($credentials) {

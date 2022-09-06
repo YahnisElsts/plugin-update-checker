@@ -310,29 +310,22 @@ if ( !class_exists('Puc_v4p13_Vcs_GitHubApi', false) ):
 			add_filter('upgrader_pre_download', array($this, 'addHttpRequestFilter'), 10, 1); //WP 3.7+
 		}
 
-		/**
-		 * Figure out which reference (i.e tag or branch) contains the latest version.
-		 *
-		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p13_Vcs_Reference
-		 */
-		public function chooseReference($configBranch) {
-			$updateSource = null;
+		protected function getUpdateDetectionStrategies($configBranch) {
+			$strategies = array();
 
 			if ( $configBranch === 'master' ) {
 				//Use the latest release.
-				$updateSource = $this->getLatestRelease();
-				if ( $updateSource === null ) {
-					//Failing that, use the tag with the highest version number.
-					$updateSource = $this->getLatestTag();
-				}
-			}
-			//Alternatively, just use the branch itself.
-			if ( empty($updateSource) ) {
-				$updateSource = $this->getBranch($configBranch);
+				$strategies[self::STRATEGY_LATEST_RELEASE] = array($this, 'getLatestRelease');
+				//Failing that, use the tag with the highest version number.
+				$strategies[self::STRATEGY_LATEST_TAG] = array($this, 'getLatestTag');
 			}
 
-			return $updateSource;
+			//Alternatively, just use the branch itself.
+			$strategies[self::STRATEGY_BRANCH] = function() use ($configBranch) {
+				return $this->getBranch($configBranch);
+			};
+
+			return $strategies;
 		}
 
 		/**

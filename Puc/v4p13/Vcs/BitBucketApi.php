@@ -29,28 +29,21 @@ if ( !class_exists('Puc_v4p13_Vcs_BitBucketApi', false) ):
 			parent::__construct($repositoryUrl, $credentials);
 		}
 
-		/**
-		 * Figure out which reference (i.e tag or branch) contains the latest version.
-		 *
-		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v4p13_Vcs_Reference
-		 */
-		public function chooseReference($configBranch) {
-			$updateSource = null;
+		protected function getUpdateDetectionStrategies($configBranch) {
+			$strategies = array(
+				self::STRATEGY_STABLE_TAG => function () use ($configBranch) {
+					return $this->getStableTag($configBranch);
+				},
+			);
 
-			//Check if there's a "Stable tag: 1.2.3" header that points to a valid tag.
-			$updateSource = $this->getStableTag($configBranch);
-
-			//Look for version-like tags.
-			if ( !$updateSource && ($configBranch === 'master' || $configBranch === 'main') ) {
-				$updateSource = $this->getLatestTag();
-			}
-			//If all else fails, use the specified branch itself.
-			if ( !$updateSource ) {
-				$updateSource = $this->getBranch($configBranch);
+			if ( ($configBranch === 'master' || $configBranch === 'main') ) {
+				$strategies[self::STRATEGY_LATEST_TAG] = array($this, 'getLatestTag');
 			}
 
-			return $updateSource;
+			$strategies[self::STRATEGY_BRANCH] = function () use ($configBranch) {
+				return $this->getBranch($configBranch);
+			};
+			return $strategies;
 		}
 
 		public function getBranch($branchName) {
@@ -261,7 +254,7 @@ if ( !class_exists('Puc_v4p13_Vcs_BitBucketApi', false) ):
 
 		public function signDownloadUrl($url) {
 			//Add authentication data to download URLs. Since OAuth signatures incorporate
-			//timestamps, we have to do this immediately before inserting the update. Otherwise
+			//timestamps, we have to do this immediately before inserting the update. Otherwise,
 			//authentication could fail due to a stale timestamp.
 			if ( $this->oauth ) {
 				$url = $this->oauth->sign($url);

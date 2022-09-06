@@ -2,6 +2,11 @@
 if ( !class_exists('Puc_v4p13_Vcs_Api') ):
 
 	abstract class Puc_v4p13_Vcs_Api {
+		const STRATEGY_LATEST_RELEASE = 'latest_release';
+		const STRATEGY_LATEST_TAG = 'latest_tag';
+		const STRATEGY_STABLE_TAG = 'stable_tag';
+		const STRATEGY_BRANCH = 'branch';
+
 		protected $tagNameProperty = 'name';
 		protected $slug = '';
 
@@ -20,6 +25,12 @@ if ( !class_exists('Puc_v4p13_Vcs_Api') ):
 		 * For example, "puc_request_info_options-slug" or "puc_request_update_options_theme-slug".
 		 */
 		protected $httpFilterName = '';
+
+		/**
+		 * @var string The filter applied to the list of update detection strategies that
+		 * are used to find the latest version.
+		 */
+		protected $strategyFilterName = '';
 
 		/**
 		 * @var string|null
@@ -45,12 +56,41 @@ if ( !class_exists('Puc_v4p13_Vcs_Api') ):
 		}
 
 		/**
-		 * Figure out which reference (i.e tag or branch) contains the latest version.
+		 * Figure out which reference (i.e. tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
 		 * @return null|Puc_v4p13_Vcs_Reference
 		 */
-		abstract public function chooseReference($configBranch);
+		public function chooseReference($configBranch) {
+			$strategies = $this->getUpdateDetectionStrategies($configBranch);
+
+			if ( !empty($this->strategyFilterName) ) {
+				$strategies = apply_filters(
+					$this->strategyFilterName,
+					$strategies,
+					$this->slug
+				);
+			}
+
+			foreach ($strategies as $strategy) {
+				$reference = call_user_func($strategy);
+				if ( !empty($reference) ) {
+					return $reference;
+				}
+			}
+			return null;
+		}
+
+		/**
+		 * Get an ordered list of strategies that can be used to find the latest version.
+		 *
+		 * The update checker will try each strategy in order until one of them
+		 * returns a valid reference.
+		 *
+		 * @param string $configBranch
+		 * @return array<callable> Array of callables that return Vcs_Reference objects.
+		 */
+		abstract protected function getUpdateDetectionStrategies($configBranch);
 
 		/**
 		 * Get the readme.txt file from the remote repository and parse it
@@ -278,6 +318,13 @@ if ( !class_exists('Puc_v4p13_Vcs_Api') ):
 		 */
 		public function setHttpFilterName($filterName) {
 			$this->httpFilterName = $filterName;
+		}
+
+		/**
+		 * @param string $filterName
+		 */
+		public function setStrategyFilterName($filterName) {
+			$this->strategyFilterName = $filterName;
 		}
 
 		/**

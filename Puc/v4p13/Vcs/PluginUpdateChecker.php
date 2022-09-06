@@ -24,10 +24,11 @@ if ( !class_exists('Puc_v4p13_Vcs_PluginUpdateChecker') ):
 		 */
 		public function __construct($api, $pluginFile, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$this->api = $api;
-			$this->api->setHttpFilterName($this->getUniqueName('request_info_options'));
 
 			parent::__construct($api->getRepositoryUrl(), $pluginFile, $slug, $checkPeriod, $optionName, $muPluginFile);
 
+			$this->api->setHttpFilterName($this->getUniqueName('request_info_options'));
+			$this->api->setStrategyFilterName($this->getUniqueName('vcs_update_detection_strategies'));
 			$this->api->setSlug($this->slug);
 		}
 
