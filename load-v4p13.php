@@ -8,7 +8,7 @@ require dirname(__FILE__) . '/Puc/v5/Factory.php';
 //Register classes defined in this version with the factory.
 foreach (
 	array(
-		'Plugin_UpdateChecker' => 'Puc_v5p13_Plugin_UpdateChecker',
+		'Plugin_UpdateChecker' => 'Puc_v5p0_Plugin_UpdateChecker',
 		'Theme_UpdateChecker'  => 'Puc_v5p0_Theme_UpdateChecker',
 
 		'Vcs_PluginUpdateChecker' => 'Puc_v5p0_Vcs_PluginUpdateChecker',
