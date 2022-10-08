@@ -13,7 +13,7 @@ if ( !class_exists(PluginExtension::class, false) ):
 		public function __construct($updateChecker) {
 			parent::__construct($updateChecker, PluginPanel::class);
 
-			add_action('wp_ajax_puc_v4_debug_request_info', array($this, 'ajaxRequestInfo'));
+			add_action('wp_ajax_puc_v5_debug_request_info', array($this, 'ajaxRequestInfo'));
 		}
 
 		/**

@@ -23,7 +23,7 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 
 		public function render() {
 			printf(
-				'<div class="puc-debug-bar-panel-v4" id="%1$s" data-slug="%2$s" data-uid="%3$s" data-nonce="%4$s">',
+				'<div class="puc-debug-bar-panel-v5" id="%1$s" data-slug="%2$s" data-uid="%3$s" data-nonce="%4$s">',
 				esc_attr($this->updateChecker->getUniqueName('debug-bar-panel')),
 				esc_attr($this->updateChecker->slug),
 				esc_attr($this->updateChecker->getUniqueName('uid')),

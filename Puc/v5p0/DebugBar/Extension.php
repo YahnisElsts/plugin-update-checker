@@ -26,7 +26,7 @@ if ( !class_exists(Extension::class, false) ):
 			add_filter('debug_bar_panels', array($this, 'addDebugBarPanel'));
 			add_action('debug_bar_enqueue_scripts', array($this, 'enqueuePanelDependencies'));
 
-			add_action('wp_ajax_puc_v4_debug_check_now', array($this, 'ajaxCheckNow'));
+			add_action('wp_ajax_puc_v5_debug_check_now', array($this, 'ajaxCheckNow'));
 		}
 
 		/**
@@ -47,17 +47,17 @@ if ( !class_exists(Extension::class, false) ):
 		 */
 		public function enqueuePanelDependencies() {
 			wp_enqueue_style(
-				'puc-debug-bar-style-v4',
+				'puc-debug-bar-style-v5',
 				$this->getLibraryUrl("/css/puc-debug-bar.css"),
 				array('debug-bar'),
-				'20171124'
+				'20221008'
 			);
 
 			wp_enqueue_script(
-				'puc-debug-bar-js-v4',
+				'puc-debug-bar-js-v5',
 				$this->getLibraryUrl("/js/debug-bar.js"),
 				array('jquery'),
-				'20201209'
+				'20221008'
 			);
 		}
 
@@ -157,7 +157,7 @@ if ( !class_exists(Extension::class, false) ):
 		public function removeHooks() {
 			remove_filter('debug_bar_panels', array($this, 'addDebugBarPanel'));
 			remove_action('debug_bar_enqueue_scripts', array($this, 'enqueuePanelDependencies'));
-			remove_action('wp_ajax_puc_v4_debug_check_now', array($this, 'ajaxCheckNow'));
+			remove_action('wp_ajax_puc_v5_debug_check_now', array($this, 'ajaxCheckNow'));
 		}
 
 		/**
