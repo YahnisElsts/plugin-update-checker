@@ -1,5 +1,12 @@
 <?php
-if ( !class_exists('Puc_v5p0_Factory', false) ):
+
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+use YahnisElsts\PluginUpdateChecker\v5p0\Theme;
+use YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
+
+if ( !class_exists(PucFactory::class, false) ):
 
 	/**
 	 * A factory that builds update checker instances.
@@ -11,7 +18,7 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 	 * At the moment it can only build instances of the UpdateChecker class. Other classes are
 	 * intended mainly for internal use and refer directly to specific implementations.
 	 */
-	class Puc_v5p0_Factory {
+	class PucFactory {
 		protected static $classVersions = array();
 		protected static $sorted = false;
 
@@ -23,7 +30,7 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 		 *
 		 * @param string $fullPath Full path to the main plugin file or the theme's style.css.
 		 * @param array $args Optional arguments. Keys should match the argument names of the buildUpdateChecker() method.
-		 * @return Puc_v5p0_Plugin_UpdateChecker|Puc_v5p0_Theme_UpdateChecker|Puc_v5p0_Vcs_BaseChecker
+		 * @return Plugin\UpdateChecker|Theme\UpdateChecker|Vcs\BaseChecker
 		 */
 		public static function buildFromHeader($fullPath, $args = array()) {
 			$fullPath = self::normalizePath($fullPath);
@@ -44,7 +51,6 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 				$metadataUrl = self::getServiceURI($fullPath);
 			}
 
-			/** @noinspection PhpUndefinedVariableInspection These variables are created by extract(), above. */
 			return self::buildUpdateChecker($metadataUrl, $fullPath, $slug, $checkPeriod, $optionName, $muPluginFile);
 		}
 
@@ -54,15 +60,15 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 		 * This method automatically detects if you're using it for a plugin or a theme and chooses
 		 * the appropriate implementation for your update source (JSON file, GitHub, BitBucket, etc).
 		 *
-		 * @see Puc_v5p0_UpdateChecker::__construct
+		 * @see UpdateChecker::__construct
 		 *
 		 * @param string $metadataUrl The URL of the metadata file, a GitHub repository, or another supported update source.
 		 * @param string $fullPath Full path to the main plugin file or to the theme directory.
 		 * @param string $slug Custom slug. Defaults to the name of the main plugin file or the theme directory.
 		 * @param int $checkPeriod How often to check for updates (in hours).
-		 * @param string $optionName Where to store book-keeping info about update checks.
+		 * @param string $optionName Where to store bookkeeping info about update checks.
 		 * @param string $muPluginFile The plugin filename relative to the mu-plugins directory.
-		 * @return Puc_v5p0_Plugin_UpdateChecker|Puc_v5p0_Theme_UpdateChecker|Puc_v5p0_Vcs_BaseChecker
+		 * @return Plugin\UpdateChecker|Theme\UpdateChecker|Vcs\BaseChecker
 		 */
 		public static function buildUpdateChecker($metadataUrl, $fullPath, $slug = '', $checkPeriod = 12, $optionName = '', $muPluginFile = '') {
 			$fullPath = self::normalizePath($fullPath);
@@ -77,7 +83,7 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 				$type = 'Theme';
 				$id = $themeDirectory;
 			} else {
-				throw new RuntimeException(sprintf(
+				throw new \RuntimeException(sprintf(
 					'The update checker cannot determine if "%s" is a plugin or a theme. ' .
 					'This is a bug. Please contact the PUC developer.',
 					htmlentities($fullPath)
@@ -90,10 +96,10 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 			$apiClass = null;
 			if ( empty($service) ) {
 				//The default is to get update information from a remote JSON file.
-				$checkerClass = $type . '_UpdateChecker';
+				$checkerClass = $type . '\\UpdateChecker';
 			} else {
 				//You can also use a VCS repository like GitHub.
-				$checkerClass = 'Vcs_' . $type . 'UpdateChecker';
+				$checkerClass = 'Vcs\\' . $type . 'UpdateChecker';
 				$apiClass = $service . 'Api';
 			}
 
@@ -111,11 +117,6 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 				return null;
 			}
 
-			//Add the current namespace to the class name(s).
-			if ( version_compare(PHP_VERSION, '5.3', '>=') ) {
-				$checkerClass = __NAMESPACE__ . '\\' . $checkerClass;
-			}
-
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
 				return new $checkerClass($metadataUrl, $id, $slug, $checkPeriod, $optionName, $muPluginFile);
@@ -129,10 +130,6 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 						htmlentities($service)
 					), E_USER_ERROR);
 					return null;
-				}
-
-				if ( version_compare(PHP_VERSION, '5.3', '>=') && (strpos($apiClass, '\\') === false) ) {
-					$apiClass = __NAMESPACE__ . '\\' . $apiClass;
 				}
 
 				return new $checkerClass(
@@ -241,7 +238,7 @@ if ( !class_exists('Puc_v5p0_Factory', false) ):
 			}
 
 			//URI was not found so throw an error.
-			throw new RuntimeException(
+			throw new \RuntimeException(
 				sprintf('Unable to locate URI in header of "%s"', htmlentities($fullPath))
 			);
 		}

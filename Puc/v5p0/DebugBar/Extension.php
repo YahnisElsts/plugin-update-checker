@@ -1,12 +1,17 @@
 <?php
-if ( !class_exists('Puc_v5p0_DebugBar_Extension', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\DebugBar;
 
-	class Puc_v5p0_DebugBar_Extension {
+use YahnisElsts\PluginUpdateChecker\v5p0\PucFactory;
+use YahnisElsts\PluginUpdateChecker\v5p0\UpdateChecker;
+
+if ( !class_exists(Extension::class, false) ):
+
+	class Extension {
 		const RESPONSE_BODY_LENGTH_LIMIT = 4000;
 
-		/** @var Puc_v5p0_UpdateChecker */
+		/** @var UpdateChecker */
 		protected $updateChecker;
-		protected $panelClass = 'Puc_v5p0_DebugBar_Panel';
+		protected $panelClass = Panel::class;
 
 		public function __construct($updateChecker, $panelClass = null) {
 			$this->updateChecker = $updateChecker;
@@ -79,7 +84,7 @@ if ( !class_exists('Puc_v5p0_DebugBar_Extension', false) ):
 
 				foreach (array_values($errors) as $num => $item) {
 					$wpError = $item['error'];
-					/** @var WP_Error $wpError */
+					/** @var \WP_Error $wpError */
 					printf('<h4>%d) %s</h4>', $num + 1, esc_html($wpError->get_error_message()));
 
 					echo '<dl>';
@@ -92,7 +97,7 @@ if ( !class_exists('Puc_v5p0_DebugBar_Extension', false) ):
 					if ( isset($item['httpResponse']) ) {
 						if ( is_wp_error($item['httpResponse']) ) {
 							$httpError = $item['httpResponse'];
-							/** @var WP_Error $httpError */
+							/** @var \WP_Error $httpError */
 							printf(
 								'<dt>WordPress HTTP API error:</dt><dd>%s (<code>%s</code>)</dd>',
 								esc_html($httpError->get_error_message()),
@@ -163,11 +168,11 @@ if ( !class_exists('Puc_v5p0_DebugBar_Extension', false) ):
 			$absolutePath = realpath(dirname(__FILE__) . '/../../../' . ltrim($filePath, '/'));
 
 			//Where is the library located inside the WordPress directory structure?
-			$absolutePath = Puc_v5p0_Factory::normalizePath($absolutePath);
+			$absolutePath = PucFactory::normalizePath($absolutePath);
 
-			$pluginDir = Puc_v5p0_Factory::normalizePath(WP_PLUGIN_DIR);
-			$muPluginDir = Puc_v5p0_Factory::normalizePath(WPMU_PLUGIN_DIR);
-			$themeDir = Puc_v5p0_Factory::normalizePath(get_theme_root());
+			$pluginDir = PucFactory::normalizePath(WP_PLUGIN_DIR);
+			$muPluginDir = PucFactory::normalizePath(WPMU_PLUGIN_DIR);
+			$themeDir = PucFactory::normalizePath(get_theme_root());
 
 			if ( (strpos($absolutePath, $pluginDir) === 0) || (strpos($absolutePath, $muPluginDir) === 0) ) {
 				//It's part of a plugin.

@@ -1,5 +1,12 @@
 <?php
-if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\InstalledPackage;
+use YahnisElsts\PluginUpdateChecker\v5p0\UpdateChecker as BaseUpdateChecker;
+use YahnisElsts\PluginUpdateChecker\v5p0\Scheduler;
+use YahnisElsts\PluginUpdateChecker\v5p0\DebugBar;
+
+if ( !class_exists(UpdateChecker::class, false) ):
 
 	/**
 	 * A custom plugin update checker.
@@ -8,7 +15,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 	 * @copyright 2018
 	 * @access public
 	 */
-	class Puc_v5p0_Plugin_UpdateChecker extends Puc_v5p0_UpdateChecker {
+	class UpdateChecker extends BaseUpdateChecker {
 		protected $updateTransient = 'update_plugins';
 		protected $translationType = 'plugin';
 
@@ -17,7 +24,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		public $muPluginFile = ''; //For MU plugins, the plugin filename relative to the mu-plugins directory.
 
 		/**
-		 * @var Puc_v5p0_Plugin_Package
+		 * @var Package
 		 */
 		protected $package;
 
@@ -68,17 +75,17 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 			//Details: https://github.com/YahnisElsts/plugin-update-checker/issues/138#issuecomment-335590964
 			add_action('uninstall_' . $this->pluginFile, array($this, 'removeHooks'));
 
-			$this->extraUi = new Puc_v5p0_Plugin_Ui($this);
+			$this->extraUi = new Ui($this);
 		}
 
 		/**
 		 * Create an instance of the scheduler.
 		 *
 		 * @param int $checkPeriod
-		 * @return Puc_v5p0_Scheduler
+		 * @return Scheduler
 		 */
 		protected function createScheduler($checkPeriod) {
-			$scheduler = new Puc_v5p0_Scheduler($this, $checkPeriod, array('load-plugins.php'));
+			$scheduler = new Scheduler($this, $checkPeriod, array('load-plugins.php'));
 			register_deactivation_hook($this->pluginFile, array($scheduler, 'removeUpdaterCron'));
 			return $scheduler;
 		}
@@ -124,13 +131,13 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		 * @uses wp_remote_get()
 		 *
 		 * @param array $queryArgs Additional query arguments to append to the request. Optional.
-		 * @return Puc_v5p0_Plugin_Info
+		 * @return PluginInfo
 		 */
 		public function requestInfo($queryArgs = array()) {
-			list($pluginInfo, $result) = $this->requestMetadata('Puc_v5p0_Plugin_Info', 'request_info', $queryArgs);
+			list($pluginInfo, $result) = $this->requestMetadata('PluginInfo', 'request_info', $queryArgs);
 
 			if ( $pluginInfo !== null ) {
-				/** @var Puc_v5p0_Plugin_Info $pluginInfo */
+				/** @var PluginInfo $pluginInfo */
 				$pluginInfo->filename = $this->pluginFile;
 				$pluginInfo->slug = $this->slug;
 			}
@@ -144,7 +151,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		 *
 		 * @uses PluginUpdateChecker::requestInfo()
 		 *
-		 * @return Puc_v5p0_Update|null An instance of Plugin_Update, or NULL when no updates are available.
+		 * @return Update|null An instance of Plugin Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
 			//For the sake of simplicity, this function just calls requestInfo()
@@ -153,7 +160,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 			if ( $pluginInfo === null ){
 				return null;
 			}
-			$update = Puc_v5p0_Plugin_Update::fromPluginInfo($pluginInfo);
+			$update = Update::fromPluginInfo($pluginInfo);
 
 			$update = $this->filterUpdateResult($update);
 
@@ -197,9 +204,9 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @param stdClass|null $updates
-		 * @param stdClass $updateToAdd
-		 * @return stdClass
+		 * @param \stdClass|null $updates
+		 * @param \stdClass $updateToAdd
+		 * @return \stdClass
 		 */
 		protected function addUpdateToList($updates, $updateToAdd) {
 			if ( $this->package->isMuPlugin() ) {
@@ -211,8 +218,8 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @param stdClass|null $updates
-		 * @return stdClass|null
+		 * @param \stdClass|null $updates
+		 * @return \stdClass|null
 		 */
 		protected function removeUpdateFromList($updates) {
 			$updates = parent::removeUpdateFromList($updates);
@@ -246,7 +253,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 					'banners'       => array(),
 					'banners_rtl'   => array(),
 					'tested'        => '',
-					'compatibility' => new stdClass(),
+					'compatibility' => new \stdClass(),
 				)
 			);
 		}
@@ -255,7 +262,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		 * Alias for isBeingUpgraded().
 		 *
 		 * @deprecated
-		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @param \WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool
 		 */
 		public function isPluginBeingUpgraded($upgrader = null) {
@@ -265,7 +272,7 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		/**
 		 * Is there an update being installed for this plugin, right now?
 		 *
-		 * @param WP_Upgrader|null $upgrader
+		 * @param \WP_Upgrader|null $upgrader
 		 * @return bool
 		 */
 		public function isBeingUpgraded($upgrader = null) {
@@ -281,12 +288,12 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		 * Uses cached update data. To retrieve update information straight from
 		 * the metadata URL, call requestUpdate() instead.
 		 *
-		 * @return Puc_v5p0_Plugin_Update|null
+		 * @return Update|null
 		 */
 		public function getUpdate() {
 			$update = parent::getUpdate();
 			if ( isset($update) ) {
-				/** @var Puc_v5p0_Plugin_Update $update */
+				/** @var Update $update */
 				$update->filename = $this->pluginFile;
 			}
 			return $update;
@@ -391,20 +398,20 @@ if ( !class_exists('Puc_v5p0_Plugin_UpdateChecker', false) ):
 		}
 
 		protected function createDebugBarExtension() {
-			return new Puc_v5p0_DebugBar_PluginExtension($this);
+			return new DebugBar\PluginExtension($this);
 		}
 
 		/**
 		 * Create a package instance that represents this plugin or theme.
 		 *
-		 * @return Puc_v5p0_InstalledPackage
+		 * @return InstalledPackage
 		 */
 		protected function createInstalledPackage() {
-			return new Puc_v5p0_Plugin_Package($this->pluginAbsolutePath, $this);
+			return new Package($this->pluginAbsolutePath, $this);
 		}
 
 		/**
-		 * @return Puc_v5p0_Plugin_Package
+		 * @return Package
 		 */
 		public function getInstalledPackage() {
 			return $this->package;

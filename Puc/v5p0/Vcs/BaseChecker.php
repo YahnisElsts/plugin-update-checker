@@ -1,7 +1,9 @@
 <?php
-if ( !interface_exists('Puc_v5p0_Vcs_BaseChecker', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
-	interface Puc_v5p0_Vcs_BaseChecker {
+if ( !interface_exists(BaseChecker::class, false) ):
+
+	interface BaseChecker {
 		/**
 		 * Set the repository branch to use for updates. Defaults to 'master'.
 		 *
@@ -19,7 +21,7 @@ if ( !interface_exists('Puc_v5p0_Vcs_BaseChecker', false) ):
 		public function setAuthentication($credentials);
 
 		/**
-		 * @return Puc_v5p0_Vcs_Api
+		 * @return Api
 		 */
 		public function getVcsApi();
 	}

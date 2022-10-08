@@ -1,8 +1,11 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
-if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
+use Parsedown;
 
-	class Puc_v5p0_Vcs_GitHubApi extends Puc_v5p0_Vcs_Api {
+if ( !class_exists(GitHubApi::class, false) ):
+
+	class GitHubApi extends Api {
 		/**
 		 * @var string GitHub username.
 		 */
@@ -48,7 +51,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
 			} else {
-				throw new InvalidArgumentException('Invalid GitHub repository URL: "' . $repositoryUrl . '"');
+				throw new \InvalidArgumentException('Invalid GitHub repository URL: "' . $repositoryUrl . '"');
 			}
 
 			parent::__construct($repositoryUrl, $accessToken);
@@ -57,7 +60,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		/**
 		 * Get the latest release from GitHub.
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getLatestRelease() {
 			$release = $this->api('/repos/:user/:repo/releases/latest');
@@ -65,7 +68,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v5p0_Vcs_Reference(array(
+			$reference = new Reference(array(
 				'name'        => $release->tag_name,
 				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
 				'downloadUrl' => $release->zipball_url,
@@ -108,7 +111,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/repos/:user/:repo/tags');
@@ -123,7 +126,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 			}
 
 			$tag = $versionTags[0];
-			return new Puc_v5p0_Vcs_Reference(array(
+			return new Reference(array(
 				'name'        => $tag->name,
 				'version'     => ltrim($tag->name, 'v'),
 				'downloadUrl' => $tag->zipball_url,
@@ -135,7 +138,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		 * Get a branch by name.
 		 *
 		 * @param string $branchName
-		 * @return null|Puc_v5p0_Vcs_Reference
+		 * @return null|Reference
 		 */
 		public function getBranch($branchName) {
 			$branch = $this->api('/repos/:user/:repo/branches/' . $branchName);
@@ -143,7 +146,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v5p0_Vcs_Reference(array(
+			$reference = new Reference(array(
 				'name'        => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 				'apiResponse' => $branch,
@@ -161,7 +164,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		 *
 		 * @param string $filename
 		 * @param string $ref Reference name (e.g. branch or tag).
-		 * @return StdClass|null
+		 * @return \StdClass|null
 		 */
 		public function getLatestCommit($filename, $ref = 'master') {
 			$commits = $this->api(
@@ -196,7 +199,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		 *
 		 * @param string $url
 		 * @param array $queryParams
-		 * @return mixed|WP_Error
+		 * @return mixed|\WP_Error
 		 */
 		protected function api($url, $queryParams = array()) {
 			$baseUrl = $url;
@@ -223,7 +226,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 				return $document;
 			}
 
-			$error = new WP_Error(
+			$error = new \WP_Error(
 				'puc-github-http-error',
 				sprintf('GitHub API error. Base URL: "%s",  HTTP status code: %d.', $baseUrl, $code)
 			);
@@ -297,7 +300,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		 */
 		public function getTag($tagName) {
 			//The current GitHub update checker doesn't use getTag, so I didn't bother to implement it.
-			throw new LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
+			throw new \LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
 		}
 
 		public function setAuthentication($credentials) {
@@ -350,7 +353,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitHubApi', false) ):
 		/**
 		 * Does this asset match the file name regex?
 		 *
-		 * @param stdClass $releaseAsset
+		 * @param \stdClass $releaseAsset
 		 * @return bool
 		 */
 		protected function matchesAssetFilter($releaseAsset) {

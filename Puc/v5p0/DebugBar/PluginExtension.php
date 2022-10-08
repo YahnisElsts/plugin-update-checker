@@ -1,12 +1,17 @@
 <?php
-if ( !class_exists('Puc_v5p0_DebugBar_PluginExtension', false) ):
 
-	class Puc_v5p0_DebugBar_PluginExtension extends Puc_v5p0_DebugBar_Extension {
-		/** @var Puc_v5p0_Plugin_UpdateChecker */
+namespace YahnisElsts\PluginUpdateChecker\v5p0\DebugBar;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker;
+
+if ( !class_exists(PluginExtension::class, false) ):
+
+	class PluginExtension extends Extension {
+		/** @var UpdateChecker */
 		protected $updateChecker;
 
 		public function __construct($updateChecker) {
-			parent::__construct($updateChecker, 'Puc_v5p0_DebugBar_PluginPanel');
+			parent::__construct($updateChecker, PluginPanel::class);
 
 			add_action('wp_ajax_puc_v4_debug_request_info', array($this, 'ajaxRequestInfo'));
 		}

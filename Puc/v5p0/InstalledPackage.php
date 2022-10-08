@@ -1,5 +1,7 @@
 <?php
-if ( !class_exists('Puc_v5p0_InstalledPackage', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+if ( !class_exists(InstalledPackage::class, false) ):
 
 	/**
 	 * This class represents a currently installed plugin or theme.
@@ -7,9 +9,9 @@ if ( !class_exists('Puc_v5p0_InstalledPackage', false) ):
 	 * Not to be confused with the "package" field in WP update API responses that contains
 	 * the download URL of a the new version.
 	 */
-	abstract class Puc_v5p0_InstalledPackage {
+	abstract class InstalledPackage {
 		/**
-		 * @var Puc_v5p0_UpdateChecker
+		 * @var UpdateChecker
 		 */
 		protected $updateChecker;
 

@@ -1,5 +1,9 @@
 <?php
-if ( !class_exists('Puc_v5p0_Plugin_Info', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\Metadata;
+
+if ( !class_exists(PluginInfo::class, false) ):
 
 	/**
 	 * A container class for holding and transforming various plugin metadata.
@@ -8,7 +12,7 @@ if ( !class_exists('Puc_v5p0_Plugin_Info', false) ):
 	 * @copyright 2016
 	 * @access public
 	 */
-	class Puc_v5p0_Plugin_Info extends Puc_v5p0_Metadata {
+	class PluginInfo extends Metadata {
 		//Most fields map directly to the contents of the plugin's info.json file.
 		//See the relevant docs for a description of their meaning.
 		public $name;
@@ -64,8 +68,8 @@ if ( !class_exists('Puc_v5p0_Plugin_Info', false) ):
 		/**
 		 * Very, very basic validation.
 		 *
-		 * @param StdClass $apiResponse
-		 * @return bool|WP_Error
+		 * @param \StdClass $apiResponse
+		 * @return bool|\WP_Error
 		 */
 		protected function validateMetadata($apiResponse) {
 			if (
@@ -73,7 +77,7 @@ if ( !class_exists('Puc_v5p0_Plugin_Info', false) ):
 				|| empty($apiResponse->name)
 				|| empty($apiResponse->version)
 			) {
-				return new WP_Error(
+				return new \WP_Error(
 					'puc-invalid-metadata',
 					"The plugin metadata file does not contain the required 'name' and/or 'version' keys."
 				);
@@ -88,7 +92,7 @@ if ( !class_exists('Puc_v5p0_Plugin_Info', false) ):
 		 * @return object
 		 */
 		public function toWpFormat(){
-			$info = new stdClass;
+			$info = new \stdClass;
 
 			//The custom update API is built so that many fields have the same name and format
 			//as those returned by the native WordPress.org API. These can be assigned directly.

@@ -1,8 +1,9 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
-if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
+if ( !class_exists(GitLabApi::class, false) ):
 
-	class Puc_v5p0_Vcs_GitLabApi extends Puc_v5p0_Vcs_Api {
+	class GitLabApi extends Api {
 		/**
 		 * @var string GitLab username.
 		 */
@@ -59,7 +60,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 				//This is probably a repository in a subgroup, e.g. "/organization/category/repo".
 				$parts = explode('/', trim($path, '/'));
 				if ( count($parts) < 3 ) {
-					throw new InvalidArgumentException('Invalid GitLab.com repository URL: "' . $repositoryUrl . '"');
+					throw new \InvalidArgumentException('Invalid GitLab.com repository URL: "' . $repositoryUrl . '"');
 				}
 				$lastPart = array_pop($parts);
 				$this->userName = implode('/', $parts);
@@ -76,7 +77,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 
 				//We need at least /user-name/repository-name/
 				if ( count($segments) < 2 ) {
-					throw new InvalidArgumentException('Invalid GitLab repository URL: "' . $repositoryUrl . '"');
+					throw new \InvalidArgumentException('Invalid GitLab repository URL: "' . $repositoryUrl . '"');
 				}
 
 				//Get the username and repository name.
@@ -101,7 +102,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 		/**
 		 * Get the latest release from GitLab.
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getLatestRelease() {
 			$releases = $this->api('/:id/releases');
@@ -118,7 +119,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v5p0_Vcs_Reference(array(
+			$reference = new Reference(array(
 				'name'        => $release->tag_name,
 				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
 				'downloadUrl' => '',
@@ -177,7 +178,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/:id/repository/tags');
@@ -191,7 +192,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 			}
 
 			$tag = $versionTags[0];
-			return new Puc_v5p0_Vcs_Reference(array(
+			return new Reference(array(
 				'name'        => $tag->name,
 				'version'     => ltrim($tag->name, 'v'),
 				'downloadUrl' => $this->buildArchiveDownloadUrl($tag->name),
@@ -203,7 +204,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 		 * Get a branch by name.
 		 *
 		 * @param string $branchName
-		 * @return null|Puc_v5p0_Vcs_Reference
+		 * @return null|Reference
 		 */
 		public function getBranch($branchName) {
 			$branch = $this->api('/:id/repository/branches/' . $branchName);
@@ -211,7 +212,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 				return null;
 			}
 
-			$reference = new Puc_v5p0_Vcs_Reference(array(
+			$reference = new Reference(array(
 				'name'        => $branch->name,
 				'downloadUrl' => $this->buildArchiveDownloadUrl($branch->name),
 				'apiResponse' => $branch,
@@ -244,7 +245,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 		 *
 		 * @param string $url
 		 * @param array $queryParams
-		 * @return mixed|WP_Error
+		 * @return mixed|\WP_Error
 		 */
 		protected function api($url, $queryParams = array()) {
 			$baseUrl = $url;
@@ -267,7 +268,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 				return json_decode($body);
 			}
 
-			$error = new WP_Error(
+			$error = new \WP_Error(
 				'puc-gitlab-http-error',
 				sprintf('GitLab API error. URL: "%s",  HTTP status code: %d.', $baseUrl, $code)
 			);
@@ -353,7 +354,7 @@ if ( !class_exists('Puc_v5p0_Vcs_GitLabApi', false) ):
 		 * @return void
 		 */
 		public function getTag($tagName) {
-			throw new LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
+			throw new \LogicException('The ' . __METHOD__ . ' method is not implemented and should not be used.');
 		}
 
 		protected function getUpdateDetectionStrategies($configBranch) {

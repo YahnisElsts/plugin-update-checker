@@ -1,14 +1,18 @@
 <?php
-if ( !class_exists('Puc_v5p0_Theme_Package', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Theme;
 
-	class Puc_v5p0_Theme_Package extends Puc_v5p0_InstalledPackage {
+use YahnisElsts\PluginUpdateChecker\v5p0\InstalledPackage;
+
+if ( !class_exists(Package::class, false) ):
+
+	class Package extends InstalledPackage {
 		/**
 		 * @var string Theme directory name.
 		 */
 		protected $stylesheet;
 
 		/**
-		 * @var WP_Theme Theme object.
+		 * @var \WP_Theme Theme object.
 		 */
 		protected $theme;
 

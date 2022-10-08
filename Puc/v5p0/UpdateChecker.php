@@ -1,8 +1,12 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
+use stdClass;
+use WP_Error;
 
-	abstract class Puc_v5p0_UpdateChecker {
+if ( !class_exists(UpdateChecker::class, false) ):
+
+	abstract class UpdateChecker {
 		protected $filterSuffix = '';
 		protected $updateTransient = '';
 		protected $translationType = ''; //"plugin" or "theme".
@@ -36,22 +40,22 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		public $slug = '';
 
 		/**
-		 * @var Puc_v5p0_InstalledPackage
+		 * @var InstalledPackage
 		 */
 		protected $package;
 
 		/**
-		 * @var Puc_v5p0_Scheduler
+		 * @var Scheduler
 		 */
 		public $scheduler;
 
 		/**
-		 * @var Puc_v5p0_UpgraderStatus
+		 * @var UpgraderStatus
 		 */
 		protected $upgraderStatus;
 
 		/**
-		 * @var Puc_v5p0_StateStore
+		 * @var StateStore
 		 */
 		protected $updateState;
 
@@ -66,7 +70,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		protected $cachedMetadataHost = 0;
 
 		/**
-		 * @var Puc_v5p0_DebugBar_Extension|null
+		 * @var DebugBar\Extension|null
 		 */
 		protected $debugBarExtension = null;
 
@@ -89,8 +93,8 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 
 			$this->package = $this->createInstalledPackage();
 			$this->scheduler = $this->createScheduler($checkPeriod);
-			$this->upgraderStatus = new Puc_v5p0_UpgraderStatus();
-			$this->updateState = new Puc_v5p0_StateStore($this->optionName);
+			$this->upgraderStatus = new UpgraderStatus();
+			$this->updateState = new StateStore($this->optionName);
 
 			if ( did_action('init') ) {
 				$this->loadTextDomain();
@@ -218,12 +222,12 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		/**
 		 * Create a package instance that represents this plugin or theme.
 		 *
-		 * @return Puc_v5p0_InstalledPackage
+		 * @return InstalledPackage
 		 */
 		abstract protected function createInstalledPackage();
 
 		/**
-		 * @return Puc_v5p0_InstalledPackage
+		 * @return InstalledPackage
 		 */
 		public function getInstalledPackage() {
 			return $this->package;
@@ -236,14 +240,14 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 * and substitute their own scheduler.
 		 *
 		 * @param int $checkPeriod
-		 * @return Puc_v5p0_Scheduler
+		 * @return Scheduler
 		 */
 		abstract protected function createScheduler($checkPeriod);
 
 		/**
 		 * Check for updates. The results are stored in the DB option specified in $optionName.
 		 *
-		 * @return Puc_v5p0_Update|null
+		 * @return Update|null
 		 */
 		public function checkForUpdates() {
 			$installedVersion = $this->getInstalledVersion();
@@ -277,7 +281,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		/**
 		 * Load the update checker state from the DB.
 		 *
-		 * @return Puc_v5p0_StateStore
+		 * @return StateStore
 		 */
 		public function getUpdateState() {
 			return $this->updateState->lazyLoad();
@@ -302,7 +306,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 * Uses cached update data. To retrieve update information straight from
 		 * the metadata URL, call requestUpdate() instead.
 		 *
-		 * @return Puc_v5p0_Update|null
+		 * @return Update|null
 		 */
 		public function getUpdate() {
 			$update = $this->updateState->getUpdate();
@@ -323,16 +327,17 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 *
 		 * Subclasses should run the update through filterUpdateResult before returning it.
 		 *
-		 * @return Puc_v5p0_Update An instance of Update, or NULL when no updates are available.
+		 * @return Update An instance of Update, or NULL when no updates are available.
 		 */
 		abstract public function requestUpdate();
 
 		/**
 		 * Filter the result of a requestUpdate() call.
 		 *
-		 * @param Puc_v5p0_Update|null $update
+		 * @template T of Update
+		 * @param T|null $update
 		 * @param array|WP_Error|null $httpResult The value returned by wp_remote_get(), if any.
-		 * @return Puc_v5p0_Update
+		 * @return T
 		 */
 		protected function filterUpdateResult($update, $httpResult = null) {
 			//Let plugins/themes modify the update.
@@ -355,9 +360,9 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 * "Compatibility: Unknown".
 		 * The function mimics how wordpress.org API crafts the "tested" field out of "Tested up to".
 		 *
-		 * @param Puc_v5p0_Metadata|null $update
+		 * @param Metadata|null $update
 		 */
-		protected function fixSupportedWordpressVersion(Puc_v5p0_Metadata $update = null) {
+		protected function fixSupportedWordpressVersion(Metadata $update = null) {
 			if ( !isset($update->tested) || !preg_match('/^\d++\.\d++$/', $update->tested) ) {
 				return;
 			}
@@ -462,7 +467,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 * Store API errors that are generated when checking for updates.
 		 *
 		 * @internal
-		 * @param WP_Error $error
+		 * @param \WP_Error $error
 		 * @param array|null $httpResponse
 		 * @param string|null $url
 		 * @param string|null $slug
@@ -515,8 +520,8 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		/**
 		 * Insert the latest update (if any) into the update list maintained by WP.
 		 *
-		 * @param stdClass $updates Update list.
-		 * @return stdClass Modified update list.
+		 * @param \stdClass $updates Update list.
+		 * @return \stdClass Modified update list.
 		 */
 		public function injectUpdate($updates) {
 			//Is there an update to insert?
@@ -543,9 +548,9 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @param stdClass|null $updates
-		 * @param stdClass|array $updateToAdd
-		 * @return stdClass
+		 * @param \stdClass|null $updates
+		 * @param \stdClass|array $updateToAdd
+		 * @return \stdClass
 		 */
 		protected function addUpdateToList($updates, $updateToAdd) {
 			if ( !is_object($updates) ) {
@@ -558,8 +563,8 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		}
 
 		/**
-		 * @param stdClass|null $updates
-		 * @return stdClass|null
+		 * @param \stdClass|null $updates
+		 * @return \stdClass|null
 		 */
 		protected function removeUpdateFromList($updates) {
 			if ( isset($updates, $updates->response) ) {
@@ -572,8 +577,8 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 * See this post for more information:
 		 * @link https://make.wordpress.org/core/2020/07/30/recommended-usage-of-the-updates-api-to-support-the-auto-updates-ui-for-plugins-and-themes-in-wordpress-5-5/
 		 *
-		 * @param stdClass|null $updates
-		 * @return stdClass
+		 * @param \stdClass|null $updates
+		 * @return \stdClass
 		 */
 		protected function addNoUpdateItem($updates) {
 			if ( !is_object($updates) ) {
@@ -635,10 +640,10 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		/**
 		 * Retrieve plugin or theme metadata from the JSON document at $this->metadataUrl.
 		 *
-		 * @param string $metaClass Parse the JSON as an instance of this class. It must have a static fromJson method.
+		 * @param class-string<Update> $metaClass Parse the JSON as an instance of this class. It must have a static fromJson method.
 		 * @param string $filterRoot
 		 * @param array $queryArgs Additional query arguments.
-		 * @return array [Puc_v5p0_Metadata|null, array|WP_Error] A metadata instance and the value returned by wp_remote_get().
+		 * @return array<Metadata|null, array|WP_Error> A metadata instance and the value returned by wp_remote_get().
 		 */
 		protected function requestMetadata($metaClass, $filterRoot, $queryArgs = array()) {
 			//Query args to append to the URL. Plugins can add their own by using a filter callback (see addQueryArgFilter()).
@@ -879,12 +884,12 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 *
 		 * @param string $source The directory to copy to /wp-content/plugins or /wp-content/themes. Usually a subdirectory of $remoteSource.
 		 * @param string $remoteSource WordPress has extracted the update to this directory.
-		 * @param WP_Upgrader $upgrader
+		 * @param \WP_Upgrader $upgrader
 		 * @return string|WP_Error
 		 */
 		public function fixDirectoryName($source, $remoteSource, $upgrader) {
 			global $wp_filesystem;
-			/** @var WP_Filesystem_Base $wp_filesystem */
+			/** @var \WP_Filesystem_Base $wp_filesystem */
 
 			//Basic sanity checks.
 			if ( !isset($source, $remoteSource, $upgrader, $upgrader->skin, $wp_filesystem) ) {
@@ -914,7 +919,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 					);
 				}
 
-				/** @var WP_Upgrader_Skin $upgrader ->skin */
+				/** @var \WP_Upgrader_Skin $upgrader ->skin */
 				$upgrader->skin->feedback(sprintf(
 					'Renaming %s to %s&#8230;',
 					'<span class="code">' . basename($source) . '</span>',
@@ -938,7 +943,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		/**
 		 * Is there an update being installed right now, for this plugin or theme?
 		 *
-		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @param \WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool
 		 */
 		abstract public function isBeingUpgraded($upgrader = null);
@@ -952,7 +957,7 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		 */
 		protected function isBadDirectoryStructure($remoteSource) {
 			global $wp_filesystem;
-			/** @var WP_Filesystem_Base $wp_filesystem */
+			/** @var \WP_Filesystem_Base $wp_filesystem */
 
 			$sourceFiles = $wp_filesystem->dirlist($remoteSource);
 			if ( is_array($sourceFiles) ) {
@@ -980,13 +985,13 @@ if ( !class_exists('Puc_v5p0_UpdateChecker', false) ):
 		}
 
 		protected function createDebugBarExtension() {
-			return new Puc_v5p0_DebugBar_Extension($this);
+			return new DebugBar\Extension($this);
 		}
 
 		/**
 		 * Display additional configuration details in the Debug Bar panel.
 		 *
-		 * @param Puc_v5p0_DebugBar_Panel $panel
+		 * @param DebugBar\Panel $panel
 		 */
 		public function onDisplayConfiguration($panel) {
 			//Do nothing. Subclasses can use this to add additional info to the panel.

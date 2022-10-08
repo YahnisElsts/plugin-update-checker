@@ -1,21 +1,26 @@
 <?php
-if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 
-	class Puc_v5p0_Vcs_PluginUpdateChecker extends Puc_v5p0_Plugin_UpdateChecker implements Puc_v5p0_Vcs_BaseChecker {
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+
+if ( !class_exists(PluginUpdateChecker::class, false) ):
+
+	class PluginUpdateChecker extends Plugin\UpdateChecker implements BaseChecker {
 		/**
 		 * @var string The branch where to look for updates. Defaults to "master".
 		 */
 		protected $branch = 'master';
 
 		/**
-		 * @var Puc_v5p0_Vcs_Api Repository API client.
+		 * @var Api Repository API client.
 		 */
 		protected $api = null;
 
 		/**
-		 * Puc_v5p0_Vcs_PluginUpdateChecker constructor.
+		 * PluginUpdateChecker constructor.
 		 *
-		 * @param Puc_v5p0_Vcs_Api $api
+		 * @param Api $api
 		 * @param string $pluginFile
 		 * @param string $slug
 		 * @param int $checkPeriod
@@ -42,7 +47,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 			$api = $this->api;
 			$api->setLocalDirectory($this->package->getAbsoluteDirectoryPath());
 
-			$info = new Puc_v5p0_Plugin_Info();
+			$info = new Plugin\PluginInfo();
 			$info->filename = $this->pluginFile;
 			$info->slug = $this->slug;
 
@@ -68,7 +73,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 				//There's probably a network problem or an authentication error.
 				do_action(
 					'puc_api_error',
-					new WP_Error(
+					new \WP_Error(
 						'puc-no-update-source',
 						'Could not retrieve version information from the repository. '
 						. 'This usually means that the update checker either can\'t connect '
@@ -127,7 +132,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 		 * Copy plugin metadata from a file header to a Plugin Info object.
 		 *
 		 * @param array $fileHeader
-		 * @param Puc_v5p0_Plugin_Info $pluginInfo
+		 * @param Plugin\PluginInfo $pluginInfo
 		 */
 		protected function setInfoFromHeader($fileHeader, $pluginInfo) {
 			$headerToPropertyMap = array(
@@ -160,7 +165,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 		 * Copy plugin metadata from the remote readme.txt file.
 		 *
 		 * @param string $ref GitHub tag or branch where to look for the readme.
-		 * @param Puc_v5p0_Plugin_Info $pluginInfo
+		 * @param Plugin\PluginInfo $pluginInfo
 		 */
 		protected function setInfoFromRemoteReadme($ref, $pluginInfo) {
 			$readme = $this->api->getRemoteReadme($ref);
@@ -193,7 +198,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 		 * and file names are described here:
 		 * @link https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/#plugin-icons
 		 *
-		 * @param Puc_v5p0_Plugin_Info $pluginInfo
+		 * @param Plugin\PluginInfo $pluginInfo
 		 */
 		protected function setIconsFromLocalAssets($pluginInfo) {
 			$icons = $this->getLocalAssetUrls(array(
@@ -222,7 +227,7 @@ if ( !class_exists('Puc_v5p0_Vcs_PluginUpdateChecker') ):
 		 * and file names are described here:
 		 * @link https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/#plugin-headers
 		 *
-		 * @param Puc_v5p0_Plugin_Info $pluginInfo
+		 * @param Plugin\PluginInfo $pluginInfo
 		 */
 		protected function setBannersFromLocalAssets($pluginInfo) {
 			$banners = $this->getLocalAssetUrls(array(

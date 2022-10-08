@@ -1,25 +1,23 @@
 <?php
 
-if ( !class_exists('Puc_v5p0_Autoloader', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-	class Puc_v5p0_Autoloader {
-		private $prefix = '';
-		private $rootDir = '';
-		private $libraryDir = '';
+if ( !class_exists(Autoloader::class, false) ):
+
+	class Autoloader {
+		const DEFAULT_NS_PREFIX = 'YahnisElsts\\PluginUpdateChecker\\';
+
+		private $prefix;
+		private $rootDir;
+		private $libraryDir;
 
 		private $staticMap;
 
 		public function __construct() {
 			$this->rootDir = dirname(__FILE__) . '/';
 
-			if ( version_compare(PHP_VERSION, '5.3', '>=') && __NAMESPACE__ ) {
-				$namespaceWithSlash = __NAMESPACE__ . '\\';
-			} else {
-				$namespaceWithSlash = '';
-			}
-
-			$nameParts = explode('_', substr(__CLASS__, strlen($namespaceWithSlash)), 3);
-			$this->prefix = $namespaceWithSlash . $nameParts[0] . '_' . $nameParts[1] . '_';
+			$namespaceWithSlash = __NAMESPACE__ . '\\';
+			$this->prefix = $namespaceWithSlash;
 
 			$this->libraryDir = $this->rootDir . '../..';
 			if ( !self::isPhar() ) {
@@ -27,11 +25,31 @@ if ( !class_exists('Puc_v5p0_Autoloader', false) ):
 			}
 			$this->libraryDir = $this->libraryDir . '/';
 
-			$this->staticMap = array(
-				$namespaceWithSlash . 'PucReadmeParser' => 'vendor/PucReadmeParser.php',
-				$namespaceWithSlash . 'Parsedown'       => 'vendor/Parsedown.php',
-				$namespaceWithSlash . 'Puc_v4_Factory'  => 'Puc/v4/Factory.php',
+			//Usually, dependencies like Parsedown are in the global namespace,
+			//but if someone adds a custom namespace to the entire library, they
+			//will be in the same namespace as this class.
+			$isCustomNamespace = (
+				substr($namespaceWithSlash, 0, strlen(self::DEFAULT_NS_PREFIX)) !== self::DEFAULT_NS_PREFIX
 			);
+			$libraryPrefix = $isCustomNamespace ? $namespaceWithSlash : '';
+
+			$this->staticMap = array(
+				$libraryPrefix . 'PucReadmeParser' => 'vendor/PucReadmeParser.php',
+				$libraryPrefix . 'Parsedown'       => 'vendor/Parsedown.php',
+			);
+
+			//Add the generic, major-version-only factory class to the static map.
+			$versionSeparatorPos = strrpos(__NAMESPACE__, '\\v');
+			if ( $versionSeparatorPos !== false ) {
+				$versionSegment = substr(__NAMESPACE__, $versionSeparatorPos + 1);
+				$pointPos = strpos($versionSegment, 'p');
+				if ( ($pointPos !== false) && ($pointPos > 1) ) {
+					$majorVersionSegment = substr($versionSegment, 0, $pointPos);
+					$majorVersionNs = __NAMESPACE__ . '\\' . $majorVersionSegment;
+					$this->staticMap[$majorVersionNs . '\\PucFactory'] =
+						'Puc/' . $majorVersionSegment . '/Factory.php';
+				}
+			}
 
 			spl_autoload_register(array($this, 'autoload'));
 		}
@@ -49,18 +67,16 @@ if ( !class_exists('Puc_v5p0_Autoloader', false) ):
 
 		public function autoload($className) {
 			if ( isset($this->staticMap[$className]) && file_exists($this->libraryDir . $this->staticMap[$className]) ) {
-				/** @noinspection PhpIncludeInspection */
-				include ($this->libraryDir . $this->staticMap[$className]);
+				include($this->libraryDir . $this->staticMap[$className]);
 				return;
 			}
 
-			if (strpos($className, $this->prefix) === 0) {
+			if ( strpos($className, $this->prefix) === 0 ) {
 				$path = substr($className, strlen($this->prefix));
 				$path = str_replace('_', '/', $path);
 				$path = $this->rootDir . $path . '.php';
 
-				if (file_exists($path)) {
-					/** @noinspection PhpIncludeInspection */
+				if ( file_exists($path) ) {
 					include $path;
 				}
 			}

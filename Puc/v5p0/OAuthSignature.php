@@ -1,11 +1,12 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-if ( !class_exists('Puc_v5p0_OAuthSignature', false) ):
+if ( !class_exists(OAuthSignature::class, false) ):
 
 	/**
 	 * A basic signature generator for zero-legged OAuth 1.0.
 	 */
-	class Puc_v5p0_OAuthSignature {
+	class OAuthSignature {
 		private $consumerKey = '';
 		private $consumerSecret = '';
 
@@ -85,7 +86,7 @@ if ( !class_exists('Puc_v5p0_OAuthSignature', false) ):
 			if ( is_callable('random_bytes') ) {
 				try {
 					$rand = random_bytes(16);
-				} catch (Exception $ex) {
+				} catch (\Exception $ex) {
 					//Fall back to mt_rand (below).
 				}
 			}

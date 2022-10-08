@@ -1,8 +1,9 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-if ( !class_exists('Puc_v5p0_Utils', false) ):
+if ( !class_exists(Utils::class, false) ):
 
-	class Puc_v5p0_Utils {
+	class Utils {
 		/**
 		 * Get a value from a nested array or object based on a path.
 		 *

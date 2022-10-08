@@ -1,14 +1,16 @@
 <?php
-if ( !class_exists('Puc_v5p0_Plugin_Ui', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+
+if ( !class_exists('Ui', false) ):
 	/**
 	 * Additional UI elements for plugins.
 	 */
-	class Puc_v5p0_Plugin_Ui {
+	class Ui {
 		private $updateChecker;
 		private $manualCheckErrorTransient = '';
 
 		/**
-		 * @param Puc_v5p0_Plugin_UpdateChecker $updateChecker
+		 * @param UpdateChecker $updateChecker
 		 */
 		public function __construct($updateChecker) {
 			$this->updateChecker = $updateChecker;
@@ -172,7 +174,7 @@ if ( !class_exists('Puc_v5p0_Plugin_Ui', false) ):
 
 					foreach ($lastRequestApiErrors as $item) {
 						$wpError = $item['error'];
-						/** @var WP_Error $wpError */
+						/** @var \WP_Error $wpError */
 						if ( !in_array($wpError->get_error_code(), $questionableErrorCodes) ) {
 							$foundCriticalErrors = true;
 							break;
@@ -254,7 +256,7 @@ if ( !class_exists('Puc_v5p0_Plugin_Ui', false) ):
 			}
 			foreach ($errors as $item) {
 				$wpError = $item['error'];
-				/** @var WP_Error $wpError */
+				/** @var \WP_Error $wpError */
 				$output .= sprintf(
 					$formatString,
 					$wpError->get_error_message(),

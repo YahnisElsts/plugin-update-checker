@@ -1,8 +1,12 @@
 <?php
 
-if ( !class_exists('Puc_v5p0_Theme_Update', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Theme;
 
-	class Puc_v5p0_Theme_Update extends Puc_v5p0_Update {
+use YahnisElsts\PluginUpdateChecker\v5p0\Update as BaseUpdate;
+
+if ( !class_exists(Update::class, false) ):
+
+	class Update extends BaseUpdate {
 		public $details_url = '';
 
 		protected static $extraFields = array('details_url');
@@ -44,8 +48,8 @@ if ( !class_exists('Puc_v5p0_Theme_Update', false) ):
 		/**
 		 * Create a new instance by copying the necessary fields from another object.
 		 *
-		 * @param StdClass|Puc_v5p0_Theme_Update $object The source object.
-		 * @return Puc_v5p0_Theme_Update The new copy.
+		 * @param \StdClass|self $object The source object.
+		 * @return self The new copy.
 		 */
 		public static function fromObject($object) {
 			$update = new self();
@@ -56,14 +60,14 @@ if ( !class_exists('Puc_v5p0_Theme_Update', false) ):
 		/**
 		 * Basic validation.
 		 *
-		 * @param StdClass $apiResponse
-		 * @return bool|WP_Error
+		 * @param \StdClass $apiResponse
+		 * @return bool|\WP_Error
 		 */
 		protected function validateMetadata($apiResponse) {
 			$required = array('version', 'details_url');
 			foreach($required as $key) {
 				if ( !isset($apiResponse->$key) || empty($apiResponse->$key) ) {
-					return new WP_Error(
+					return new \WP_Error(
 						'tuc-invalid-metadata',
 						sprintf('The theme metadata is missing the required "%s" key.', $key)
 					);

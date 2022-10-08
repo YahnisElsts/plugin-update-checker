@@ -1,9 +1,14 @@
 <?php
-if ( !class_exists('Puc_v5p0_Plugin_Package', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
 
-	class Puc_v5p0_Plugin_Package extends Puc_v5p0_InstalledPackage {
+use YahnisElsts\PluginUpdateChecker\v5p0\InstalledPackage;
+use YahnisElsts\PluginUpdateChecker\v5p0\PucFactory;
+
+if ( !class_exists(Package::class, false) ):
+
+	class Package extends InstalledPackage {
 		/**
-		 * @var Puc_v5p0_Plugin_UpdateChecker
+		 * @var UpdateChecker
 		 */
 		protected $updateChecker;
 
@@ -140,7 +145,6 @@ if ( !class_exists('Puc_v5p0_Plugin_Package', false) ):
 			}
 
 			if ( !function_exists('get_plugin_data') ) {
-				/** @noinspection PhpIncludeInspection */
 				require_once(ABSPATH . '/wp-admin/includes/plugin.php');
 			}
 			return get_plugin_data($this->pluginAbsolutePath, false, false);
@@ -170,8 +174,8 @@ if ( !class_exists('Puc_v5p0_Plugin_Package', false) ):
 				$pluginPath  = realpath($this->pluginAbsolutePath);
 				//If realpath() fails, just normalize the syntax instead.
 				if (($muPluginDir === false) || ($pluginPath === false)) {
-					$muPluginDir = Puc_v5p0_Factory::normalizePath(WPMU_PLUGIN_DIR);
-					$pluginPath  = Puc_v5p0_Factory::normalizePath($this->pluginAbsolutePath);
+					$muPluginDir = PucFactory::normalizePath(WPMU_PLUGIN_DIR);
+					$pluginPath  = PucFactory::normalizePath($this->pluginAbsolutePath);
 				}
 
 				$cachedResult = (strpos($pluginPath, $muPluginDir) === 0);

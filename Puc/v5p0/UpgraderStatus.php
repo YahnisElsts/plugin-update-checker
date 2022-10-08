@@ -1,5 +1,7 @@
 <?php
-if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+if ( !class_exists(UpgraderStatus::class, false) ):
 
 	/**
 	 * A utility class that helps figure out which plugin or theme WordPress is upgrading.
@@ -8,7 +10,7 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 	 * Core classes like Plugin_Upgrader don't expose the plugin file name during an in-progress update (AFAICT).
 	 * This class uses a few workarounds and heuristics to get the file name.
 	 */
-	class Puc_v5p0_UpgraderStatus {
+	class UpgraderStatus {
 		private $currentType = null; //"plugin" or "theme".
 		private $currentId = null;   //Plugin basename or theme directory name.
 
@@ -27,7 +29,7 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 		 * and upgrader implementations are liable to change without notice.
 		 *
 		 * @param string $pluginFile The plugin to check.
-		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @param \WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool True if the plugin identified by $pluginFile is being upgraded.
 		 */
 		public function isPluginBeingUpgraded($pluginFile, $upgrader = null) {
@@ -38,7 +40,7 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 		 * Is there an update being installed for a specific theme?
 		 *
 		 * @param string $stylesheet Theme directory name.
-		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @param \WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool
 		 */
 		public function isThemeBeingUpgraded($stylesheet, $upgrader = null) {
@@ -50,7 +52,7 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 		 *
 		 * @param string $type
 		 * @param string $id
-		 * @param Plugin_Upgrader|WP_Upgrader|null $upgrader
+		 * @param \Plugin_Upgrader|\WP_Upgrader|null $upgrader
 		 * @return bool
 		 */
 		protected function isBeingUpgraded($type, $id, $upgrader = null) {
@@ -76,7 +78,7 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 		 *      ['plugin', 'plugin-dir-name/plugin.php']
 		 *      ['theme', 'theme-dir-name']
 		 *
-		 * @param Plugin_Upgrader|WP_Upgrader $upgrader
+		 * @param \Plugin_Upgrader|\WP_Upgrader $upgrader
 		 * @return array
 		 */
 		private function getThingBeingUpgradedBy($upgrader) {
@@ -89,13 +91,13 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 			$themeDirectoryName = null;
 
 			$skin = $upgrader->skin;
-			if ( isset($skin->theme_info) && ($skin->theme_info instanceof WP_Theme) ) {
+			if ( isset($skin->theme_info) && ($skin->theme_info instanceof \WP_Theme) ) {
 				$themeDirectoryName = $skin->theme_info->get_stylesheet();
-			} elseif ( $skin instanceof Plugin_Upgrader_Skin ) {
+			} elseif ( $skin instanceof \Plugin_Upgrader_Skin ) {
 				if ( isset($skin->plugin) && is_string($skin->plugin) && ($skin->plugin !== '') ) {
 					$pluginFile = $skin->plugin;
 				}
-			} elseif ( $skin instanceof Theme_Upgrader_Skin ) {
+			} elseif ( $skin instanceof \Theme_Upgrader_Skin ) {
 				if ( isset($skin->theme) && is_string($skin->theme) && ($skin->theme !== '') ) {
 					$themeDirectoryName = $skin->theme;
 				}
@@ -122,7 +124,6 @@ if ( !class_exists('Puc_v5p0_UpgraderStatus', false) ):
 		 */
 		private function identifyPluginByHeaders($searchHeaders) {
 			if ( !function_exists('get_plugins') ){
-				/** @noinspection PhpIncludeInspection */
 				require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
 			}
 

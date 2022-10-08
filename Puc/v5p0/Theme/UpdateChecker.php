@@ -1,8 +1,15 @@
 <?php
 
-if ( !class_exists('Puc_v5p0_Theme_UpdateChecker', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Theme;
 
-	class Puc_v5p0_Theme_UpdateChecker extends Puc_v5p0_UpdateChecker {
+use YahnisElsts\PluginUpdateChecker\v5p0\UpdateChecker as BaseUpdateChecker;
+use YahnisElsts\PluginUpdateChecker\v5p0\InstalledPackage;
+use YahnisElsts\PluginUpdateChecker\v5p0\Scheduler;
+use YahnisElsts\PluginUpdateChecker\v5p0\DebugBar;
+
+if ( !class_exists(UpdateChecker::class, false) ):
+
+	class UpdateChecker extends BaseUpdateChecker {
 		protected $filterSuffix = 'theme';
 		protected $updateTransient = 'update_themes';
 		protected $translationType = 'theme';
@@ -39,13 +46,13 @@ if ( !class_exists('Puc_v5p0_Theme_UpdateChecker', false) ):
 		/**
 		 * Retrieve the latest update (if any) from the configured API endpoint.
 		 *
-		 * @return Puc_v5p0_Update|null An instance of Update, or NULL when no updates are available.
+		 * @return Update|null An instance of Update, or NULL when no updates are available.
 		 */
 		public function requestUpdate() {
-			list($themeUpdate, $result) = $this->requestMetadata('Puc_v5p0_Theme_Update', 'request_update');
+			list($themeUpdate, $result) = $this->requestMetadata(Update::class, 'request_update');
 
 			if ( $themeUpdate !== null ) {
-				/** @var Puc_v5p0_Theme_Update $themeUpdate */
+				/** @var Update $themeUpdate */
 				$themeUpdate->slug = $this->slug;
 			}
 
@@ -71,16 +78,16 @@ if ( !class_exists('Puc_v5p0_Theme_UpdateChecker', false) ):
 		 * Create an instance of the scheduler.
 		 *
 		 * @param int $checkPeriod
-		 * @return Puc_v5p0_Scheduler
+		 * @return Scheduler
 		 */
 		protected function createScheduler($checkPeriod) {
-			return new Puc_v5p0_Scheduler($this, $checkPeriod, array('load-themes.php'));
+			return new Scheduler($this, $checkPeriod, array('load-themes.php'));
 		}
 
 		/**
 		 * Is there an update being installed right now for this theme?
 		 *
-		 * @param WP_Upgrader|null $upgrader The upgrader that's performing the current update.
+		 * @param \WP_Upgrader|null $upgrader The upgrader that's performing the current update.
 		 * @return bool
 		 */
 		public function isBeingUpgraded($upgrader = null) {
@@ -88,7 +95,7 @@ if ( !class_exists('Puc_v5p0_Theme_UpdateChecker', false) ):
 		}
 
 		protected function createDebugBarExtension() {
-			return new Puc_v5p0_DebugBar_Extension($this, 'Puc_v5p0_DebugBar_ThemePanel');
+			return new DebugBar\Extension($this, DebugBar\ThemePanel::class);
 		}
 
 		/**
@@ -142,10 +149,10 @@ if ( !class_exists('Puc_v5p0_Theme_UpdateChecker', false) ):
 		/**
 		 * Create a package instance that represents this plugin or theme.
 		 *
-		 * @return Puc_v5p0_InstalledPackage
+		 * @return InstalledPackage
 		 */
 		protected function createInstalledPackage() {
-			return new Puc_v5p0_Theme_Package($this->stylesheet, $this);
+			return new Package($this->stylesheet, $this);
 		}
 	}
 

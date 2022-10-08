@@ -242,18 +242,18 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	```
 
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
-	```php
-    $myUpdateChecker = new Puc_v5p0_Vcs_PluginUpdateChecker(
-        new Puc_v5p0_Vcs_GitLabApi('https://myserver.com/user-name/repo-name/'),
-        __FILE__,
-        'unique-plugin-or-theme-slug'
-    );
-   //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
-   ```
+   ```php
+   $myUpdateChecker = new Puc_v5p0_Vcs_PluginUpdateChecker(
+       new GitLabApi('https://myserver.com/user-name/repo-name/'),
+       __FILE__,
+       'unique-plugin-or-theme-slug'
+   );
+  //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
+  ```
    If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
    ```php
        $myUpdateChecker = new Puc_v5p0_Vcs_PluginUpdateChecker(
-           new Puc_v5p0_Vcs_GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
+           new GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
            __FILE__,
            'unique-plugin-or-theme-slug'
        );

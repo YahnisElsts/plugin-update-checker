@@ -1,7 +1,12 @@
 <?php
-if ( !class_exists('Puc_v5p0_Vcs_Api') ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
-	abstract class Puc_v5p0_Vcs_Api {
+use Parsedown;
+use PucReadmeParser;
+
+if ( !class_exists(Api::class, false) ):
+
+	abstract class Api {
 		const STRATEGY_LATEST_RELEASE = 'latest_release';
 		const STRATEGY_LATEST_TAG = 'latest_tag';
 		const STRATEGY_STABLE_TAG = 'stable_tag';
@@ -38,7 +43,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		protected $localDirectory = null;
 
 		/**
-		 * Puc_v5p0_Vcs_Api constructor.
+		 * Api constructor.
 		 *
 		 * @param string $repositoryUrl
 		 * @param array|string|null $credentials
@@ -59,7 +64,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		 * Figure out which reference (i.e. tag or branch) contains the latest version.
 		 *
 		 * @param string $configBranch Start looking in this branch.
-		 * @return null|Puc_v5p0_Vcs_Reference
+		 * @return null|Reference
 		 */
 		public function chooseReference($configBranch) {
 			$strategies = $this->getUpdateDetectionStrategies($configBranch);
@@ -145,7 +150,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		 * Get a branch.
 		 *
 		 * @param string $branchName
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		abstract public function getBranch($branchName);
 
@@ -153,7 +158,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		abstract public function getTag($tagName);
 
@@ -161,7 +166,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		 * Get the tag that looks like the highest version number.
 		 * (Implementations should skip pre-release versions if possible.)
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		abstract public function getLatestTag();
 
@@ -187,7 +192,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		/**
 		 * Check if a tag appears to be named like a version number.
 		 *
-		 * @param stdClass $tag
+		 * @param \stdClass $tag
 		 * @return bool
 		 */
 		protected function isVersionTag($tag) {
@@ -199,8 +204,8 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		 * Sort a list of tags as if they were version numbers.
 		 * Tags that don't look like version number will be removed.
 		 *
-		 * @param stdClass[] $tags Array of tag objects.
-		 * @return stdClass[] Filtered array of tags sorted in descending order.
+		 * @param \stdClass[] $tags Array of tag objects.
+		 * @return \stdClass[] Filtered array of tags sorted in descending order.
 		 */
 		protected function sortTagsByVersion($tags) {
 			//Keep only those tags that look like version numbers.
@@ -214,8 +219,8 @@ if ( !class_exists('Puc_v5p0_Vcs_Api') ):
 		/**
 		 * Compare two tags as if they were version number.
 		 *
-		 * @param stdClass $tag1 Tag object.
-		 * @param stdClass $tag2 Another tag object.
+		 * @param \stdClass $tag1 Tag object.
+		 * @param \stdClass $tag2 Another tag object.
 		 * @return int
 		 */
 		protected function compareTagNames($tag1, $tag2) {

@@ -1,11 +1,15 @@
 <?php
-if ( !class_exists('Puc_v5p0_Scheduler', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
+
+if ( !class_exists(Scheduler::class, false) ):
 
 	/**
 	 * The scheduler decides when and how often to check for updates.
-	 * It calls @see Puc_v5p0_UpdateChecker::checkForUpdates() to perform the actual checks.
+	 * It calls @see UpdateChecker::checkForUpdates() to perform the actual checks.
 	 */
-	class Puc_v5p0_Scheduler {
+	class Scheduler {
 		public $checkPeriod = 12; //How often to check for updates (in hours).
 		public $throttleRedundantChecks = false; //Check less often if we already know that an update is available.
 		public $throttledCheckPeriod = 72;
@@ -13,7 +17,7 @@ if ( !class_exists('Puc_v5p0_Scheduler', false) ):
 		protected $hourlyCheckHooks = array('load-update.php');
 
 		/**
-		 * @var Puc_v5p0_UpdateChecker
+		 * @var UpdateChecker
 		 */
 		protected $updateChecker;
 
@@ -22,7 +26,7 @@ if ( !class_exists('Puc_v5p0_Scheduler', false) ):
 		/**
 		 * Scheduler constructor.
 		 *
-		 * @param Puc_v5p0_UpdateChecker $updateChecker
+		 * @param UpdateChecker $updateChecker
 		 * @param int $checkPeriod How often to check for updates (in hours).
 		 * @param array $hourlyHooks
 		 */
@@ -89,7 +93,7 @@ if ( !class_exists('Puc_v5p0_Scheduler', false) ):
 		 * We look at the parameters to decide whether to call maybeCheckForUpdates() or not.
 		 * We also check if the update checker has been removed by the update.
 		 *
-		 * @param WP_Upgrader $upgrader  WP_Upgrader instance
+		 * @param \WP_Upgrader $upgrader  WP_Upgrader instance
 		 * @param array $upgradeInfo extra information about the upgrade
 		 */
 		public function upgraderProcessComplete(
@@ -130,7 +134,7 @@ if ( !class_exists('Puc_v5p0_Scheduler', false) ):
 				}
 			}
 
-			if ( is_a($this->updateChecker, 'Puc_v5p0_Plugin_UpdateChecker') ) {
+			if ( is_a($this->updateChecker, Plugin\UpdateChecker::class) ) {
 				if ( 'plugin' !== $upgradeInfo['type'] || !isset($upgradeInfo['plugins']) ) {
 					return;
 				}

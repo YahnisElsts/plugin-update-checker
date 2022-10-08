@@ -1,5 +1,7 @@
 <?php
-if ( !class_exists('Puc_v5p0_Vcs_Reference', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
+
+if ( !class_exists(Reference::class, false) ):
 
 	/**
 	 * This class represents a VCS branch or tag. It's intended as a read only, short-lived container
@@ -13,7 +15,7 @@ if ( !class_exists('Puc_v5p0_Vcs_Reference', false) ):
 	 * @property string|null $changelog
 	 * @property int|null $downloadCount
 	 */
-	class Puc_v5p0_Vcs_Reference {
+	class Reference {
 		private $properties = array();
 
 		public function __construct($properties = array()) {

@@ -1,8 +1,9 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-if ( !class_exists('Puc_v5p0_StateStore', false) ):
+if ( !class_exists(StateStore::class, false) ):
 
-	class Puc_v5p0_StateStore {
+	class StateStore {
 		/**
 		 * @var int Last update check timestamp.
 		 */
@@ -14,7 +15,7 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 		protected $checkedVersion = '';
 
 		/**
-		 * @var Puc_v5p0_Update|null Cached update.
+		 * @var Update|null Cached update.
 		 */
 		protected $update = null;
 
@@ -65,7 +66,7 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 		}
 
 		/**
-		 * @return null|Puc_v5p0_Update
+		 * @return null|Update
 		 */
 		public function getUpdate() {
 			$this->lazyLoad();
@@ -73,10 +74,10 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 		}
 
 		/**
-		 * @param Puc_v5p0_Update|null $update
+		 * @param Update|null $update
 		 * @return $this
 		 */
-		public function setUpdate(Puc_v5p0_Update $update = null) {
+		public function setUpdate(Update $update = null) {
 			$this->lazyLoad();
 			$this->update = $update;
 			return $this;
@@ -127,7 +128,7 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 		}
 
 		public function save() {
-			$state = new stdClass();
+			$state = new \stdClass();
 
 			$state->lastCheck = $this->lastCheck;
 			$state->checkedVersion = $this->checkedVersion;
@@ -138,7 +139,7 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 				$updateClass = get_class($this->update);
 				$state->updateClass = $updateClass;
 				$prefix = $this->getLibPrefix();
-				if ( Puc_v5p0_Utils::startsWith($updateClass, $prefix) ) {
+				if ( Utils::startsWith($updateClass, $prefix) ) {
 					$state->updateBaseClass = substr($updateClass, strlen($prefix));
 				}
 			}
@@ -169,8 +170,8 @@ if ( !class_exists('Puc_v5p0_StateStore', false) ):
 				return;
 			}
 
-			$this->lastCheck = intval(Puc_v5p0_Utils::get($state, 'lastCheck', 0));
-			$this->checkedVersion = Puc_v5p0_Utils::get($state, 'checkedVersion', '');
+			$this->lastCheck = intval(Utils::get($state, 'lastCheck', 0));
+			$this->checkedVersion = Utils::get($state, 'checkedVersion', '');
 			$this->update = null;
 
 			if ( isset($state->update) ) {

@@ -1,5 +1,11 @@
 <?php
-if ( !class_exists('Puc_v5p0_Metadata', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+use LogicException;
+use stdClass;
+use WP_Error;
+
+if ( !class_exists(Metadata::class, false) ):
 
 	/**
 	 * A base container for holding information about updates and plugin metadata.
@@ -8,7 +14,7 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 	 * @copyright 2016
 	 * @access public
 	 */
-	abstract class Puc_v5p0_Metadata {
+	abstract class Metadata {
 
 		/**
 		 * Create an instance of this class from a JSON document.
@@ -17,7 +23,7 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		 * @param string $json
 		 * @return self
 		 */
-		public static function fromJson(/** @noinspection PhpUnusedParameterInspection */ $json) {
+		public static function fromJson($json) {
 			throw new LogicException('The ' . __METHOD__ . ' method must be implemented by subclasses');
 		}
 
@@ -27,7 +33,7 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		 * @return bool
 		 */
 		protected static function createFromJson($json, $target) {
-			/** @var StdClass $apiResponse */
+			/** @var \StdClass $apiResponse */
 			$apiResponse = json_decode($json);
 			if ( empty($apiResponse) || !is_object($apiResponse) ){
 				$errorMessage = "Failed to parse update metadata. Try validating your .json file with http://jsonlint.com/";
@@ -53,10 +59,10 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		/**
 		 * No validation by default! Subclasses should check that the required fields are present.
 		 *
-		 * @param StdClass $apiResponse
-		 * @return bool|WP_Error
+		 * @param \StdClass $apiResponse
+		 * @return bool|\WP_Error
 		 */
-		protected function validateMetadata(/** @noinspection PhpUnusedParameterInspection */ $apiResponse) {
+		protected function validateMetadata($apiResponse) {
 			return true;
 		}
 
@@ -64,10 +70,10 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		 * Create a new instance by copying the necessary fields from another object.
 		 *
 		 * @abstract
-		 * @param StdClass|self $object The source object.
+		 * @param \StdClass|self $object The source object.
 		 * @return self The new copy.
 		 */
-		public static function fromObject(/** @noinspection PhpUnusedParameterInspection */ $object) {
+		public static function fromObject($object) {
 			throw new LogicException('The ' . __METHOD__ . ' method must be implemented by subclasses');
 		}
 
@@ -77,7 +83,7 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		 * avoids the "incomplete object" problem if the cached value is loaded
 		 * before this class.
 		 *
-		 * @return StdClass
+		 * @return \StdClass
 		 */
 		public function toStdClass() {
 			$object = new stdClass();
@@ -95,8 +101,8 @@ if ( !class_exists('Puc_v5p0_Metadata', false) ):
 		/**
 		 * Copy known fields from one object to another.
 		 *
-		 * @param StdClass|self $from
-		 * @param StdClass|self $to
+		 * @param \StdClass|self $from
+		 * @param \StdClass|self $to
 		 */
 		protected function copyFields($from, $to) {
 			$fields = $this->getFieldNames();

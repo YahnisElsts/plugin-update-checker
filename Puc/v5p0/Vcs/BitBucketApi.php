@@ -1,9 +1,15 @@
 <?php
-if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 
-	class Puc_v5p0_Vcs_BitBucketApi extends Puc_v5p0_Vcs_Api {
+namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
+
+use YahnisElsts\PluginUpdateChecker\v5p0\OAuthSignature;
+use YahnisElsts\PluginUpdateChecker\v5p0\Utils;
+
+if ( !class_exists(BitBucketApi::class, false) ):
+
+	class BitBucketApi extends Api {
 		/**
-		 * @var Puc_v5p0_OAuthSignature
+		 * @var OAuthSignature
 		 */
 		private $oauth = null;
 
@@ -23,7 +29,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 				$this->username = $matches['username'];
 				$this->repository = $matches['repository'];
 			} else {
-				throw new InvalidArgumentException('Invalid BitBucket repository URL: "' . $repositoryUrl . '"');
+				throw new \InvalidArgumentException('Invalid BitBucket repository URL: "' . $repositoryUrl . '"');
 			}
 
 			parent::__construct($repositoryUrl, $credentials);
@@ -60,7 +66,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 				$ref = $branch->target->hash;
 			}
 
-			return new Puc_v5p0_Vcs_Reference(array(
+			return new Reference(array(
 				'name' => $ref,
 				'updated' => $branch->target->date,
 				'downloadUrl' => $this->getDownloadUrl($branch->name),
@@ -71,7 +77,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 		 * Get a specific tag.
 		 *
 		 * @param string $tagName
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getTag($tagName) {
 			$tag = $this->api('/refs/tags/' . $tagName);
@@ -79,7 +85,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 				return null;
 			}
 
-			return new Puc_v5p0_Vcs_Reference(array(
+			return new Reference(array(
 				'name' => $tag->name,
 				'version' => ltrim($tag->name, 'v'),
 				'updated' => $tag->target->date,
@@ -90,7 +96,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 		/**
 		 * Get the tag that looks like the highest version number.
 		 *
-		 * @return Puc_v5p0_Vcs_Reference|null
+		 * @return Reference|null
 		 */
 		public function getLatestTag() {
 			$tags = $this->api('/refs/tags?sort=-target.date');
@@ -104,7 +110,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 			//Return the first result.
 			if ( !empty($versionTags) ) {
 				$tag = $versionTags[0];
-				return new Puc_v5p0_Vcs_Reference(array(
+				return new Reference(array(
 					'name' => $tag->name,
 					'version' => ltrim($tag->name, 'v'),
 					'updated' => $tag->target->date,
@@ -118,7 +124,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 		 * Get the tag/ref specified by the "Stable tag" header in the readme.txt of a given branch.
 		 *
 		 * @param string $branch
-		 * @return null|Puc_v5p0_Vcs_Reference
+		 * @return null|Reference
 		 */
 		protected function getStableTag($branch) {
 			$remoteReadme = $this->getRemoteReadme($branch);
@@ -184,11 +190,11 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 		 *
 		 * @param string $url
 		 * @param string $version
-		 * @return mixed|WP_Error
+		 * @return mixed|\WP_Error
 		 */
 		public function api($url, $version = '2.0') {
 			$url = ltrim($url, '/');
-			$isSrcResource = Puc_v5p0_Utils::startsWith($url, 'src/');
+			$isSrcResource = Utils::startsWith($url, 'src/');
 
 			$url = implode('/', array(
 				'https://api.bitbucket.org',
@@ -227,7 +233,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 				return $document;
 			}
 
-			$error = new WP_Error(
+			$error = new \WP_Error(
 				'puc-bitbucket-http-error',
 				sprintf('BitBucket API error. Base URL: "%s",  HTTP status code: %d.', $baseUrl, $code)
 			);
@@ -243,7 +249,7 @@ if ( !class_exists('Puc_v5p0_Vcs_BitBucketApi', false) ):
 			parent::setAuthentication($credentials);
 
 			if ( !empty($credentials) && !empty($credentials['consumer_key']) ) {
-				$this->oauth = new Puc_v5p0_OAuthSignature(
+				$this->oauth = new OAuthSignature(
 					$credentials['consumer_key'],
 					$credentials['consumer_secret']
 				);

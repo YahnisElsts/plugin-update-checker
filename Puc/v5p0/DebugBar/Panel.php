@@ -1,9 +1,12 @@
 <?php
+namespace YahnisElsts\PluginUpdateChecker\v5p0\DebugBar;
 
-if ( !class_exists('Puc_v5p0_DebugBar_Panel', false) && class_exists('Debug_Bar_Panel', false) ):
+use YahnisElsts\PluginUpdateChecker\v5p0\UpdateChecker;
 
-	class Puc_v5p0_DebugBar_Panel extends Debug_Bar_Panel {
-		/** @var Puc_v5p0_UpdateChecker */
+if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false) ):
+
+	class Panel extends \Debug_Bar_Panel {
+		/** @var UpdateChecker */
 		protected $updateChecker;
 
 		private $responseBox = '<div class="puc-ajax-response" style="display: none;"></div>';

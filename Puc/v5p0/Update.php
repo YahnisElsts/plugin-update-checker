@@ -1,5 +1,9 @@
 <?php
-if ( !class_exists('Puc_v5p0_Update', false) ):
+namespace YahnisElsts\PluginUpdateChecker\v5p0;
+
+use stdClass;
+
+if ( !class_exists(Update::class, false) ):
 
 	/**
 	 * A simple container class for holding information about an available update.
@@ -7,7 +11,7 @@ if ( !class_exists('Puc_v5p0_Update', false) ):
 	 * @author Janis Elsts
 	 * @access public
 	 */
-	abstract class Puc_v5p0_Update extends Puc_v5p0_Metadata {
+	abstract class Update extends Metadata {
 		public $slug;
 		public $version;
 		public $download_url;
