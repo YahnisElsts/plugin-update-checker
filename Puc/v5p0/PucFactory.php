@@ -114,7 +114,6 @@ if ( !class_exists(PucFactory::class, false) ):
 					),
 					E_USER_ERROR
 				);
-				return null;
 			}
 
 			if ( !isset($apiClass) ) {
@@ -129,7 +128,6 @@ if ( !class_exists(PucFactory::class, false) ):
 						htmlentities(self::$latestCompatibleVersion),
 						htmlentities($service)
 					), E_USER_ERROR);
-					return null;
 				}
 
 				return new $checkerClass(
