@@ -332,12 +332,8 @@ if ( !class_exists(PucFactory::class, false) ):
 		 */
 		public static function addVersion($generalClass, $versionedClass, $version) {
 			if ( empty(self::$myMajorVersion) ) {
-				$className = (version_compare(PHP_VERSION, '5.3', '>=') && __NAMESPACE__)
-					? substr(__CLASS__, strlen(__NAMESPACE__) + 1)
-					: __CLASS__;
-
-				$nameParts = explode('_', $className, 3);
-				self::$myMajorVersion = substr(ltrim($nameParts[1], 'v'), 0, 1);
+				$lastNamespaceSegment = substr(__NAMESPACE__, strrpos(__NAMESPACE__, '\\') + 1);
+				self::$myMajorVersion = substr(ltrim($lastNamespaceSegment, 'v'), 0, 1);
 			}
 
 			//Store the greatest version number that matches our major version.
