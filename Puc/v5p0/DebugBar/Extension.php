@@ -19,7 +19,7 @@ if ( !class_exists(Extension::class, false) ):
 				$this->panelClass = $panelClass;
 			}
 
-			if ( version_compare(PHP_VERSION, '5.3', '>=') && (strpos($this->panelClass, '\\') === false) ) {
+			if ( (strpos($this->panelClass, '\\') === false) ) {
 				$this->panelClass = __NAMESPACE__ . '\\' . $this->panelClass;
 			}
 
