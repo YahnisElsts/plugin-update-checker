@@ -134,7 +134,11 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 * @return PluginInfo
 		 */
 		public function requestInfo($queryArgs = array()) {
-			list($pluginInfo, $result) = $this->requestMetadata('PluginInfo', 'request_info', $queryArgs);
+			list($pluginInfo, $result) = $this->requestMetadata(
+				PluginInfo::class,
+				'request_info',
+				$queryArgs
+			);
 
 			if ( $pluginInfo !== null ) {
 				/** @var PluginInfo $pluginInfo */
