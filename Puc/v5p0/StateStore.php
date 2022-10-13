@@ -200,17 +200,8 @@ if ( !class_exists(StateStore::class, false) ):
 		}
 
 		private function getLibPrefix() {
-			$lastSlashPos = strrpos(__CLASS__, '\\');
-			if ( $lastSlashPos !== false ) {
-				$namespacePrefix = substr(__CLASS__, 0, $lastSlashPos + 1);
-				$className = substr(__CLASS__, $lastSlashPos + 1);
-			} else {
-				$namespacePrefix = '';
-				$className = __CLASS__;
-			}
-
-			$parts = explode('_', $className, 3);
-			return $namespacePrefix . $parts[0] . '_' . $parts[1] . '_';
+			//This assumes that the current class is at the top of the versioned namespace.
+			return __NAMESPACE__ . '\\';
 		}
 	}
 
