@@ -1,8 +1,6 @@
 <?php
 namespace YahnisElsts\PluginUpdateChecker\v5p0;
 
-use YahnisElsts\PluginUpdateChecker\v5p0\Plugin;
-
 if ( !class_exists(Scheduler::class, false) ):
 
 	/**
@@ -128,7 +126,7 @@ if ( !class_exists(Scheduler::class, false) ):
 
 			//Filter out notifications of upgrades that should have no bearing upon whether or not our
 			//current info is up-to-date.
-			if ( is_a($this->updateChecker, 'Puc_v5p0_Theme_UpdateChecker') ) {
+			if ( is_a($this->updateChecker, Theme\UpdateChecker::class) ) {
 				if ( 'theme' !== $upgradeInfo['type'] || !isset($upgradeInfo['themes']) ) {
 					return;
 				}
