@@ -250,7 +250,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	```
 
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
-   ```php
+	```php
 	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
 	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
 	
@@ -260,9 +260,9 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 		'unique-plugin-or-theme-slug'
 	);
 	//Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
-   ```
-   If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
-   ```php
+	```
+	If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
+	```php
 	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
 	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
    
@@ -275,7 +275,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 		__FILE__,
 		'unique-plugin-or-theme-slug'
 	);
-   ```
+	```
 
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
 
