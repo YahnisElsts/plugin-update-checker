@@ -64,8 +64,10 @@ Getting Started
 
 	```php
 	require 'path/to/plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
-		'http://example.com/path/to/details.json',
+	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+ 
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
+		'https://example.com/path/to/details.json',
 		__FILE__, //Full path to the main plugin file or functions.php.
 		'unique-plugin-or-theme-slug'
 	);
@@ -96,7 +98,9 @@ By default, the library will check the specified URL for changes every 12 hours.
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+ 
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://github.com/user-name/repo-name/',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -175,7 +179,9 @@ The library will pull update details from the following parts of a release/tag/b
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+ 
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://bitbucket.org/user-name/repo-name',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -231,7 +237,9 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://gitlab.com/user-name/repo-name/',
 		__FILE__,
 		'unique-plugin-or-theme-slug'
@@ -243,21 +251,30 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
    ```php
-   $myUpdateChecker = new Puc_v5p0_Vcs_PluginUpdateChecker(
-       new GitLabApi('https://myserver.com/user-name/repo-name/'),
-       __FILE__,
-       'unique-plugin-or-theme-slug'
-   );
-  //Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
-  ```
+	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
+	
+	$myUpdateChecker = new PluginUpdateChecker(
+		new GitLabApi('https://myserver.com/user-name/repo-name/'),
+		__FILE__,
+		'unique-plugin-or-theme-slug'
+	);
+	//Optional: Add setAuthentication(...) and setBranch(...) as shown above.  
+   ```
    If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
    ```php
-       $myUpdateChecker = new Puc_v5p0_Vcs_PluginUpdateChecker(
-           new GitLabApi('https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', null, 'subgroup-level1/subgroup-level2/subgroup-level3'),
-           __FILE__,
-           'unique-plugin-or-theme-slug'
-       );
-
+	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
+   
+	$myUpdateChecker = new PluginUpdateChecker(
+		new GitLabApi(
+			'https://myserver.com/group-name/subgroup-level1/subgroup-level2/subgroup-level3/repo-name/', 
+			null, 
+			'subgroup-level1/subgroup-level2/subgroup-level3'
+		),
+		__FILE__,
+		'unique-plugin-or-theme-slug'
+	);
    ```
 
 3. Plugins only: Add a `readme.txt` file formatted according to the [WordPress.org plugin readme standard](https://wordpress.org/plugins/readme.txt) to your repository. The contents of this file will be shown when the user clicks the "View version 1.2.3 details" link.
