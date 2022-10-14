@@ -20,14 +20,16 @@ if ( !class_exists(PluginExtension::class, false) ):
 		 * Request plugin info and output it.
 		 */
 		public function ajaxRequestInfo() {
-			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
+			//phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is checked in preAjaxRequest().
+			if ( !isset($_POST['uid']) || ($_POST['uid'] !== $this->updateChecker->getUniqueName('uid')) ) {
 				return;
 			}
 			$this->preAjaxRequest();
 			$info = $this->updateChecker->requestInfo();
 			if ( $info !== null ) {
 				echo 'Successfully retrieved plugin info from the metadata URL:';
-				echo '<pre>', htmlentities(print_r($info, true)), '</pre>';
+				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- For debugging output.
+				echo '<pre>', esc_html(print_r($info, true)), '</pre>';
 			} else {
 				echo 'Failed to retrieve plugin info from the metadata URL.';
 			}

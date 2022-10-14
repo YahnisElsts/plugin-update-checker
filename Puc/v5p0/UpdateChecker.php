@@ -210,7 +210,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 */
 		public function allowMetadataHost($allow, $host) {
 			if ( $this->cachedMetadataHost === 0 ) {
-				$this->cachedMetadataHost = parse_url($this->metadataUrl, PHP_URL_HOST);
+				$this->cachedMetadataHost = wp_parse_url($this->metadataUrl, PHP_URL_HOST);
 			}
 
 			if ( is_string($this->cachedMetadataHost) && (strtolower($host) === strtolower($this->cachedMetadataHost)) ) {
@@ -432,7 +432,8 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 */
 		public function triggerError($message, $errorType) {
 			if ( $this->isDebugModeEnabled() ) {
-				trigger_error($message, $errorType);
+				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error -- Only happens in debug mode.
+				trigger_error(esc_html($message), $errorType);
 			}
 		}
 

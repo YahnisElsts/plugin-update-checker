@@ -24,7 +24,7 @@ if ( !class_exists(BitBucketApi::class, false) ):
 		private $repository;
 
 		public function __construct($repositoryUrl, $credentials = array()) {
-			$path = parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = wp_parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->username = $matches['username'];
 				$this->repository = $matches['repository'];

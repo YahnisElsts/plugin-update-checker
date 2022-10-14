@@ -57,7 +57,15 @@ if ( !class_exists(Scheduler::class, false) ):
 				if ( !wp_next_scheduled($this->cronHook) && !defined('WP_INSTALLING') ) {
 					//Randomly offset the schedule to help prevent update server traffic spikes. Without this
 					//most checks may happen during times of day when people are most likely to install new plugins.
-					$firstCheckTime = time() - rand(0, max($this->checkPeriod * 3600 - 15 * 60, 1));
+					$upperLimit = max($this->checkPeriod * 3600 - 15 * 60, 1);
+					if ( function_exists('wp_rand') ) {
+						$randomOffset = wp_rand(0, $upperLimit);
+					} else {
+						//This constructor may be called before wp_rand() is available.
+						//phpcs:ignore WordPress.WP.AlternativeFunctions.rand_rand
+						$randomOffset = rand(0, $upperLimit);
+					}
+					$firstCheckTime = time() - $randomOffset;
 					$firstCheckTime = apply_filters(
 						$this->updateChecker->getUniqueName('first_check_time'),
 						$firstCheckTime

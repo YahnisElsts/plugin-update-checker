@@ -46,7 +46,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 		private $downloadFilterAdded = false;
 
 		public function __construct($repositoryUrl, $accessToken = null) {
-			$path = parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = wp_parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];
@@ -371,6 +371,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 */
 		public function addHttpRequestFilter($result) {
 			if ( !$this->downloadFilterAdded && $this->isAuthenticationEnabled() ) {
+				//phpcs:ignore WordPressVIPMinimum.Hooks.RestrictedHooks.http_request_args -- The callback doesn't change the timeout.
 				add_filter('http_request_args', array($this, 'setUpdateDownloadHeaders'), 10, 2);
 				add_action('requests-requests.before_redirect', array($this, 'removeAuthHeaderFromRedirects'), 10, 4);
 				$this->downloadFilterAdded = true;

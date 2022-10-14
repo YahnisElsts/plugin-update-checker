@@ -41,18 +41,18 @@ if ( !class_exists(GitLabApi::class, false) ):
 
 		public function __construct($repositoryUrl, $accessToken = null, $subgroup = null) {
 			//Parse the repository host to support custom hosts.
-			$port = parse_url($repositoryUrl, PHP_URL_PORT);
+			$port = wp_parse_url($repositoryUrl, PHP_URL_PORT);
 			if ( !empty($port) ) {
 				$port = ':' . $port;
 			}
-			$this->repositoryHost = parse_url($repositoryUrl, PHP_URL_HOST) . $port;
+			$this->repositoryHost = wp_parse_url($repositoryUrl, PHP_URL_HOST) . $port;
 
 			if ( $this->repositoryHost !== 'gitlab.com' ) {
-				$this->repositoryProtocol = parse_url($repositoryUrl, PHP_URL_SCHEME);
+				$this->repositoryProtocol = wp_parse_url($repositoryUrl, PHP_URL_SCHEME);
 			}
 
 			//Find the repository information
-			$path = parse_url($repositoryUrl, PHP_URL_PATH);
+			$path = wp_parse_url($repositoryUrl, PHP_URL_PATH);
 			if ( preg_match('@^/?(?P<username>[^/]+?)/(?P<repository>[^/#?&]+?)/?$@', $path, $matches) ) {
 				$this->userName = $matches['username'];
 				$this->repositoryName = $matches['repository'];

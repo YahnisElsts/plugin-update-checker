@@ -206,8 +206,9 @@ if ( !class_exists('Ui', false) ):
 		 * You can change the result message by using the "puc_manual_check_message-$slug" filter.
 		 */
 		public function displayManualCheckResult() {
+			//phpcs:disable WordPress.Security.NonceVerification.Recommended -- Just displaying a message.
 			if ( isset($_GET['puc_update_check_result'], $_GET['puc_slug']) && ($_GET['puc_slug'] == $this->updateChecker->slug) ) {
-				$status = strval($_GET['puc_update_check_result']);
+				$status = sanitize_key($_GET['puc_update_check_result']);
 				$title = $this->updateChecker->getInstalledPackage()->getPluginTitle();
 				$noticeClass = 'updated notice-success';
 				$details = '';
@@ -223,16 +224,29 @@ if ( !class_exists('Ui', false) ):
 					$details = $this->formatManualCheckErrors(get_site_transient($this->manualCheckErrorTransient));
 					delete_site_transient($this->manualCheckErrorTransient);
 				} else {
-					$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), htmlentities($status));
+					$message = sprintf(__('Unknown update checker status "%s"', 'plugin-update-checker'), $status);
 					$noticeClass = 'error notice-error';
 				}
+
+				$message = esc_html($message);
+
+				//Plugins can replace the message with their own, including adding HTML.
+				$message = apply_filters(
+					$this->updateChecker->getUniqueName('manual_check_message'),
+					$message,
+					$status
+				);
+
 				printf(
 					'<div class="notice %s is-dismissible"><p>%s</p>%s</div>',
-					$noticeClass,
-					apply_filters($this->updateChecker->getUniqueName('manual_check_message'), $message, $status),
+					esc_attr($noticeClass),
+					//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Was escaped above, and plugins can add HTML.
+					$message,
+					//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Contains HTML. Content should already be escaped.
 					$details
 				);
 			}
+			//phpcs:enable
 		}
 
 		/**
@@ -259,8 +273,8 @@ if ( !class_exists('Ui', false) ):
 				/** @var \WP_Error $wpError */
 				$output .= sprintf(
 					$formatString,
-					$wpError->get_error_message(),
-					$wpError->get_error_code()
+					esc_html($wpError->get_error_message()),
+					esc_html($wpError->get_error_code())
 				);
 			}
 			if ( $showAsList ) {

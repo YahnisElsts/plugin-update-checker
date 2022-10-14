@@ -105,13 +105,14 @@ if ( !class_exists(PucFactory::class, false) ):
 
 			$checkerClass = self::getCompatibleClassVersion($checkerClass);
 			if ( $checkerClass === null ) {
+				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
 				trigger_error(
-					sprintf(
+					esc_html(sprintf(
 						'PUC %s does not support updates for %ss %s',
-						htmlentities(self::$latestCompatibleVersion),
+						self::$latestCompatibleVersion,
 						strtolower($type),
-						$service ? ('hosted on ' . htmlentities($service)) : 'using JSON metadata'
-					),
+						$service ? ('hosted on ' . $service) : 'using JSON metadata'
+					)),
 					E_USER_ERROR
 				);
 			}
@@ -123,11 +124,12 @@ if ( !class_exists(PucFactory::class, false) ):
 				//VCS checker + an API client.
 				$apiClass = self::getCompatibleClassVersion($apiClass);
 				if ( $apiClass === null ) {
-					trigger_error(sprintf(
+					//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
+					trigger_error(esc_html(sprintf(
 						'PUC %s does not support %s',
-						htmlentities(self::$latestCompatibleVersion),
-						htmlentities($service)
-					), E_USER_ERROR);
+						self::$latestCompatibleVersion,
+						$service
+					)), E_USER_ERROR);
 				}
 
 				return new $checkerClass(
@@ -251,8 +253,8 @@ if ( !class_exists(PucFactory::class, false) ):
 			$service = null;
 
 			//Which hosting service does the URL point to?
-			$host = (string)(parse_url($metadataUrl, PHP_URL_HOST));
-			$path = (string)(parse_url($metadataUrl, PHP_URL_PATH));
+			$host = (string)(wp_parse_url($metadataUrl, PHP_URL_HOST));
+			$path = (string)(wp_parse_url($metadataUrl, PHP_URL_PATH));
 
 			//Check if the path looks like "/user-name/repository".
 			//For GitLab.com it can also be "/user/group1/group2/.../repository".

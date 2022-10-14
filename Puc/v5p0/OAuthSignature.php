@@ -26,10 +26,10 @@ if ( !class_exists(OAuthSignature::class, false) ):
 			$parameters = array();
 
 			//Parse query parameters.
-			$query = parse_url($url, PHP_URL_QUERY);
+			$query = wp_parse_url($url, PHP_URL_QUERY);
 			if ( !empty($query) ) {
 				parse_str($query, $parsedParams);
-				if ( is_array($parameters) ) {
+				if ( is_array($parsedParams) ) {
 					$parameters = $parsedParams;
 				}
 				//Remove the query string from the URL. We'll replace it later.
@@ -91,7 +91,8 @@ if ( !class_exists(OAuthSignature::class, false) ):
 				}
 			}
 			if ( $rand === null ) {
-				$rand = mt_rand();
+				//phpcs:ignore WordPress.WP.AlternativeFunctions.rand_mt_rand
+				$rand = function_exists('wp_rand') ? wp_rand() : mt_rand();
 			}
 
 			return md5($mt . '_' . $rand);

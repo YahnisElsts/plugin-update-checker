@@ -66,14 +66,16 @@ if ( !class_exists(Extension::class, false) ):
 		 * the update checking process works as expected.
 		 */
 		public function ajaxCheckNow() {
-			if ( $_POST['uid'] !== $this->updateChecker->getUniqueName('uid') ) {
+			//phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce is checked in preAjaxRequest().
+			if ( !isset($_POST['uid']) || ($_POST['uid'] !== $this->updateChecker->getUniqueName('uid')) ) {
 				return;
 			}
 			$this->preAjaxRequest();
 			$update = $this->updateChecker->checkForUpdates();
 			if ( $update !== null ) {
 				echo "An update is available:";
-				echo '<pre>', htmlentities(print_r($update, true)), '</pre>';
+				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- For debugging output.
+				echo '<pre>', esc_html(print_r($update, true)), '</pre>';
 			} else {
 				echo 'No updates found.';
 			}
@@ -85,7 +87,7 @@ if ( !class_exists(Extension::class, false) ):
 				foreach (array_values($errors) as $num => $item) {
 					$wpError = $item['error'];
 					/** @var \WP_Error $wpError */
-					printf('<h4>%d) %s</h4>', $num + 1, esc_html($wpError->get_error_message()));
+					printf('<h4>%d) %s</h4>', intval($num + 1), esc_html($wpError->get_error_message()));
 
 					echo '<dl>';
 					printf('<dt>Error code:</dt><dd><code>%s</code></dd>', esc_html($wpError->get_error_code()));
@@ -107,8 +109,8 @@ if ( !class_exists(Extension::class, false) ):
 							//Status code.
 							printf(
 								'<dt>HTTP status:</dt><dd><code>%d %s</code></dd>',
-								wp_remote_retrieve_response_code($item['httpResponse']),
-								wp_remote_retrieve_response_message($item['httpResponse'])
+								esc_html(wp_remote_retrieve_response_code($item['httpResponse'])),
+								esc_html(wp_remote_retrieve_response_message($item['httpResponse']))
 							);
 
 							//Headers.
@@ -147,7 +149,9 @@ if ( !class_exists(Extension::class, false) ):
 			}
 			check_ajax_referer('puc-ajax');
 
+			//phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_error_reporting -- Part of a debugging feature.
 			error_reporting(E_ALL);
+			//phpcs:ignore WordPress.PHP.IniSet.display_errors_Blacklisted
 			@ini_set('display_errors', 'On');
 		}
 

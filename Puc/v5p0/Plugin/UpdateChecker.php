@@ -57,8 +57,8 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			if ( $slugUsedBy ) {
 				$this->triggerError(sprintf(
 					'Plugin slug "%s" is already in use by %s. Slugs must be unique.',
-					htmlentities($slug),
-					htmlentities($slugUsedBy)
+					$slug,
+					$slugUsedBy
 				), E_USER_ERROR);
 			}
 			add_filter($slugCheckFilter, array($this, 'getAbsolutePath'));
