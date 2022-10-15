@@ -122,7 +122,10 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 				$fields = $this->getUpdateFields();
 				foreach($fields as $field) {
 					if ( property_exists($update, $field) ) {
-						$this->row(ucwords(str_replace('_', ' ', $field)), htmlentities($update->$field));
+						$this->row(
+							ucwords(str_replace('_', ' ', $field)),
+							isset($update->$field) ? htmlentities($update->$field) : null
+						);
 					}
 				}
 				echo '</table>';
