@@ -40,7 +40,7 @@ Getting Started
 		{
 			"name" : "Plugin Name",
 			"version" : "2.0",
-			"download_url" : "http://example.com/plugin-name-2.0.zip",
+			"download_url" : "https://example.com/plugin-name-2.0.zip",
 			"sections" : {
 				"description" : "Plugin description here. You can use HTML."
 			}
@@ -53,8 +53,8 @@ Getting Started
 		```json
 		{
 			"version": "2.0",
-			"details_url": "http://example.com/version-2.0-details.html",
-			"download_url": "http://example.com/example-theme-2.0.zip"
+			"details_url": "https://example.com/version-2.0-details.html",
+			"download_url": "https://example.com/example-theme-2.0.zip"
 		}
 		```
 		
@@ -131,7 +131,7 @@ This library supports a couple of different ways to release updates on GitHub. P
 	
 	To release version 1.2.3, create a new Git tag named `v1.2.3` or `1.2.3`. That's it.
 	
-	PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitHub releases or branches instead.
+	PUC doesn't require strict adherence to [SemVer](https://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitHub releases or branches instead.
 	
 - **Stable branch** 
 	
@@ -220,7 +220,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	
 	You can skip the "stable tag" bit and just create a new Git tag named `v1.2.3` or `1.2.3`. The update checker will look at the most recent tags and pick the one that looks like the highest version number.
 	
-	PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions.
+	PUC doesn't require strict adherence to [SemVer](https://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions.
 	
 - **Stable branch** 
 	
@@ -300,7 +300,7 @@ A Gitlab repository can be checked for updates in 4 different ways.
 		$myUpdateChecker->getVcsApi()->enableReleasePackages();
 		```
 	- PUC will periodically check the release version (i.e. the tag name of the release) and will display a notification if the release is a greater version than the installed version.
-	- The release tag name should loosely follow [SemVer](http://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
+	- The release tag name should loosely follow [SemVer](https://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
 	- For more information about *Gitlab Release Generic Packages* refer to the following links:
 		- [Gitlab CI/CD Release Documentation](https://docs.gitlab.com/ee/user/project/releases/#create-release-from-gitlab-ci)
 		- [Gitlab Release Assets as Generic Package Documentation](https://gitlab.com/gitlab-org/release-cli/-/tree/master/docs/examples/release-assets-as-generic-package/)
@@ -315,7 +315,7 @@ A Gitlab repository can be checked for updates in 4 different ways.
         $myUpdateChecker->getVcsApi()->enableReleaseAssets();
         ```
     - PUC will periodically check the release version (based on release tag name) and display a notification if the release version is greater than the installed version.
-    - The release name should loosely follow [SemVer](http://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
+    - The release name should loosely follow [SemVer](https://semver.org/) but these are all valid release names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5` However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
 
 
 4. **Tags** (this is the default option):
@@ -325,7 +325,7 @@ A Gitlab repository can be checked for updates in 4 different ways.
 		//Add the following code to your main plugin file or `functions.php` file to check for updates from the default branch
 		$myUpdateChecker->setBranch('master'); //or 'main'
 		```
-	- PUC doesn't require strict adherence to [SemVer](http://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
+	- PUC doesn't require strict adherence to [SemVer](https://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
 
 License Management
 ------------------
@@ -335,9 +335,9 @@ Currently, the update checker doesn't have any built-in license management featu
 Resources
 ---------
 
-- [This blog post](http://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) has more information about the update checker API. *Slightly out of date.*
+- [This blog post](https://w-shadow.com/blog/2010/09/02/automatic-updates-for-any-plugin/) has more information about the update checker API. *Slightly out of date.*
 - [Debug Bar](https://wordpress.org/plugins/debug-bar/) - useful for testing and debugging the update checker.
 - [Update format reference](https://docs.google.com/spreadsheets/d/1eOBbW7Go2qEQXReOOCdidMTf_tDYRq4JfegcO1CBPIs/edit?usp=sharing) - describes all fields supported by the JSON-based update information format used by the update checker. Only covers plugins. Themes use a similar but more limited format.
-- [Securing download links](http://w-shadow.com/blog/2013/03/19/plugin-updates-securing-download-links/) - a general overview.
-- [A GUI for entering download credentials](http://open-tools.net/documentation/tutorial-automatic-updates.html#wordpress)
-- [Theme Update Checker](http://w-shadow.com/blog/2011/06/02/automatic-updates-for-commercial-themes/) - an older, theme-only variant of this update checker.
+- [Securing download links](https://w-shadow.com/blog/2013/03/19/plugin-updates-securing-download-links/) - a general overview.
+- [A GUI for entering download credentials](https://open-tools.net/documentation/tutorial-automatic-updates.html#wordpress)
+- [Theme Update Checker](https://w-shadow.com/blog/2011/06/02/automatic-updates-for-commercial-themes/) - an older, theme-only variant of this update checker.
