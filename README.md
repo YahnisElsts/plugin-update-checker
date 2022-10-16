@@ -20,6 +20,7 @@ From the users' perspective, it works just like with plugins and themes hosted o
     - [How to Release an Update](#how-to-release-an-update-2)
   - [GitLab Integration](#gitlab-integration)
     - [How to Release a GitLab Update](#how-to-release-a-gitlab-update)
+- [Migrating from 4.x](#migrating-from-4x)
 - [License Management](#license-management)
 - [Resources](#resources)
 
