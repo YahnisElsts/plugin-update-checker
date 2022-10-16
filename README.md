@@ -251,7 +251,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	Alternatively, if you're using a self-hosted GitLab instance, initialize the update checker like this:
 	```php
-	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\PluginUpdateChecker;
 	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
 	
 	$myUpdateChecker = new PluginUpdateChecker(
@@ -263,7 +263,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 	```
 	If you're using a self-hosted GitLab instance and [subgroups or nested groups](https://docs.gitlab.com/ce/user/group/subgroups/index.html), you have to tell the update checker which parts of the URL are subgroups:
 	```php
-	use YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker as PluginUpdateChecker;
+	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\PluginUpdateChecker;
 	use YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi;
    
 	$myUpdateChecker = new PluginUpdateChecker(
@@ -326,6 +326,45 @@ A Gitlab repository can be checked for updates in 4 different ways.
 		$myUpdateChecker->setBranch('master'); //or 'main'
 		```
 	- PUC doesn't require strict adherence to [SemVer](https://semver.org/). These are all valid tag names: `v1.2.3`, `v1.2-foo`, `1.2.3_rc1-ABC`, `1.2.3.4.5`. However, be warned that it's not smart enough to filter out alpha/beta/RC versions. If that's a problem, you might want to use GitLab branches instead.
+
+Migrating from 4.x
+------------------
+
+Older versions of the library didn't use namespaces. Code that was written for those versions will need to be updated to work with the current version. At a minimum, you'll need to change the factory class name. 
+
+Old code:
+```php
+$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'https://example.com/info.json',
+	__FILE__,
+	'my-slug'
+);
+```
+
+New code:
+```php
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
+	'https://example.com/info.json',
+	__FILE__,
+	'my-slug'
+);
+```
+
+Other classes have also been renamed, usually by simply removing the `Puc_vXpY_` prefix and converting `Category_Thing` to `Category\Thing`. Here's a table of the most commonly used classes and their new names:
+
+| Old class name                      | New class name                                                 |
+|-------------------------------------|----------------------------------------------------------------|
+| `Puc_v4_Factory`                    | `YahnisElsts\PluginUpdateChecker\v5\PucFactory`                |
+| `Puc_v4p13_Factory`                 | `YahnisElsts\PluginUpdateChecker\v5p0\PucFactory`              |
+| `Puc_v4p13_Plugin_UpdateChecker`    | `YahnisElsts\PluginUpdateChecker\v5p0\Plugin\UpdateChecker`    |
+| `Puc_v4p13_Theme_UpdateChecker`     | `YahnisElsts\PluginUpdateChecker\v5p0\Theme\UpdateChecker`     |
+| `Puc_v4p13_Vcs_PluginUpdateChecker` | `YahnisElsts\PluginUpdateChecker\v5p0\Vcs\PluginUpdateChecker` |
+| `Puc_v4p13_Vcs_ThemeUpdateChecker`  | `YahnisElsts\PluginUpdateChecker\v5p0\Vcs\ThemeUpdateChecker`  |
+| `Puc_v4p13_Vcs_GitHubApi`           | `YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitHubApi`           |
+| `Puc_v4p13_Vcs_GitLabApi`           | `YahnisElsts\PluginUpdateChecker\v5p0\Vcs\GitLabApi`           |
+| `Puc_v4p13_Vcs_BitBucketApi`        | `YahnisElsts\PluginUpdateChecker\v5p0\Vcs\BitBucketApi`        |
 
 License Management
 ------------------
