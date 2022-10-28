@@ -153,7 +153,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		/**
 		 * Retrieve the latest update (if any) from the configured API endpoint.
 		 *
-		 * @uses PluginUpdateChecker::requestInfo()
+		 * @uses UpdateChecker::requestInfo()
 		 *
 		 * @return Update|null An instance of Plugin Update, or NULL when no updates are available.
 		 */
