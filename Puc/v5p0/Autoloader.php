@@ -73,7 +73,7 @@ if ( !class_exists(Autoloader::class, false) ):
 
 			if ( strpos($className, $this->prefix) === 0 ) {
 				$path = substr($className, strlen($this->prefix));
-				$path = str_replace('_', '/', $path);
+				$path = str_replace(array('_', '\\'), '/', $path);
 				$path = $this->rootDir . $path . '.php';
 
 				if ( file_exists($path) ) {
