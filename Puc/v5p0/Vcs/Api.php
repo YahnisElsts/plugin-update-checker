@@ -1,4 +1,5 @@
 <?php
+
 namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
 use Parsedown;
@@ -11,6 +12,16 @@ if ( !class_exists(Api::class, false) ):
 		const STRATEGY_LATEST_TAG = 'latest_tag';
 		const STRATEGY_STABLE_TAG = 'stable_tag';
 		const STRATEGY_BRANCH = 'branch';
+
+		/**
+		 * If there are no release assets or none of them match the configured filter,
+		 * fall back to the automatically generated source code archive.
+		 */
+		const PREFER_RELEASE_ASSETS = 1;
+		/**
+		 * Skip releases that don't have any matching release assets.
+		 */
+		const REQUIRE_RELEASE_ASSETS = 2;
 
 		protected $tagNameProperty = 'name';
 		protected $slug = '';

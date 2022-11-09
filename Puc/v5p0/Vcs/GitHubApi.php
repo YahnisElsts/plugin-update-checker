@@ -6,6 +6,8 @@ use Parsedown;
 if ( !class_exists(GitHubApi::class, false) ):
 
 	class GitHubApi extends Api {
+		use ReleaseAssetSupport;
+
 		/**
 		 * @var string GitHub username.
 		 */
@@ -24,21 +26,6 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 * @var string GitHub authentication token. Optional.
 		 */
 		protected $accessToken;
-
-		/**
-		 * @var bool Whether to download release assets instead of the auto-generated source code archives.
-		 */
-		protected $releaseAssetsEnabled = false;
-
-		/**
-		 * @var string|null Regular expression that's used to filter release assets by name. Optional.
-		 */
-		protected $assetFilterRegex = null;
-
-		/**
-		 * @var string|null The unchanging part of a release asset URL. Used to identify download attempts.
-		 */
-		protected $assetApiBaseUrl = null;
 
 		/**
 		 * @var bool
@@ -80,9 +67,14 @@ if ( !class_exists(GitHubApi::class, false) ):
 				$reference->downloadCount = $release->assets[0]->download_count;
 			}
 
-			if ( $this->releaseAssetsEnabled && isset($release->assets, $release->assets[0]) ) {
+			if ( $this->releaseAssetsEnabled ) {
 				//Use the first release asset that matches the specified regular expression.
-				$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
+				if ( isset($release->assets, $release->assets[0]) ) {
+					$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
+				} else {
+					$matchingAssets = array();
+				}
+
 				if ( !empty($matchingAssets) ) {
 					if ( $this->isAuthenticationEnabled() ) {
 						/**
@@ -98,6 +90,10 @@ if ( !class_exists(GitHubApi::class, false) ):
 					}
 
 					$reference->downloadCount = $matchingAssets[0]->download_count;
+				} else if ( $this->releaseAssetPreference === Api::REQUIRE_RELEASE_ASSETS ) {
+					//None of the assets match the filter, and we're not allowed
+					//to fall back to the auto-generated source ZIP.
+					return null;
 				}
 			}
 
@@ -331,37 +327,23 @@ if ( !class_exists(GitHubApi::class, false) ):
 		}
 
 		/**
-		 * Enable updating via release assets.
+		 * Get the unchanging part of a release asset URL. Used to identify download attempts.
 		 *
-		 * If the latest release contains no usable assets, the update checker
-		 * will fall back to using the automatically generated ZIP archive.
-		 *
-		 * Private repositories will only work with WordPress 3.7 or later.
-		 *
-		 * @param string|null $fileNameRegex Optional. Use only those assets where the file name matches this regex.
+		 * @return string
 		 */
-		public function enableReleaseAssets($fileNameRegex = null) {
-			$this->releaseAssetsEnabled = true;
-			$this->assetFilterRegex = $fileNameRegex;
-			$this->assetApiBaseUrl = sprintf(
+		protected function getAssetApiBaseUrl() {
+			return sprintf(
 				'//api.github.com/repos/%1$s/%2$s/releases/assets/',
 				$this->userName,
 				$this->repositoryName
 			);
 		}
 
-		/**
-		 * Does this asset match the file name regex?
-		 *
-		 * @param \stdClass $releaseAsset
-		 * @return bool
-		 */
-		protected function matchesAssetFilter($releaseAsset) {
-			if ( $this->assetFilterRegex === null ) {
-				//The default is to accept all assets.
-				return true;
+		protected function getFilterableAssetName($releaseAsset) {
+			if ( isset($releaseAsset->name) ) {
+				return $releaseAsset->name;
 			}
-			return isset($releaseAsset->name) && preg_match($this->assetFilterRegex, $releaseAsset->name);
+			return null;
 		}
 
 		/**
@@ -393,7 +375,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 */
 		public function setUpdateDownloadHeaders($requestArgs, $url = '') {
 			//Is WordPress trying to download one of our release assets?
-			if ( $this->releaseAssetsEnabled && (strpos($url, $this->assetApiBaseUrl) !== false) ) {
+			if ( $this->releaseAssetsEnabled && (strpos($url, $this->getAssetApiBaseUrl()) !== false) ) {
 				$requestArgs['headers']['Accept'] = 'application/octet-stream';
 			}
 			//Use Basic authentication, but only if the download is from our repository.
