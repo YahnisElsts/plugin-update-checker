@@ -54,6 +54,11 @@ if ( !class_exists(Api::class, false) ):
 		protected $localDirectory = null;
 
 		/**
+		 * @var string prerelease name
+		 */
+		protected $prereleaseName;
+
+		/**
 		 * Api constructor.
 		 *
 		 * @param string $repositoryUrl
@@ -358,6 +363,14 @@ if ( !class_exists(Api::class, false) ):
 		 */
 		public function setSlug($slug) {
 			$this->slug = $slug;
+		}
+
+		/**
+		 * @param string $name
+		 *
+		 */
+		public function filterPrereleaseName($name) {
+			$this->prereleaseName = $name;
 		}
 	}
 

@@ -115,6 +115,10 @@ if ( !class_exists(GitLabApi::class, false) ):
 					|| !isset($release->tag_name)
 					//Skip upcoming releases.
 					|| !empty($release->upcoming_release)
+					//Skip release if prerelease name is not a match
+					|| (isset($this->prereleaseName) && preg_match('/'.$this->prereleaseName.'/m', $release->tag_name) !== 1)
+					//Skip release if it's not a final release
+					|| (!isset($this->prereleaseName) && preg_match('/^v?[0-9]+\.[0-9]+\.[0-9]+$/m', $release->tag_name) !== 1)
 				) {
 					continue;
 				}

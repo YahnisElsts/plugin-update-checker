@@ -51,7 +51,13 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 */
 		public function getLatestRelease() {
 			$release = $this->api('/repos/:user/:repo/releases/latest');
-			if ( is_wp_error($release) || !is_object($release) || !isset($release->tag_name) ) {
+			if ( is_wp_error($release)
+			     || !is_object($release)
+			     || !isset($release->tag_name)
+			     //Skip release if prerelease name is not a match
+			     || (isset($this->prereleaseName) && preg_match('/'.$this->prereleaseName.'/m', $release->tag_name) !== 1)
+			     //Skip release if it's not a final release
+			     || (!isset($this->prereleaseName) && preg_match('/^v?[0-9]+\.[0-9]+\.[0-9]+$/m', $release->tag_name) !== 1)) {
 				return null;
 			}
 
