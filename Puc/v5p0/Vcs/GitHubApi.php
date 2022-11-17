@@ -1,4 +1,5 @@
 <?php
+
 namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
 use Parsedown;
@@ -7,6 +8,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 
 	class GitHubApi extends Api {
 		use ReleaseAssetSupport;
+		use ReleaseFilteringFeature;
 
 		/**
 		 * @var string GitHub username.
@@ -50,58 +52,103 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 * @return Reference|null
 		 */
 		public function getLatestRelease() {
-			$release = $this->api('/repos/:user/:repo/releases/latest');
-			if ( is_wp_error($release) || !is_object($release) || !isset($release->tag_name) ) {
-				return null;
-			}
-
-			$reference = new Reference(array(
-				'name'        => $release->tag_name,
-				'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
-				'downloadUrl' => $release->zipball_url,
-				'updated'     => $release->created_at,
-				'apiResponse' => $release,
-			));
-
-			if ( isset($release->assets[0]) ) {
-				$reference->downloadCount = $release->assets[0]->download_count;
-			}
-
-			if ( $this->releaseAssetsEnabled ) {
-				//Use the first release asset that matches the specified regular expression.
-				if ( isset($release->assets, $release->assets[0]) ) {
-					$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
-				} else {
-					$matchingAssets = array();
+			//The "latest release" endpoint returns one release and always skips pre-releases,
+			//so we can only use it if that's compatible with the current filter settings.
+			if (
+				$this->shouldSkipPreReleases()
+				&& (
+					($this->releaseFilterMaxReleases === 1) || !$this->hasCustomReleaseFilter()
+				)
+			) {
+				//Just get the latest release.
+				$release = $this->api('/repos/:user/:repo/releases/latest');
+				if ( is_wp_error($release) || !is_object($release) || !isset($release->tag_name) ) {
+					return null;
 				}
-
-				if ( !empty($matchingAssets) ) {
-					if ( $this->isAuthenticationEnabled() ) {
-						/**
-						 * Keep in mind that we'll need to add an "Accept" header to download this asset.
-						 *
-						 * @see setUpdateDownloadHeaders()
-						 */
-						$reference->downloadUrl = $matchingAssets[0]->url;
-					} else {
-						//It seems that browser_download_url only works for public repositories.
-						//Using an access_token doesn't help. Maybe OAuth would work?
-						$reference->downloadUrl = $matchingAssets[0]->browser_download_url;
-					}
-
-					$reference->downloadCount = $matchingAssets[0]->download_count;
-				} else if ( $this->releaseAssetPreference === Api::REQUIRE_RELEASE_ASSETS ) {
-					//None of the assets match the filter, and we're not allowed
-					//to fall back to the auto-generated source ZIP.
+				$foundReleases = array($release);
+			} else {
+				//Get a list of the most recent releases.
+				$foundReleases = $this->api(
+					'/repos/:user/:repo/releases',
+					array('per_page' => $this->releaseFilterMaxReleases)
+				);
+				if ( is_wp_error($foundReleases) || !is_array($foundReleases) ) {
 					return null;
 				}
 			}
 
-			if ( !empty($release->body) ) {
-				$reference->changelog = Parsedown::instance()->text($release->body);
+			foreach ($foundReleases as $release) {
+				//Always skip drafts.
+				if ( isset($release->draft) && !empty($release->draft) ) {
+					continue;
+				}
+
+				//Skip pre-releases unless specifically included.
+				if (
+					$this->shouldSkipPreReleases()
+					&& isset($release->prerelease)
+					&& !empty($release->prerelease)
+				) {
+					continue;
+				}
+
+				$versionNumber = ltrim($release->tag_name, 'v'); //Remove the "v" prefix from "v1.2.3".
+
+				//Custom release filtering.
+				if ( !$this->matchesCustomReleaseFilter($versionNumber, $release) ) {
+					continue;
+				}
+
+				$reference = new Reference(array(
+					'name'        => $release->tag_name,
+					'version'     => $versionNumber,
+					'downloadUrl' => $release->zipball_url,
+					'updated'     => $release->created_at,
+					'apiResponse' => $release,
+				));
+
+				if ( isset($release->assets[0]) ) {
+					$reference->downloadCount = $release->assets[0]->download_count;
+				}
+
+				if ( $this->releaseAssetsEnabled ) {
+					//Use the first release asset that matches the specified regular expression.
+					if ( isset($release->assets, $release->assets[0]) ) {
+						$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
+					} else {
+						$matchingAssets = array();
+					}
+
+					if ( !empty($matchingAssets) ) {
+						if ( $this->isAuthenticationEnabled() ) {
+							/**
+							 * Keep in mind that we'll need to add an "Accept" header to download this asset.
+							 *
+							 * @see setUpdateDownloadHeaders()
+							 */
+							$reference->downloadUrl = $matchingAssets[0]->url;
+						} else {
+							//It seems that browser_download_url only works for public repositories.
+							//Using an access_token doesn't help. Maybe OAuth would work?
+							$reference->downloadUrl = $matchingAssets[0]->browser_download_url;
+						}
+
+						$reference->downloadCount = $matchingAssets[0]->download_count;
+					} else if ( $this->releaseAssetPreference === Api::REQUIRE_RELEASE_ASSETS ) {
+						//None of the assets match the filter, and we're not allowed
+						//to fall back to the auto-generated source ZIP.
+						return null;
+					}
+				}
+
+				if ( !empty($release->body) ) {
+					$reference->changelog = Parsedown::instance()->text($release->body);
+				}
+
+				return $reference;
 			}
 
-			return $reference;
+			return null;
 		}
 
 		/**
@@ -319,7 +366,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 			}
 
 			//Alternatively, just use the branch itself.
-			$strategies[self::STRATEGY_BRANCH] = function() use ($configBranch) {
+			$strategies[self::STRATEGY_BRANCH] = function () use ($configBranch) {
 				return $this->getBranch($configBranch);
 			};
 
@@ -347,9 +394,9 @@ if ( !class_exists(GitHubApi::class, false) ):
 		}
 
 		/**
-		 * @internal
 		 * @param bool $result
 		 * @return bool
+		 * @internal
 		 */
 		public function addHttpRequestFilter($result) {
 			if ( !$this->downloadFilterAdded && $this->isAuthenticationEnabled() ) {
@@ -365,6 +412,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 * Set the HTTP headers that are necessary to download updates from private repositories.
 		 *
 		 * See GitHub docs:
+		 *
 		 * @link https://developer.github.com/v3/repos/releases/#get-a-single-release-asset
 		 * @link https://developer.github.com/v3/auth/#basic-authentication
 		 *
@@ -391,9 +439,9 @@ if ( !class_exists(GitHubApi::class, false) ):
 		 * the authorization header to other hosts. We don't want that because it breaks
 		 * AWS downloads and can leak authorization information.
 		 *
-		 * @internal
 		 * @param string $location
 		 * @param array $headers
+		 * @internal
 		 */
 		public function removeAuthHeaderFromRedirects(&$location, &$headers) {
 			$repoApiBaseUrl = $this->buildApiUrl('/repos/:user/:repo/', array());

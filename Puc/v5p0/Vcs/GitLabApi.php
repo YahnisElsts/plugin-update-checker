@@ -1,10 +1,12 @@
 <?php
+
 namespace YahnisElsts\PluginUpdateChecker\v5p0\Vcs;
 
 if ( !class_exists(GitLabApi::class, false) ):
 
 	class GitLabApi extends Api {
 		use ReleaseAssetSupport;
+		use ReleaseFilteringFeature;
 
 		/**
 		 * @var string GitLab username.
@@ -103,7 +105,7 @@ if ( !class_exists(GitLabApi::class, false) ):
 		 * @return Reference|null
 		 */
 		public function getLatestRelease() {
-			$releases = $this->api('/:id/releases');
+			$releases = $this->api('/:id/releases', array('per_page' => $this->releaseFilterMaxReleases));
 			if ( is_wp_error($releases) || empty($releases) || !is_array($releases) ) {
 				return null;
 			}
@@ -114,8 +116,18 @@ if ( !class_exists(GitLabApi::class, false) ):
 					!is_object($release)
 					|| !isset($release->tag_name)
 					//Skip upcoming releases.
-					|| !empty($release->upcoming_release)
+					|| (
+						!empty($release->upcoming_release)
+						&& $this->shouldSkipPreReleases()
+					)
 				) {
+					continue;
+				}
+
+				$versionNumber = ltrim($release->tag_name, 'v'); //Remove the "v" prefix from "v1.2.3".
+
+				//Apply custom filters.
+				if ( !$this->matchesCustomReleaseFilter($versionNumber, $release) ) {
 					continue;
 				}
 
@@ -131,7 +143,7 @@ if ( !class_exists(GitLabApi::class, false) ):
 
 				return new Reference(array(
 					'name'        => $release->tag_name,
-					'version'     => ltrim($release->tag_name, 'v'), //Remove the "v" prefix from "v1.2.3".
+					'version'     => $versionNumber,
 					'downloadUrl' => $downloadUrl,
 					'updated'     => $release->released_at,
 					'apiResponse' => $release,
@@ -362,7 +374,7 @@ if ( !class_exists(GitLabApi::class, false) ):
 				$strategies[self::STRATEGY_LATEST_TAG] = array($this, 'getLatestTag');
 			}
 
-			$strategies[self::STRATEGY_BRANCH] = function() use ($configBranch) {
+			$strategies[self::STRATEGY_BRANCH] = function () use ($configBranch) {
 				return $this->getBranch($configBranch);
 			};
 
@@ -380,13 +392,13 @@ if ( !class_exists(GitLabApi::class, false) ):
 		 *
 		 * This is included for backwards compatibility with older versions of PUC.
 		 *
-		 * @deprecated Use enableReleaseAssets() instead.
-		 * @noinspection PhpUnused -- Public API
 		 * @return void
+		 * @deprecated   Use enableReleaseAssets() instead.
+		 * @noinspection PhpUnused -- Public API
 		 */
 		public function enableReleasePackages() {
 			$this->enableReleaseAssets(
-				/** @lang RegExp */ '/\.zip($|[?&#])/i',
+			/** @lang RegExp */ '/\.zip($|[?&#])/i',
 				Api::REQUIRE_RELEASE_ASSETS
 			);
 		}
