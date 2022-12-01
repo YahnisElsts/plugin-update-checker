@@ -51,7 +51,7 @@ if ( !class_exists(Package::class, false) ):
 				//This can happen if the filename points to something that is not a plugin.
 				$this->updateChecker->triggerError(
 					sprintf(
-						"Can't to read the Version header for '%s'. The filename is incorrect or is not a plugin.",
+						"Cannot read the Version header for '%s'. The filename is incorrect or is not a plugin.",
 						$this->updateChecker->pluginFile
 					),
 					E_USER_WARNING
