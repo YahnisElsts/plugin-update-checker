@@ -114,7 +114,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 				if ( $this->releaseAssetsEnabled ) {
 					//Use the first release asset that matches the specified regular expression.
 					if ( isset($release->assets, $release->assets[0]) ) {
-						$matchingAssets = array_filter($release->assets, array($this, 'matchesAssetFilter'));
+						$matchingAssets = array_values(array_filter($release->assets, array($this, 'matchesAssetFilter')));
 					} else {
 						$matchingAssets = array();
 					}
