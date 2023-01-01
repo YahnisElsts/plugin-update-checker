@@ -358,7 +358,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 		protected function getUpdateDetectionStrategies($configBranch) {
 			$strategies = array();
 
-			if ( $configBranch === 'master' ) {
+			if ( $configBranch === 'master' || $configBranch === 'main') {
 				//Use the latest release.
 				$strategies[self::STRATEGY_LATEST_RELEASE] = array($this, 'getLatestRelease');
 				//Failing that, use the tag with the highest version number.
