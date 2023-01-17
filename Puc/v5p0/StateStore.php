@@ -185,8 +185,9 @@ if ( !class_exists(StateStore::class, false) ):
 					$updateClass = $state->updateClass;
 				}
 
-				if ( ($updateClass !== null) && class_exists($updateClass) ) {
-					$this->update = call_user_func(array($updateClass, 'fromObject'), $state->update);
+				$factory = array($updateClass, 'fromObject');
+				if ( ($updateClass !== null) && is_callable($factory) ) {
+					$this->update = call_user_func($factory, $state->update);
 				}
 			}
 		}
