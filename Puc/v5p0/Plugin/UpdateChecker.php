@@ -71,10 +71,6 @@ if ( !class_exists(UpdateChecker::class, false) ):
 				$this->muPluginFile = $this->pluginFile;
 			}
 
-			//TODO: Consider "pre_uninstall_plugin" instead. It happens before the actual uninstallation,
-			// but only for plugins that have uninstall.php or an uninstallation hook. Note that the argument
-			// may not be as expected; actual WP code calls plugin_basename() on it for some reason.
-			// Use 'delete_plugin' as an alternative for plugins that don't have an uninstaller.
 			//To prevent a crash during plugin uninstallation, remove updater hooks when the user removes the plugin.
 			//Details: https://github.com/YahnisElsts/plugin-update-checker/issues/138#issuecomment-335590964
 			add_action('uninstall_' . $this->pluginFile, array($this, 'removeHooks'));
@@ -91,8 +87,6 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		protected function createScheduler($checkPeriod) {
 			$scheduler = new Scheduler($this, $checkPeriod, array('load-plugins.php'));
 			register_deactivation_hook($this->pluginFile, array($scheduler, 'removeUpdaterCron'));
-			//TODO: In Multisite, network-deactivating the plugin should remove the cron job for all sites.
-			// See https://github.com/YahnisElsts/plugin-update-checker/issues/517
 			return $scheduler;
 		}
 
