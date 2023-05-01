@@ -210,7 +210,7 @@ if ( !class_exists(BitBucketApi::class, false) ):
 				$url = $this->oauth->sign($url,'GET');
 			}
 
-			$options = array('timeout' => 10);
+			$options = array('timeout' => wp_doing_cron() ? 10 : 3);
 			if ( !empty($this->httpFilterName) ) {
 				$options = apply_filters($this->httpFilterName, $options);
 			}

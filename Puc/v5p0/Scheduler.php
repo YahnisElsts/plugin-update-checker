@@ -49,6 +49,7 @@ if ( !class_exists(Scheduler::class, false) ):
 				} else {
 					//Use a custom cron schedule.
 					$scheduleName = 'every' . $this->checkPeriod . 'hours';
+					//phpcs:ignore WordPress.WP.CronInterval.ChangeDetected -- WPCS fails to parse the callback.
 					add_filter('cron_schedules', array($this, '_addCustomSchedule'));
 				}
 
@@ -79,6 +80,7 @@ if ( !class_exists(Scheduler::class, false) ):
 				//Like WordPress itself, we check more often on certain pages.
 				/** @see wp_update_plugins */
 				add_action('load-update-core.php', array($this, 'maybeCheckForUpdates'));
+				//phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- Not actually code, just file names.
 				//"load-update.php" and "load-plugins.php" or "load-themes.php".
 				$this->hourlyCheckHooks = array_merge($this->hourlyCheckHooks, $hourlyHooks);
 				foreach($this->hourlyCheckHooks as $hook) {

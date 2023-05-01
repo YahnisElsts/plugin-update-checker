@@ -160,11 +160,18 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 
 		public function row($name, $value) {
 			if ( is_object($value) || is_array($value) ) {
+				//This is specifically for debugging, so print_r() is fine.
+				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 				$value = '<pre>' . htmlentities(print_r($value, true)) . '</pre>';
 			} else if ($value === null) {
 				$value = '<code>null</code>';
 			}
-			printf('<tr><th scope="row">%1$s</th> <td>%2$s</td></tr>', $name, $value);
+			printf(
+				'<tr><th scope="row">%1$s</th> <td>%2$s</td></tr>',
+				esc_html($name),
+				//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped above.
+				$value
+			);
 		}
 	}
 

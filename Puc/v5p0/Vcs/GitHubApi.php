@@ -248,7 +248,7 @@ if ( !class_exists(GitHubApi::class, false) ):
 			$baseUrl = $url;
 			$url = $this->buildApiUrl($url, $queryParams);
 
-			$options = array('timeout' => 10);
+			$options = array('timeout' => wp_doing_cron() ? 10 : 3);
 			if ( $this->isAuthenticationEnabled() ) {
 				$options['headers'] = array('Authorization' => $this->getAuthorizationHeader());
 			}

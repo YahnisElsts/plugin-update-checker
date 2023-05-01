@@ -11,7 +11,7 @@ if ( !class_exists(UpgraderStatus::class, false) ):
 	 * This class uses a few workarounds and heuristics to get the file name.
 	 */
 	class UpgraderStatus {
-		private $currentType = null; //"plugin" or "theme".
+		private $currentType = null; //This must be either "plugin" or "theme".
 		private $currentId = null;   //Plugin basename or theme directory name.
 
 		public function __construct() {

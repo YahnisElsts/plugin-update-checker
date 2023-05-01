@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<ruleset name="PUC_PHPCS_Settings">
+    <description>PHPCS settings for Plugin Update Checker</description>
+
+    <arg name="basepath" value="."/>
+    <arg name="warning-severity" value="5"/>
+    <arg name="error-severity" value="5"/>
+    <arg value="sp"/>
+    
+    <!-- Check the current directory by default -->
+    <file>./</file>
+    
+    <!-- Include the WordPress-VIP-Go standard -->
+    <rule ref="WordPress-VIP-Go">
+		<!-- This library is not exclusive to WP VIP, so it doesn't use vip_safe_wp_remote_get() and such. -->
+		<exclude name="WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get" />
+    </rule>
+    
+    <!-- Exclude external and third-party libraries -->
+    <exclude-pattern type="relative">^vendor/*</exclude-pattern>
+</ruleset>

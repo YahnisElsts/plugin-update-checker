@@ -9,7 +9,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 	abstract class UpdateChecker {
 		protected $filterSuffix = '';
 		protected $updateTransient = '';
-		protected $translationType = ''; //"plugin" or "theme".
+		protected $translationType = ''; //This can be "plugin" or "theme".
 
 		/**
 		 * Set to TRUE to enable error reporting. Errors are raised using trigger_error()
@@ -660,7 +660,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			//Various options for the wp_remote_get() call. Plugins can filter these, too.
 			$options = array(
-				'timeout' => 10, //seconds
+				'timeout' => wp_doing_cron() ? 10 : 3,
 				'headers' => array(
 					'Accept' => 'application/json',
 				),
