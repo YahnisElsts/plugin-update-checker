@@ -80,7 +80,7 @@ $newVersionInfix = versionToInfix($newVersion);
 $oldVersion = $currentVersion;
 
 //Create a new branch for the version update.
-exec("git checkout -b version-bump-$newVersion");
+exec("git checkout -b \"version-bump-$newVersion\"");
 
 //Rename the Puc/vXpY directory.
 rename($currentVersionDir, "Puc/$newVersionInfix");
@@ -113,9 +113,9 @@ $content = file_get_contents($pluginUpdateCheckerFilePath);
 $content = str_replace($oldLoaderFileName, $newLoaderFileName, $content);
 file_put_contents($pluginUpdateCheckerFilePath, $content);
 
-// Commit the changes
+//Commit the changes.
 exec('git add .');
-exec("git commit -m 'Bump version number to $newVersion'");
+exec("git commit -m \"Bump version number to $newVersion\"");
 
 //Switch back to the original branch.
 //exec('git checkout -');
