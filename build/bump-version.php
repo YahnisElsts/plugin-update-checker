@@ -86,7 +86,7 @@ exec("git checkout -b \"version-bump-$newVersion\"");
 rename($currentVersionDir, "Puc/$newVersionInfix");
 
 //Define the list of directories to search
-$directoriesToSearch = ['css', 'examples', 'js', 'Puc'];
+$directoriesToSearch = ['css', 'js', 'Puc'];
 
 //Replace old version infix and old version number in the source code
 foreach ($directoriesToSearch as $dir) {
@@ -100,6 +100,8 @@ foreach ($directoriesToSearch as $dir) {
 
 //Replace the old version infix in the readme file.
 updateVersionNumbers($repositoryRoot . '/README.md', $oldVersion, $newVersion);
+//And also in the main .pot file.
+updateVersionNumbers($repositoryRoot . '/languages/plugin-update-checker.pot', $oldVersion, $newVersion);
 
 //Rename the loader file and update the version numbers.
 $oldLoaderFileName = "load-$oldVersionInfix.php";
