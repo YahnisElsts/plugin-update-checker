@@ -109,11 +109,14 @@ $newLoaderFileName = "load-$newVersionInfix.php";
 exec("git mv $oldLoaderFileName $newLoaderFileName");
 updateVersionNumbers($repositoryRoot . '/' . $newLoaderFileName, $oldVersion, $newVersion);
 
-//Replace old loader file name with new one in plugin-update-checker.php.
-$pluginUpdateCheckerFilePath = $repositoryRoot . '/plugin-update-checker.php';
-$content = file_get_contents($pluginUpdateCheckerFilePath);
-$content = str_replace($oldLoaderFileName, $newLoaderFileName, $content);
-file_put_contents($pluginUpdateCheckerFilePath, $content);
+//Replace the old loader file name with new one in files that use it.
+$filesUsingLoader = ['plugin-update-checker.php', 'composer.json'];
+foreach ($filesUsingLoader as $fileName) {
+	$fullFileName = $repositoryRoot . '/' . $fileName;
+	$content = file_get_contents($fullFileName);
+	$content = str_replace($oldLoaderFileName, $newLoaderFileName, $content);
+	file_put_contents($fullFileName, $content);
+}
 
 //Commit the changes.
 exec('git add .');
