@@ -83,7 +83,7 @@ $oldVersion = $currentVersion;
 exec("git checkout -b \"version-bump-$newVersion\"");
 
 //Rename the Puc/vXpY directory using Git.
-exec("git mv \"Puc/$currentVersionDir\" \"Puc/$newVersionInfix\"");
+exec("git mv \"Puc/$oldVersionInfix\" \"Puc/$newVersionInfix\"");
 
 //Define the list of directories to search
 $directoriesToSearch = ['css', 'js', 'Puc'];
