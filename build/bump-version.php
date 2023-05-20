@@ -117,8 +117,7 @@ file_put_contents($pluginUpdateCheckerFilePath, $content);
 exec('git add .');
 exec("git commit -m \"Bump version number to $newVersion\"");
 
-//Switch back to the original branch.
-//exec('git checkout -');
+echo "Version number bumped to $newVersion.\n";
 
 //Switch back to the original directory.
 chdir($oldDir);
