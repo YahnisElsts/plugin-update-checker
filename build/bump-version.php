@@ -98,10 +98,15 @@ foreach ($directoriesToSearch as $dir) {
 	}
 }
 
-//Replace the old version infix in the readme file.
-updateVersionNumbers($repositoryRoot . '/README.md', $oldVersion, $newVersion);
-//And also in the main .pot file.
-updateVersionNumbers($repositoryRoot . '/languages/plugin-update-checker.pot', $oldVersion, $newVersion);
+//Update version numbers in certain files that are not in the above subdirectories.
+$standaloneFiles = [
+	'plugin-update-checker.php',
+	'README.md',
+	'languages/plugin-update-checker.pot',
+];
+foreach ($standaloneFiles as $standaloneFile) {
+	updateVersionNumbers($repositoryRoot . '/' . $standaloneFile, $oldVersion, $newVersion);
+}
 
 //Rename the loader file and update the version numbers.
 $oldLoaderFileName = "load-$oldVersionInfix.php";
@@ -110,6 +115,8 @@ exec("git mv $oldLoaderFileName $newLoaderFileName");
 updateVersionNumbers($repositoryRoot . '/' . $newLoaderFileName, $oldVersion, $newVersion);
 
 //Replace the old loader file name with new one in files that use it.
+//plugin-update-checker.php was already updated by the previous step, but we'll
+//include it here anyway in case the code order or loader naming scheme changes.
 $filesUsingLoader = ['plugin-update-checker.php', 'composer.json'];
 foreach ($filesUsingLoader as $fileName) {
 	$fullFileName = $repositoryRoot . '/' . $fileName;
