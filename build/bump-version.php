@@ -82,8 +82,8 @@ $oldVersion = $currentVersion;
 //Create a new branch for the version update.
 exec("git checkout -b \"version-bump-$newVersion\"");
 
-//Rename the Puc/vXpY directory.
-rename($currentVersionDir, "Puc/$newVersionInfix");
+//Rename the Puc/vXpY directory using Git.
+exec("git mv \"Puc/$currentVersionDir\" \"Puc/$newVersionInfix\"");
 
 //Define the list of directories to search
 $directoriesToSearch = ['css', 'js', 'Puc'];
@@ -111,7 +111,7 @@ foreach ($standaloneFiles as $standaloneFile) {
 //Rename the loader file and update the version numbers.
 $oldLoaderFileName = "load-$oldVersionInfix.php";
 $newLoaderFileName = "load-$newVersionInfix.php";
-exec("git mv $oldLoaderFileName $newLoaderFileName");
+exec("git mv \"$oldLoaderFileName\" \"$newLoaderFileName\"");
 updateVersionNumbers($repositoryRoot . '/' . $newLoaderFileName, $oldVersion, $newVersion);
 
 //Replace the old loader file name with new one in files that use it.
