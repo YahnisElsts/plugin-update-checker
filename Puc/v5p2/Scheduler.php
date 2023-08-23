@@ -210,7 +210,7 @@ if ( !class_exists(Scheduler::class, false) ):
 				//Check less frequently if it's already known that an update is available.
 				$period = $this->throttledCheckPeriod * 3600;
 			} else if ( defined('DOING_CRON') && constant('DOING_CRON') ) {
-				//WordPress cron schedules are not exact, so lets do an update check even
+				//WordPress cron schedules are not exact, so let's do an update check even
 				//if slightly less than $checkPeriod hours have elapsed since the last check.
 				$cronFuzziness = 20 * 60;
 				$period = $this->checkPeriod * 3600 - $cronFuzziness;
