@@ -980,7 +980,11 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 * Initialize the update checker Debug Bar plugin/add-on thingy.
 		 */
 		public function maybeInitDebugBar() {
-			if ( class_exists('Debug_Bar', false) && file_exists(dirname(__FILE__) . '/DebugBar') ) {
+			if (
+				class_exists('Debug_Bar', false)
+				&& class_exists('Debug_Bar_Panel', false)
+				&& file_exists(dirname(__FILE__) . '/DebugBar')
+			) {
 				$this->debugBarExtension = $this->createDebugBarExtension();
 			}
 		}
