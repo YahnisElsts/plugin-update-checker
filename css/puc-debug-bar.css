@@ -1,5 +1,5 @@
 .puc-debug-bar-panel-v5 pre {
-	margin-top: 0;
+    margin-top: 0;
 }
 
 /* Style the debug data table to match "widefat" table style used by WordPress. */
@@ -21,7 +21,7 @@ table.puc-debug-data * {
 }
 
 table.puc-debug-data th {
-	width: 11em;
+    width: 11em;
     padding: 7px 7px 8px;
     text-align: left;
 
@@ -50,21 +50,21 @@ table.puc-debug-data td {
 }
 
 .puc-ajax-response {
-	border: 1px solid #dfdfdf;
-	border-radius: 3px;
-	padding: 0.5em;
-	margin: 5px 0;
-	background-color: white;
+    border: 1px solid #dfdfdf;
+    border-radius: 3px;
+    padding: 0.5em;
+    margin: 5px 0;
+    background-color: white;
 }
 
 .puc-ajax-nonce {
-	display: none;
+    display: none;
 }
 
 .puc-ajax-response dt {
-	margin: 0;
+    margin: 0;
 }
 
 .puc-ajax-response dd {
-	margin: 0 0 1em;
+    margin: 0 0 1em;
 }

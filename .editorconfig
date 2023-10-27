@@ -1,15 +1,20 @@
 [*]
-charset=utf-8
-end_of_line=lf
-insert_final_newline=false
-indent_style=tab
-tab_width=4
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
 
-[{phpunit.xml.dist,*.jhm,*.xslt,*.xul,*.rng,*.xsl,*.xsd,*.ant,*.tld,*.fxml,*.jrxml,*.xml,*.jnlp,*.wsdl}]
-indent_style=space
-indent_size=4
+[*.php]
+indent_style = tab
+eclint_block_comment_start = /*
+eclint_block_comment = *
+eclint_block_comment_end = */
 
-[*.svg]
-indent_style=space
-indent_size=4
+[*.js]
+indent_style = tab
 
+[README.md]
+# doctoc + TAB-s
+indent_style = unset

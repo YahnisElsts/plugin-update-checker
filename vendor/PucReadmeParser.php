@@ -285,7 +285,7 @@ class PucReadmeParser {
 		);
 
 		$text = balanceTags($text);
-		
+
 		$text = wp_kses( $text, $allowed );
 		$text = trim($text);
 		return $text;

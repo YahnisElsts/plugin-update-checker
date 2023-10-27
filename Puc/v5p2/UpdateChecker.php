@@ -676,7 +676,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			$result = wp_remote_get($url, $options);
 
 			$result = apply_filters($this->getUniqueName('request_metadata_http_result'), $result, $url, $options);
-			
+
 			//Try to parse the response
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
