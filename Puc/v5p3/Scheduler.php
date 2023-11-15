@@ -187,6 +187,21 @@ if ( !class_exists(Scheduler::class, false) ):
 			$state = $this->updateChecker->getUpdateState();
 			$shouldCheck = ($state->timeSinceLastCheck() >= $this->getEffectiveCheckPeriod());
 
+			if ( $shouldCheck ) {
+				//Sanity check: Do not proceed if one of the critical classes is missing.
+				//That can happen - theoretically and extremely rarely - if maybeCoreUpdate()
+				//is called before the old version of our plugin has been fully deleted, or
+				//called from an independent AJAX request during deletion.
+				if ( !(
+					class_exists(Utils::class)
+					&& class_exists(Metadata::class)
+					&& class_exists(Plugin\Update::class)
+					&& class_exists(Theme\Update::class)
+				) ) {
+					return;
+				}
+			}
+
 			//Let plugin authors substitute their own algorithm.
 			$shouldCheck = apply_filters(
 				$this->updateChecker->getUniqueName('check_now'),
