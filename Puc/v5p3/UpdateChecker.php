@@ -9,7 +9,16 @@ if ( !class_exists(UpdateChecker::class, false) ):
 	abstract class UpdateChecker {
 		protected $filterSuffix = '';
 		protected $updateTransient = '';
-		protected $translationType = ''; //This can be "plugin" or "theme".
+
+		/**
+		 * @var string This can be "plugin" or "theme".
+		 */
+		protected $componentType = '';
+		/**
+		 * @var string Currently the same as $componentType, but this is an implementation detail that
+		 *             depends on how WP works internally, and could therefore change.
+		 */
+		protected $translationType = '';
 
 		/**
 		 * Set to TRUE to enable error reporting. Errors are raised using trigger_error()
@@ -74,6 +83,11 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 */
 		protected $debugBarExtension = null;
 
+		/**
+		 * @var WpCliCheckTrigger|null
+		 */
+		protected $wpCliCheckTrigger = null;
+
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));
 			$this->metadataUrl = $metadataUrl;
@@ -91,6 +105,10 @@ if ( !class_exists(UpdateChecker::class, false) ):
 				}
 			}
 
+			if ( empty($this->translationType) ) {
+				$this->translationType = $this->componentType;
+			}
+
 			$this->package = $this->createInstalledPackage();
 			$this->scheduler = $this->createScheduler($checkPeriod);
 			$this->upgraderStatus = new UpgraderStatus();
@@ -103,6 +121,10 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			}
 
 			$this->installHooks();
+
+			if ( ($this->wpCliCheckTrigger === null) && defined('WP_CLI') ) {
+				$this->wpCliCheckTrigger = new WpCliCheckTrigger($this->componentType, $this->scheduler);
+			}
 		}
 
 		/**
