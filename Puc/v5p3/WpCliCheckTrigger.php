@@ -65,23 +65,20 @@ class WpCliCheckTrigger {
 	/**
 	 * Trigger a potential update check once.
 	 *
-	 * The update transient can be read multiple times during a single WP-CLI command execution.
-	 * For performance, we only want to trigger an update check once.
-	 *
-	 * @param mixed $transient
+	 * @param mixed $input
 	 * @return mixed The input value, unchanged.
 	 * @internal This method is public so that it can be used as a WP-CLI hook callback.
 	 *           It should not be called directly.
 	 *
 	 */
-	public function triggerUpdateCheckOnce($transient) {
+	public function triggerUpdateCheckOnce($input = null) {
 		if ( $this->wasCheckTriggered ) {
-			return $transient;
+			return $input;
 		}
 
 		$this->wasCheckTriggered = true;
 		$this->scheduler->maybeCheckForUpdates();
 
-		return $transient;
+		return $input;
 	}
 }
