@@ -698,7 +698,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			$result = wp_remote_get($url, $options);
 
 			$result = apply_filters($this->getUniqueName('request_metadata_http_result'), $result, $url, $options);
-			
+
 			//Try to parse the response
 			$status = $this->validateApiResponse($result);
 			$metadata = null;
@@ -924,33 +924,31 @@ if ( !class_exists(UpdateChecker::class, false) ):
 				return $source;
 			}
 
-			// Fix the remote source structure if necessary.
+			//Fix the remote source structure if necessary.
 			//The update archive should contain a single directory that contains the rest of plugin/theme files.
 			//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
 			//We can't rename $remoteSource because that would break WordPress code that cleans up temporary files
 			//after update.
 			if ( $this->isBadDirectoryStructure($remoteSource) ) {
+				//Create a new directory using the plugin slug.
+				$newDirectory = trailingslashit($remoteSource) . $this->slug . '/';
 
-				// Create a new folder using plugin slug.
-				$new_directory = trailingslashit( $remoteSource ) . $this->slug . '/';
+				if ( !$wp_filesystem->is_dir($newDirectory) ) {
+					$wp_filesystem->mkdir($newDirectory);
 
-				if ( ! $wp_filesystem->is_dir( $new_directory ) ) {
-					$wp_filesystem->mkdir( $new_directory );
-
-					// Move all files inside newly created directory.
+					//Move all files to the newly created directory.
 					$sourceFiles = $wp_filesystem->dirlist($remoteSource);
 					if ( is_array($sourceFiles) ) {
 						$sourceFiles = array_keys($sourceFiles);
 						$allMoved = true;
 						foreach ($sourceFiles as $filename) {
-
-							// Skip for our newly created folder.
+							//Skip for our newly created folder.
 							if ( $filename === $this->slug ) {
 								continue;
 							}
-							
-							$previousSource = trailingslashit( $remoteSource ) . $filename;
-							$newSource = trailingslashit( $new_directory ) . $filename;
+
+							$previousSource = trailingslashit($remoteSource) . $filename;
+							$newSource = trailingslashit($newDirectory) . $filename;
 
 							if ( !$wp_filesystem->move($previousSource, $newSource, true) ) {
 								$allMoved = false;
@@ -959,14 +957,13 @@ if ( !class_exists(UpdateChecker::class, false) ):
 						}
 
 						if ( $allMoved ) {
-							// Rename source.
-							$source = $new_directory;
-						}
-						else {
-							// Delete our newly created folder including all files in it.
-							$wp_filesystem->rmdir( $new_directory, true );
+							//Rename source.
+							$source = $newDirectory;
+						} else {
+							//Delete our newly created folder including all files in it.
+							$wp_filesystem->rmdir($newDirectory, true);
 
-							// And return a relevant error.
+							//And return a relevant error.
 							return new WP_Error(
 								'puc-incorrect-directory-structure',
 								sprintf(
@@ -983,8 +980,6 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			//Rename the source to match the existing directory.
 			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
 			if ( $source !== $correctedSource ) {
-				
-
 				/** @var \WP_Upgrader_Skin $upgrader ->skin */
 				$upgrader->skin->feedback(sprintf(
 					'Renaming %s to %s&#8230;',
