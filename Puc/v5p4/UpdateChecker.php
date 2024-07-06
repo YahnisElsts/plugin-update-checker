@@ -924,23 +924,66 @@ if ( !class_exists(UpdateChecker::class, false) ):
 				return $source;
 			}
 
+			// Fix the remote source structure if necessary.
+			//The update archive should contain a single directory that contains the rest of plugin/theme files.
+			//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
+			//We can't rename $remoteSource because that would break WordPress code that cleans up temporary files
+			//after update.
+			if ( $this->isBadDirectoryStructure($remoteSource) ) {
+
+				// Create a new folder using plugin slug.
+				$new_directory = trailingslashit( $remoteSource ) . $this->slug . '/';
+
+				if ( ! $wp_filesystem->is_dir( $new_directory ) ) {
+					$wp_filesystem->mkdir( $new_directory );
+
+					// Move all files inside newly created directory.
+					$sourceFiles = $wp_filesystem->dirlist($remoteSource);
+					if ( is_array($sourceFiles) ) {
+						$sourceFiles = array_keys($sourceFiles);
+						$allMoved = true;
+						foreach ($sourceFiles as $filename) {
+
+							// Skip for our newly created folder.
+							if ( $filename === $this->slug ) {
+								continue;
+							}
+							
+							$previousSource = trailingslashit( $remoteSource ) . $filename;
+							$newSource = trailingslashit( $new_directory ) . $filename;
+
+							if ( !$wp_filesystem->move($previousSource, $newSource, true) ) {
+								$allMoved = false;
+								break;
+							}
+						}
+
+						if ( $allMoved ) {
+							// Rename source.
+							$source = $new_directory;
+						}
+						else {
+							// Delete our newly created folder including all files in it.
+							$wp_filesystem->rmdir( $new_directory, true );
+
+							// And return a relevant error.
+							return new WP_Error(
+								'puc-incorrect-directory-structure',
+								sprintf(
+									'The directory structure of the update was incorrect. All files should be inside ' .
+									'a directory named <span class="code">%s</span>, not at the root of the ZIP archive. Plugin Update Checker tried to fix the directory structure, but failed.',
+									htmlentities($this->slug)
+								)
+							);
+						}
+					}
+				}
+			}
+
 			//Rename the source to match the existing directory.
 			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
 			if ( $source !== $correctedSource ) {
-				//The update archive should contain a single directory that contains the rest of plugin/theme files.
-				//Otherwise, WordPress will try to copy the entire working directory ($source == $remoteSource).
-				//We can't rename $remoteSource because that would break WordPress code that cleans up temporary files
-				//after update.
-				if ( $this->isBadDirectoryStructure($remoteSource) ) {
-					return new WP_Error(
-						'puc-incorrect-directory-structure',
-						sprintf(
-							'The directory structure of the update is incorrect. All files should be inside ' .
-							'a directory named <span class="code">%s</span>, not at the root of the ZIP archive.',
-							htmlentities($this->slug)
-						)
-					);
-				}
+				
 
 				/** @var \WP_Upgrader_Skin $upgrader ->skin */
 				$upgrader->skin->feedback(sprintf(
