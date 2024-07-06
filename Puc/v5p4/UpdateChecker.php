@@ -980,7 +980,6 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			//Rename the source to match the existing directory.
 			$correctedSource = trailingslashit($remoteSource) . $this->directoryName . '/';
 			if ( $source !== $correctedSource ) {
-				/** @var \WP_Upgrader_Skin $upgrader ->skin */
 				$upgrader->skin->feedback(sprintf(
 					'Renaming %s to %s&#8230;',
 					'<span class="code">' . basename($source) . '</span>',
