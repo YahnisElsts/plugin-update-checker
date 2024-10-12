@@ -292,6 +292,8 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			$reportingItems = json_decode($args['body'][$typePluralised], true);
 
+			if ( null === $reportingItems ) return $args;
+
 			foreach ( $reportingItems[$typePluralised] as $key => $item ) {
 				// https://make.wordpress.org/core/2021/06/29/introducing-update-uri-plugin-header-in-wordpress-5-8/
 				if (dirname($key) === $this->directoryName) {
