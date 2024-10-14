@@ -171,6 +171,10 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
+			//Potentially exclude the inclusion of information about this entity in core requests to api.wordpress.org
+
+			add_filter('http_request_args', array($this, 'excludeEntityFromWordPressAPI'), 10, 2);
+			
 			//DebugBar integration.
 			if ( did_action('plugins_loaded') ) {
 				$this->maybeInitDebugBar();
@@ -192,6 +196,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			remove_filter('upgrader_source_selection', array($this, 'fixDirectoryName'), 10);
 			remove_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10);
+			remove_filter('http_request_args', array($this, 'excludeEntityFromWordPressAPI'));
 			remove_action('plugins_loaded', array($this, 'maybeInitDebugBar'));
 
 			remove_action('init', array($this, 'loadTextDomain'));
@@ -266,6 +271,51 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 */
 		abstract protected function createScheduler($checkPeriod);
 
+		/**
+		 * Potentially exclude the inclusion of information about this entity in core requests to api.wordpress.org
+		 *
+		 * @param Array $args
+		 * @param String $url
+		 * @return Array
+		 */
+		public function excludeEntityFromWordPressAPI($args, $url) {
+
+			if ( !apply_filters($this->getUniqueName('filter_wordpress_org_api_request_args'), true, $this, $args, $url) ) return $args;
+
+			$parsedUrl = parse_url($url);
+
+			if ( !isset($parsedUrl['host']) || 'api.wordpress.org' !== strtolower($parsedUrl['host']) ) return $args;
+
+			$typePluralised = $this->componentType.'s';
+			
+			if ( empty($args['body'][$typePluralised]) ) return $args;
+
+			$reportingItems = json_decode($args['body'][$typePluralised], true);
+
+			if ( null === $reportingItems ) return $args;
+
+			foreach ( $reportingItems[$typePluralised] as $key => $item ) {
+				// https://make.wordpress.org/core/2021/06/29/introducing-update-uri-plugin-header-in-wordpress-5-8/
+				if (dirname($key) === $this->directoryName) {
+					unset($reportingItems[$typePluralised][$key]);
+				}
+			}
+
+			if (!empty($reportingItems['active']) ) {
+				foreach ($reportingItems['active'] as $key => $relativePath) {
+					if ( dirname($relativePath) === $this->directoryName ) {
+						unset($reportingItems['active'][$key]);
+					}
+				}
+				// Re-index the array
+				$reportingItems['active'] = array_values($reportingItems['active']);
+			}
+
+			$args['body'][$typePluralised] = json_encode($reportingItems);
+
+			return $args;
+		}
+		
 		/**
 		 * Check for updates. The results are stored in the DB option specified in $optionName.
 		 *
