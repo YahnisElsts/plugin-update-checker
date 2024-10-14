@@ -171,10 +171,9 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			//Allow HTTP requests to the metadata URL even if it's on a local host.
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
-			//Potentially exclude the inclusion of information about this entity in core requests to api.wordpress.org
-
+			//Potentially exclude information about this entity from core update check requests to api.wordpress.org.
 			add_filter('http_request_args', array($this, 'excludeEntityFromWordPressAPI'), 10, 2);
-			
+
 			//DebugBar integration.
 			if ( did_action('plugins_loaded') ) {
 				$this->maybeInitDebugBar();
@@ -272,50 +271,75 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		abstract protected function createScheduler($checkPeriod);
 
 		/**
-		 * Potentially exclude the inclusion of information about this entity in core requests to api.wordpress.org
+		 * Remove information about this plugin or theme from the requests that WordPress core sends
+		 * to api.wordpress.org when checking for updates.
 		 *
-		 * @param Array $args
-		 * @param String $url
-		 * @return Array
+		 * @param array $args
+		 * @param string $url
+		 * @return array
 		 */
 		public function excludeEntityFromWordPressAPI($args, $url) {
+			//Is this an api.wordpress.org update check request?
+			$parsedUrl = wp_parse_url($url);
+			if ( !isset($parsedUrl['host']) || (strtolower($parsedUrl['host']) !== 'api.wordpress.org') ) {
+				return $args;
+			}
 
-			if ( !apply_filters($this->getUniqueName('filter_wordpress_org_api_request_args'), true, $this, $args, $url) ) return $args;
+			$typePluralised = $this->componentType . 's';
+			$expectedPathPrefix = '/' . $typePluralised . '/update-check/1.';  //e.g. "/plugins/update-check/1.1/"
+			if ( !isset($parsedUrl['path']) || !Utils::startsWith($parsedUrl['path'], $expectedPathPrefix) ) {
+				return $args;
+			}
 
-			$parsedUrl = parse_url($url);
+			//Plugins and themes can disable this feature by using the filter below.
+			if ( !apply_filters(
+				$this->getUniqueName('remove_from_core_update_check'),
+				true, $this, $args, $url
+			) ) {
+				return $args;
+			}
 
-			if ( !isset($parsedUrl['host']) || 'api.wordpress.org' !== strtolower($parsedUrl['host']) ) return $args;
-
-			$typePluralised = $this->componentType.'s';
-			
-			if ( empty($args['body'][$typePluralised]) ) return $args;
+			if ( empty($args['body'][$typePluralised]) ) {
+				return $args;
+			}
 
 			$reportingItems = json_decode($args['body'][$typePluralised], true);
-
-			if ( null === $reportingItems ) return $args;
-
-			foreach ( $reportingItems[$typePluralised] as $key => $item ) {
-				// https://make.wordpress.org/core/2021/06/29/introducing-update-uri-plugin-header-in-wordpress-5-8/
-				if (dirname($key) === $this->directoryName) {
-					unset($reportingItems[$typePluralised][$key]);
-				}
+			if ( $reportingItems === null ) {
+				return $args;
 			}
 
-			if (!empty($reportingItems['active']) ) {
-				foreach ($reportingItems['active'] as $key => $relativePath) {
-					if ( dirname($relativePath) === $this->directoryName ) {
-						unset($reportingItems['active'][$key]);
+			//The list of installed items uses different key formats for plugins and themes.
+			//Luckily, we can reuse the getUpdateListKey() method here.
+			$updateListKey = $this->getUpdateListKey();
+			if ( isset($reportingItems[$typePluralised][$updateListKey]) ) {
+				unset($reportingItems[$typePluralised][$updateListKey]);
+			}
+
+			if ( !empty($reportingItems['active']) ) {
+				if ( is_array($reportingItems['active']) ) {
+					foreach ($reportingItems['active'] as $index => $relativePath) {
+						if ( $relativePath === $updateListKey ) {
+							unset($reportingItems['active'][$index]);
+						}
 					}
+					//Re-index the array.
+					$reportingItems['active'] = array_values($reportingItems['active']);
+				} else if ( $reportingItems['active'] === $updateListKey ) {
+					//For themes, the "active" field is a string that contains the theme's directory name.
+					//Pretend that the default theme is active so that we don't reveal the actual theme.
+					if ( defined('WP_DEFAULT_THEME') ) {
+						$reportingItems['active'] = WP_DEFAULT_THEME;
+					}
+
+					//Unfortunately, it doesn't seem to be documented if we can safely remove the "active"
+					//key. So when we don't know the default theme, we'll just leave it as is.
 				}
-				// Re-index the array
-				$reportingItems['active'] = array_values($reportingItems['active']);
 			}
 
-			$args['body'][$typePluralised] = json_encode($reportingItems);
-
+			$args['body'][$typePluralised] = wp_json_encode($reportingItems);
 			return $args;
 		}
-		
+
 		/**
 		 * Check for updates. The results are stored in the DB option specified in $optionName.
 		 *
