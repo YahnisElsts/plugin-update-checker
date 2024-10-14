@@ -172,6 +172,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			add_filter('http_request_host_is_external', array($this, 'allowMetadataHost'), 10, 2);
 
 			//Potentially exclude information about this entity from core update check requests to api.wordpress.org.
+			//phpcs:ignore WordPressVIPMinimum.Hooks.RestrictedHooks.http_request_args -- Doesn't modify timeouts.
 			add_filter('http_request_args', array($this, 'excludeEntityFromWordPressAPI'), 10, 2);
 
 			//DebugBar integration.
