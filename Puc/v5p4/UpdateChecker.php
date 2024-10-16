@@ -1017,7 +1017,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 						$sourceFiles = array_keys($sourceFiles);
 						$allMoved = true;
 						foreach ($sourceFiles as $filename) {
-							//Skip for our newly created folder.
+							//Skip our newly created folder.
 							if ( $filename === $this->slug ) {
 								continue;
 							}
