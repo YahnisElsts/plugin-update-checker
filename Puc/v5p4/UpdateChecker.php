@@ -294,7 +294,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 
 			//Plugins and themes can disable this feature by using the filter below.
 			if ( !apply_filters(
-				$this->getUniqueName('remove_from_core_update_check'),
+				$this->getUniqueName('remove_from_default_update_checks'),
 				true, $this, $args, $url
 			) ) {
 				return $args;
