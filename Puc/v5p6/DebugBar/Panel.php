@@ -41,11 +41,11 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			echo '<h3>Configuration</h3>';
 			echo '<table class="puc-debug-data">';
 			$this->displayConfigHeader();
-			$this->row('Slug', htmlentities($this->updateChecker->slug));
-			$this->row('DB option', htmlentities($this->updateChecker->optionName));
+			$this->row('Slug', htmlentities($this->updateChecker->slug, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
+			$this->row('DB option', htmlentities($this->updateChecker->optionName, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
 
 			$requestInfoButton = $this->getMetadataButton();
-			$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $this->responseBox);
+			$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8') . ' ' . $requestInfoButton . $this->responseBox);
 
 			$scheduler = $this->updateChecker->scheduler;
 			if ( $scheduler->checkPeriod > 0 ) {
@@ -115,10 +115,10 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			$this->row('Next automatic check', $this->formatTimeWithDelta($nextCheck));
 
 			if ( $state->getCheckedVersion() !== '' ) {
-				$this->row('Checked version', htmlentities($state->getCheckedVersion()));
+				$this->row('Checked version', htmlentities($state->getCheckedVersion(), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
 				$this->row('Cached update', $state->getUpdate());
 			}
-			$this->row('Update checker class', htmlentities(get_class($this->updateChecker)));
+			$this->row('Update checker class', htmlentities(get_class($this->updateChecker), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8'));
 			echo '</table>';
 		}
 
@@ -132,7 +132,7 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 					if ( property_exists($update, $field) ) {
 						$this->row(
 							ucwords(str_replace('_', ' ', $field)),
-							isset($update->$field) ? htmlentities($update->$field) : null
+							isset($update->$field) ? htmlentities($update->$field, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8') : null
 						);
 					}
 				}
@@ -170,7 +170,7 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			if ( is_object($value) || is_array($value) ) {
 				//This is specifically for debugging, so print_r() is fine.
 				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
-				$value = '<pre>' . htmlentities(print_r($value, true)) . '</pre>';
+				$value = '<pre>' . htmlentities(print_r($value, true), ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8') . '</pre>';
 			} else if ($value === null) {
 				$value = '<code>null</code>';
 			}
