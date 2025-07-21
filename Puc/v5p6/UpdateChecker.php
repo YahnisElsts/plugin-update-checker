@@ -1044,7 +1044,7 @@ if ( !class_exists(UpdateChecker::class, false) ):
 								sprintf(
 									'The directory structure of the update was incorrect. All files should be inside ' .
 									'a directory named <span class="code">%s</span>, not at the root of the ZIP archive. Plugin Update Checker tried to fix the directory structure, but failed.',
-									htmlentities($this->slug)
+									htmlentities($this->slug, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'UTF-8')
 								)
 							);
 						}

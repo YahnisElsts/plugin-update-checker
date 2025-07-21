@@ -187,7 +187,7 @@ if ( !class_exists(Ui::class, false) ):
 					}
 				}
 
-				wp_redirect(add_query_arg(
+				wp_safe_redirect(add_query_arg(
 					array(
 						'puc_update_check_result' => $status,
 						'puc_slug'                => $this->updateChecker->slug,

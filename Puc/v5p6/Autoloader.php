@@ -66,21 +66,33 @@ if ( !class_exists(Autoloader::class, false) ):
 		}
 
 		public function autoload($className) {
-			if ( isset($this->staticMap[$className]) && file_exists($this->libraryDir . $this->staticMap[$className]) ) {
-				include($this->libraryDir . $this->staticMap[$className]);
-				return;
+			if (isset($this->staticMap[$className])) {
+				$file = $this->libraryDir . $this->staticMap[$className];
+				$realFile = realpath($file);
+				$realBase = realpath($this->libraryDir);
+
+				// Check file exists and is inside libraryDir
+				if ($realFile && strpos($realFile, $realBase) === 0 && file_exists($realFile)) {
+					include $realFile;
+					return;
+				}
 			}
 
-			if ( strpos($className, $this->prefix) === 0 ) {
+			if (strpos($className, $this->prefix) === 0) {
 				$path = substr($className, strlen($this->prefix));
 				$path = str_replace(array('_', '\\'), '/', $path);
-				$path = $this->rootDir . $path . '.php';
+				$file = $this->rootDir . $path . '.php';
 
-				if ( file_exists($path) ) {
-					include $path;
+				$realFile = realpath($file);
+				$realBase = realpath($this->rootDir);
+
+				// Ensure the file is inside rootDir and exists
+				if ($realFile && strpos($realFile, $realBase) === 0 && file_exists($realFile)) {
+					include $realFile;
 				}
 			}
 		}
+
 	}
 
 endif;
