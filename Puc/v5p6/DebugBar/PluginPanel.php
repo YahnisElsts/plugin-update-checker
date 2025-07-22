@@ -12,7 +12,7 @@ if ( !class_exists(PluginPanel::class, false) ):
 		protected $updateChecker;
 
 		protected function displayConfigHeader() {
-			$this->row('Plugin file', htmlentities($this->updateChecker->pluginFile));
+			$this->row('Plugin file', esc_html($this->updateChecker->pluginFile));
 			parent::displayConfigHeader();
 		}
 

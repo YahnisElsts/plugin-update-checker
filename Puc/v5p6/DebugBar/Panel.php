@@ -41,11 +41,11 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			echo '<h3>Configuration</h3>';
 			echo '<table class="puc-debug-data">';
 			$this->displayConfigHeader();
-			$this->row('Slug', htmlentities($this->updateChecker->slug));
-			$this->row('DB option', htmlentities($this->updateChecker->optionName));
+			$this->row('Slug', esc_html($this->updateChecker->slug));
+			$this->row('DB option', esc_html($this->updateChecker->optionName));
 
 			$requestInfoButton = $this->getMetadataButton();
-			$this->row('Metadata URL', htmlentities($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $this->responseBox);
+			$this->row('Metadata URL', esc_html($this->updateChecker->metadataUrl) . ' ' . $requestInfoButton . $this->responseBox);
 
 			$scheduler = $this->updateChecker->scheduler;
 			if ( $scheduler->checkPeriod > 0 ) {
@@ -115,10 +115,10 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			$this->row('Next automatic check', $this->formatTimeWithDelta($nextCheck));
 
 			if ( $state->getCheckedVersion() !== '' ) {
-				$this->row('Checked version', htmlentities($state->getCheckedVersion()));
+				$this->row('Checked version', esc_html($state->getCheckedVersion()));
 				$this->row('Cached update', $state->getUpdate());
 			}
-			$this->row('Update checker class', htmlentities(get_class($this->updateChecker)));
+			$this->row('Update checker class', esc_html(get_class($this->updateChecker)));
 			echo '</table>';
 		}
 
@@ -132,7 +132,7 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 					if ( property_exists($update, $field) ) {
 						$this->row(
 							ucwords(str_replace('_', ' ', $field)),
-							isset($update->$field) ? htmlentities($update->$field) : null
+							isset($update->$field) ? esc_html($update->$field) : null
 						);
 					}
 				}
@@ -170,7 +170,7 @@ if ( !class_exists(Panel::class, false) && class_exists('Debug_Bar_Panel', false
 			if ( is_object($value) || is_array($value) ) {
 				//This is specifically for debugging, so print_r() is fine.
 				//phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
-				$value = '<pre>' . htmlentities(print_r($value, true)) . '</pre>';
+				$value = '<pre>' . esc_html(print_r($value, true)) . '</pre>';
 			} else if ($value === null) {
 				$value = '<code>null</code>';
 			}

@@ -86,7 +86,7 @@ if ( !class_exists(PucFactory::class, false) ):
 				throw new \RuntimeException(sprintf(
 					'The update checker cannot determine if "%s" is a plugin or a theme. ' .
 					'This is a bug. Please contact the PUC developer.',
-					htmlentities($fullPath)
+					esc_html($fullPath)
 				));
 			}
 
@@ -239,7 +239,7 @@ if ( !class_exists(PucFactory::class, false) ):
 
 			//URI was not found so throw an error.
 			throw new \RuntimeException(
-				sprintf('Unable to locate URI in header of "%s"', htmlentities($fullPath))
+				sprintf('Unable to locate URI in header of "%s"', esc_html($fullPath))
 			);
 		}
 

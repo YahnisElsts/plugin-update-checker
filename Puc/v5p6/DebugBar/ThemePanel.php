@@ -13,7 +13,7 @@ if ( !class_exists(ThemePanel::class, false) ):
 		protected $updateChecker;
 
 		protected function displayConfigHeader() {
-			$this->row('Theme directory', htmlentities($this->updateChecker->directoryName));
+			$this->row('Theme directory', esc_html($this->updateChecker->directoryName));
 			parent::displayConfigHeader();
 		}
 
