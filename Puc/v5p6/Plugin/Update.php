@@ -20,7 +20,7 @@ if ( !class_exists(Update::class, false) ):
 		public $requires_php = false;
 		public $icons = array();
 		public $filename; //Plugin filename relative to the plugins directory.
-		public $autoupdate;
+		public $autoupdate = false;
 
 		protected static $extraFields = array(
 			'id', 'homepage', 'tested', 'requires_php', 'upgrade_notice', 'icons', 'filename', 'autoupdate',
