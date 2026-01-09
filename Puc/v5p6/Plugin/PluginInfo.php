@@ -39,6 +39,7 @@ if ( !class_exists(PluginInfo::class, false) ):
 		public $downloaded;
 		public $active_installs;
 		public $last_updated;
+		public $autoupdate = false;
 
 		public $id = 0; //The native WP.org API returns numeric plugin IDs, but they're not used for anything.
 
