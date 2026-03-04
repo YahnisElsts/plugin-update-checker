@@ -104,7 +104,7 @@ if ( !class_exists(Update::class, false) ):
 					$update->icons = $icons;
 
 					//It appears that the 'default' icon isn't used anywhere in WordPress 4.9,
-					//but lets set it just in case a future release needs it.
+					//but let's set it just in case a future release needs it.
 					if ( !isset($update->icons['default']) ) {
 						$update->icons['default'] = current($update->icons);
 					}
