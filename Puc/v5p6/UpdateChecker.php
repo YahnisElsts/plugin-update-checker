@@ -632,7 +632,15 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			if ( !empty($update) ) {
 				//Let plugins filter the update info before it's passed on to WordPress.
 				$update = apply_filters($this->getUniqueName('pre_inject_update'), $update);
-				$updates = $this->addUpdateToList($updates, $update->toWpFormat());
+				//Convert the update into the format used by WordPress core.
+				$wpUpdate = $update->toWpFormat();
+				//Disable the "autoupdate" flag unless explicitly allowed. This is a safety precaution;
+				//untrusted or compromised update sources could otherwise set this flag to true even
+				//if the plugin/theme developer didn't intend to allow automatic update installation.
+				if ( isset($wpUpdate->autoupdate) && !$this->isAutoupdateFieldAllowed($update) ) {
+					$wpUpdate->autoupdate = false;
+				}
+				$updates = $this->addUpdateToList($updates, $wpUpdate);
 			} else {
 				//Clean up any stale update info.
 				$updates = $this->removeUpdateFromList($updates);
@@ -728,6 +736,38 @@ if ( !class_exists(UpdateChecker::class, false) ):
 		 */
 		protected function shouldShowUpdates() {
 			return true;
+		}
+
+		/**
+		 * @var bool
+		 */
+		protected $autoupdateFieldAllowed = false;
+
+		/**
+		 * Allow the "autoupdate" field in incoming plugin updates to be set to `true`.
+		 *
+		 * By default, the update checker will parse the field (so it will be available in the update
+		 * object), but will set it to `false` before passing the update to WordPress.
+		 *
+		 * @return $this
+		 */
+		public function allowAutoupdateField() {
+			$this->autoupdateFieldAllowed = true;
+			return $this;
+		}
+
+		/**
+		 * Is the "autoupdate" field for injected updates allowed to be set to true?
+		 *
+		 * @param object $incomingUpdate
+		 * @return bool
+		 */
+		protected function isAutoupdateFieldAllowed($incomingUpdate) {
+			return apply_filters(
+				$this->getUniqueName('autoupdate_field_allowed'),
+				$this->autoupdateFieldAllowed,
+				$incomingUpdate
+			);
 		}
 
 		/* -------------------------------------------------------------------
