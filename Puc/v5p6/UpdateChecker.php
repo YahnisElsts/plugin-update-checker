@@ -813,9 +813,28 @@ if ( !class_exists(UpdateChecker::class, false) ):
 			}
 
 			if ( $result['response']['code'] !== 200 ) {
+				$error_message = 'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)';
+				
+				// Try to extract error message from response body if available
+				if ( !empty($result['body']) ) {
+					$body = trim($result['body']);
+					// Try to parse as JSON
+					$decoded = json_decode($body, true);
+					if ( json_last_error() === JSON_ERROR_NONE && is_array($decoded) ) {
+						if ( isset($decoded['error']) && is_string($decoded['error']) ) {
+							$error_message .= '. Error: ' . $decoded['error'];
+						} elseif ( isset($decoded['message']) && is_string($decoded['message']) ) {
+							$error_message .= '. Message: ' . $decoded['message'];
+						}
+					} elseif ( !empty($body) && strlen($body) < 500 ) {
+						// If not JSON but short text, include it
+						$error_message .= '. Response: ' . $body;
+					}
+				}
+				
 				return new WP_Error(
 					'puc_unexpected_response_code',
-					'HTTP response code is ' . $result['response']['code'] . ' (expected: 200)'
+					$error_message
 				);
 			}
 
