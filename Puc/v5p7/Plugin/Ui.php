@@ -131,7 +131,7 @@ if ( !class_exists(Ui::class, false) ):
 				);
 				if ( !empty($linkText) ) {
 					/** @noinspection HtmlUnknownTarget */
-					$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_attr($linkUrl), $linkText);
+					$pluginMeta[] = sprintf('<a href="%s">%s</a>', esc_url($linkUrl), esc_html($linkText));
 				}
 			}
 			return $pluginMeta;
