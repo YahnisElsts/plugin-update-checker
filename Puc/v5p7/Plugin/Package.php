@@ -109,6 +109,7 @@ if ( !class_exists(Package::class, false) ):
 				'Requires WP'       => 'Requires WP',
 				'Tested up to'      => 'Tested up to',
 				'Requires at least' => 'Requires at least',
+				'Requires PHP'      => 'Requires PHP',
 			);
 		}
 

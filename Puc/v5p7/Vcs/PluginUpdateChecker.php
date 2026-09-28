@@ -154,8 +154,10 @@ if ( !class_exists(PluginUpdateChecker::class, false) ):
 				'Tested WP' => 'tested',
 				'Requires at least' => 'requires',
 				'Tested up to' => 'tested',
+				'RequiresWP' => 'requires',
 
 				'Requires PHP' => 'requires_php',
+				'RequiresPHP' => 'requires_php',
 			);
 			foreach ($headerToPropertyMap as $headerName => $property) {
 				if ( isset($fileHeader[$headerName]) && !empty($fileHeader[$headerName]) ) {
