@@ -130,7 +130,7 @@ class PucReadmeParser {
 		for ( $i=0; $i < count($_sections); $i +=2 ) {
 			$title = $this->sanitize_text( $_sections[$i] );
 			if ( isset($_sections[$i+1]) ) {
-				$content = preg_replace('/(^[\s]*)=[\s]+(.+?)[\s]+=/m', '$1<h4>$2</h4>', $_sections[$i+1]);
+				$content = preg_replace('/(^[\s]*)=[\s]+(.+?)[\s]+=/m', '$1<h4>$2</h4>' . "\n", $_sections[$i+1]);
 				$content = $this->filter_text( $content, true );
 			} else {
 				$content = '';
