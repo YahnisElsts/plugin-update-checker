@@ -1,6 +1,6 @@
 <?php
 
-namespace YahnisElsts\PluginUpdateChecker\v5;
+namespace YahnisElsts\PluginUpdateChecker\v6;
 
 if ( !class_exists(PucFactory::class, false) ):
 

@@ -65,7 +65,7 @@ Getting Started
 
 	```php
 	require 'path/to/plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://example.com/path/to/details.json',
@@ -99,7 +99,7 @@ By default, the library will check the specified URL for changes every 12 hours.
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://github.com/user-name/repo-name/',
@@ -185,7 +185,7 @@ The library will pull update details from the following parts of a release/tag/b
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
  
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://bitbucket.org/user-name/repo-name',
@@ -241,7 +241,7 @@ BitBucket doesn't have an equivalent to GitHub's releases, so the process is sli
 
 	```php
 	require 'plugin-update-checker/plugin-update-checker.php';
-	use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+	use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
 
 	$myUpdateChecker = PucFactory::buildUpdateChecker(
 		'https://gitlab.com/user-name/repo-name/',
@@ -336,7 +336,7 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 
 New code:
 ```php
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+use YahnisElsts\PluginUpdateChecker\v6\PucFactory;
 
 $myUpdateChecker = PucFactory::buildUpdateChecker(
 	'https://example.com/info.json',
@@ -349,7 +349,7 @@ Other classes have also been renamed, usually by simply removing the `Puc_vXpY_`
 
 | Old class name                      | New class name                                                 |
 |-------------------------------------|----------------------------------------------------------------|
-| `Puc_v4_Factory`                    | `YahnisElsts\PluginUpdateChecker\v5\PucFactory`                |
+| `Puc_v4_Factory`                    | `YahnisElsts\PluginUpdateChecker\v6\PucFactory`                |
 | `Puc_v4p13_Factory`                 | `YahnisElsts\PluginUpdateChecker\v6p0\PucFactory`              |
 | `Puc_v4p13_Plugin_UpdateChecker`    | `YahnisElsts\PluginUpdateChecker\v6p0\Plugin\UpdateChecker`    |
 | `Puc_v4p13_Theme_UpdateChecker`     | `YahnisElsts\PluginUpdateChecker\v6p0\Theme\UpdateChecker`     |

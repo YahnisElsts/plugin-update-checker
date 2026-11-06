@@ -2,14 +2,14 @@
 
 namespace YahnisElsts\PluginUpdateChecker\v6p0;
 
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory as MajorFactory;
+use YahnisElsts\PluginUpdateChecker\v6\PucFactory as MajorFactory;
 use YahnisElsts\PluginUpdateChecker\v6p0\PucFactory as MinorFactory;
 
 require __DIR__ . '/Puc/v6p0/Autoloader.php';
 new Autoloader();
 
 require __DIR__ . '/Puc/v6p0/PucFactory.php';
-require __DIR__ . '/Puc/v5/PucFactory.php';
+require __DIR__ . '/Puc/v6/PucFactory.php';
 
 //Register classes defined in this version with the factory.
 foreach (
