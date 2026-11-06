@@ -50,14 +50,14 @@ if ( !class_exists(Extension::class, false) ):
 				'puc-debug-bar-style-v6',
 				$this->getLibraryUrl("/css/puc-debug-bar.css"),
 				array('debug-bar'),
-				'20221008'
+				'20261106'
 			);
 
 			wp_enqueue_script(
 				'puc-debug-bar-js-v6',
 				$this->getLibraryUrl("/js/debug-bar.js"),
 				array('jquery'),
-				'20221008'
+				'20261106'
 			);
 		}
 
